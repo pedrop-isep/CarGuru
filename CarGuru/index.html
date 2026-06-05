@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CarGuru — O Teu Guia Automóvel</title>
+  <meta name="description" content="CarGuru — Encontra, compara e compra o carro dos teus sonhos." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- =================== NAVBAR =================== -->
+  <nav class="navbar" id="navbar">
+    <a href="#" data-nav="home" class="nav-logo">
+      <div class="nav-logo-icon">🚗</div>
+      Car<span>Guru</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" data-nav="home" class="active">Início</a></li>
+      <li><a href="#" data-nav="home">Veículos</a></li>
+      <li><a href="#" data-nav="home">Marcas</a></li>
+      <li><a href="#" data-nav="home">Avaliações</a></li>
+      <li><a href="#" data-nav="home">Contacto</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="#" data-nav="auth" class="btn btn-ghost btn-sm">Entrar</a>
+      <a href="#" data-nav="auth" class="btn btn-primary btn-sm">Registar</a>
+    </div>
+    <button class="nav-hamburger" id="hamburger">☰</button>
+  </nav>
+
+
+  <!-- =================== HOME PAGE =================== -->
+  <div class="page active" id="home">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            +12.000 veículos disponíveis
+          </div>
+          <h1 class="hero-title">
+            ENCONTRA O<br>
+            <em>TEU CARRO</em><br>
+            IDEAL
+          </h1>
+          <p class="hero-subtitle">
+            O CarGuru é a plataforma que te dá o poder de pesquisar, comparar e decidir com total confiança. Do carro de cidade ao SUV de topo — tudo num só lugar.
+          </p>
+          <div class="hero-cta">
+            <a href="#" data-nav="home" class="btn btn-primary btn-lg">
+              🔍 Explorar Veículos
+            </a>
+            <a href="#" data-nav="auth" class="btn btn-ghost btn-lg">
+              Criar Conta Grátis
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="hero-stat-val">12K+</div>
+              <div class="hero-stat-label">Veículos</div>
+            </div>
+            <div>
+              <div class="hero-stat-val">98%</div>
+              <div class="hero-stat-label">Satisfação</div>
+            </div>
+            <div>
+              <div class="hero-stat-val">340+</div>
+              <div class="hero-stat-label">Marcas</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-car-frame">
+            <div class="hero-car-inner">
+              <div class="hero-car-icon">🏎️</div>
+              <div class="hero-car-label">FIND YOUR DRIVE</div>
+            </div>
+          </div>
+          <div class="hero-card-floating card-1">
+            <div class="card-label">Melhor Oferta</div>
+            <div class="card-value">BMW M4</div>
+            <div class="card-sub">↓ 8% este mês</div>
+          </div>
+          <div class="hero-card-floating card-2">
+            <div class="card-label">Avaliação</div>
+            <div class="card-value">★ 4.9</div>
+            <div class="card-sub">2.841 reviews</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH BAR -->
+    <div class="search-section">
+      <div class="search-box">
+        <div class="search-box-title">🔎 Pesquisa Rápida</div>
+        <div class="search-filters">
+          <div class="search-field">
+            <label for="searchMarca">Marca</label>
+            <select id="searchMarca">
+              <option value="">Todas as marcas</option>
+              <option>BMW</option>
+              <option>Mercedes-Benz</option>
+              <option>Audi</option>
+              <option>Volkswagen</option>
+              <option>Toyota</option>
+              <option>Ford</option>
+              <option>Renault</option>
+              <option>Peugeot</option>
+              <option>Porsche</option>
+              <option>Tesla</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <label for="searchTipo">Tipo de Veículo</label>
+            <select id="searchTipo">
+              <option value="">Todos os tipos</option>
+              <option>Citadino</option>
+              <option>Berlina</option>
+              <option>SUV</option>
+              <option>Coupé</option>
+              <option>Descapotável</option>
+              <option>Monovolume</option>
+              <option>Elétrico</option>
+            </select>
+          </div>
+          <div class="search-field">
+            <label for="searchPreco">Preço Máximo (€)</label>
+            <input type="number" id="searchPreco" placeholder="Ex: 25000" min="0" step="500" />
+          </div>
+          <div>
+            <button class="btn btn-primary btn-lg" id="searchBtn" style="width:100%">
+              Pesquisar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <section class="section">
+      <div class="section-header">
+        <div class="section-label">Por que CarGuru?</div>
+        <h2 class="section-title">TUDO O QUE PRECISAS</h2>
+        <p class="section-subtitle">Ferramentas profissionais para encontrares e avaliares o teu próximo carro sem stress.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3 class="feature-title">Pesquisa Avançada</h3>
+          <p class="feature-desc">Filtra por marca, modelo, ano, preço, combustível e muito mais. Encontra exatamente o que procuras em segundos.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3 class="feature-title">Comparador de Modelos</h3>
+          <p class="feature-desc">Compara até 4 veículos lado a lado com dados técnicos detalhados, consumos e avaliações reais de proprietários.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3 class="feature-title">Análise de Preço</h3>
+          <p class="feature-desc">Sabe se o preço pedido é justo. O nosso algoritmo analisa o mercado e diz-te se estás a fazer um bom negócio.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⭐</div>
+          <h3 class="feature-title">Reviews Verificadas</h3>
+          <p class="feature-desc">Opiniões reais de proprietários verificados. Sem filtros, sem marketing — só experiências autênticas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3 class="feature-title">Historial do Veículo</h3>
+          <p class="feature-desc">Acede ao historial completo: acidentes, revisões, proprietários anteriores e alertas de segurança.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3 class="feature-title">Alertas Personalizados</h3>
+          <p class="feature-desc">Define os teus critérios e recebe uma notificação assim que aparecer um veículo a combinar com o teu perfil.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CARS SHOWCASE -->
+    <section class="section showcase-bg">
+      <div class="section-header">
+        <div class="section-label">Em Destaque</div>
+        <h2 class="section-title">VEÍCULOS POPULARES</h2>
+        <p class="section-subtitle">Os modelos mais pesquisados esta semana na plataforma.</p>
+      </div>
+      <div class="cars-grid">
+
+        <div class="car-card">
+          <div class="car-card-img">
+            🚗
+            <span class="car-card-badge">DESTAQUE</span>
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">BMW Série 3</h3>
+            <p class="car-card-sub">320d • 2022 • Automático</p>
+            <div class="car-card-specs">
+              <span class="car-spec">⛽ <strong>5.2L</strong>/100km</span>
+              <span class="car-spec">⚡ <strong>190</strong> cv</span>
+              <span class="car-spec">📏 <strong>48.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">32.500€</div>
+                <div class="car-price-sub">Preço justo ✔</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="car-card">
+          <div class="car-card-img" style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(196,75,0,0.3) 0%, #161616 70%);">
+            🏎️
+            <span class="car-card-badge">NOVO</span>
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">Porsche Macan</h3>
+            <p class="car-card-sub">GTS • 2023 • Automático</p>
+            <div class="car-card-specs">
+              <span class="car-spec">⛽ <strong>8.1L</strong>/100km</span>
+              <span class="car-spec">⚡ <strong>380</strong> cv</span>
+              <span class="car-spec">📏 <strong>12.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">89.000€</div>
+                <div class="car-price-sub">Preço premium</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="car-card">
+          <div class="car-card-img" style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(232,93,4,0.15) 0%, #161616 70%);">
+            🚙
+            <span class="car-card-badge" style="background: #2ecc71;">ELÉTRICO</span>
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">Tesla Model 3</h3>
+            <p class="car-card-sub">Long Range • 2023 • Elétrico</p>
+            <div class="car-card-specs">
+              <span class="car-spec">🔋 <strong>602</strong> km</span>
+              <span class="car-spec">⚡ <strong>440</strong> cv</span>
+              <span class="car-spec">📏 <strong>8.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">54.900€</div>
+                <div class="car-price-sub">Preço justo ✔</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="car-card">
+          <div class="car-card-img">
+            🚐
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">Volkswagen Tiguan</h3>
+            <p class="car-card-sub">2.0 TDI • 2021 • DSG</p>
+            <div class="car-card-specs">
+              <span class="car-spec">⛽ <strong>5.8L</strong>/100km</span>
+              <span class="car-spec">⚡ <strong>150</strong> cv</span>
+              <span class="car-spec">📏 <strong>62.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">28.750€</div>
+                <div class="car-price-sub">Bom negócio 🔥</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="car-card">
+          <div class="car-card-img" style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(232,93,4,0.2) 0%, #161616 70%);">
+            🏁
+            <span class="car-card-badge">HOT</span>
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">Mercedes AMG C63</h3>
+            <p class="car-card-sub">S • 2022 • Automático</p>
+            <div class="car-card-specs">
+              <span class="car-spec">⛽ <strong>9.4L</strong>/100km</span>
+              <span class="car-spec">⚡ <strong>510</strong> cv</span>
+              <span class="car-spec">📏 <strong>25.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">112.000€</div>
+                <div class="car-price-sub">Oferta única</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="car-card">
+          <div class="car-card-img">
+            🚕
+          </div>
+          <div class="car-card-body">
+            <h3 class="car-card-name">Toyota Yaris</h3>
+            <p class="car-card-sub">Hybrid • 2023 • CVT</p>
+            <div class="car-card-specs">
+              <span class="car-spec">⛽ <strong>3.8L</strong>/100km</span>
+              <span class="car-spec">⚡ <strong>116</strong> cv</span>
+              <span class="car-spec">📏 <strong>5.000</strong> km</span>
+            </div>
+            <div class="car-card-footer">
+              <div>
+                <div class="car-price">22.400€</div>
+                <div class="car-price-sub">Preço justo ✔</div>
+              </div>
+              <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CTA BAND -->
+    <section class="cta-band">
+      <h2 class="cta-band-title">PRONTO PARA ENCONTRAR O TEU CARRO?</h2>
+      <p class="cta-band-sub">Junta-te a mais de 3 utilizadores que já usam o CarGuru para tomar melhores decisões.</p>
+      <a href="#" data-nav="auth" class="btn btn-ghost btn-lg">Criar Conta Gratuita →</a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <a href="#" data-nav="home" class="nav-logo">
+            <div class="nav-logo-icon">🚗</div>
+            Car<span>Guru</span>
+          </a>
+          <p class="footer-tagline">
+            A plataforma automóvel mais completa de Portugal. Encontra, compara e decide com confiança.
+          </p>
+        </div>
+        <div>
+          <div class="footer-col-title">Explorar</div>
+          <ul class="footer-links">
+            <li><a href="#">Todos os Veículos</a></li>
+            <li><a href="#">Por Marca</a></li>
+            <li><a href="#">Por Tipo</a></li>
+            <li><a href="#">Elétricos</a></li>
+            <li><a href="#">Ofertas</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Empresa</div>
+          <ul class="footer-links">
+            <li><a href="#">Sobre Nós</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Carreiras</a></li>
+            <li><a href="#">Imprensa</a></li>
+            <li><a href="#">Contacto</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Legal</div>
+          <ul class="footer-links">
+            <li><a href="#">Privacidade</a></li>
+            <li><a href="#">Termos de Uso</a></li>
+            <li><a href="#">Cookies</a></li>
+            <li><a href="#">RGPD</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2024 <span>CarGuru</span>. Todos os direitos reservados.</span>
+        <span>Feito com 🧡 em Portugal</span>
+      </div>
+    </footer>
+
+  </div><!-- /home page -->
+
+
+  <!-- =================== AUTH PAGE =================== -->
+  <div class="page" id="auth">
+    <div class="auth-page">
+
+      <!-- LEFT PANEL -->
+      <div class="auth-left">
+        <div class="auth-left-grid"></div>
+        <div class="auth-left-content">
+          <div class="auth-logo">
+            <div class="nav-logo-icon" style="width:42px;height:42px;font-size:1.3rem;">🚗</div>
+            <div class="auth-logo-text">Car<span>Guru</span></div>
+          </div>
+          <h2 class="auth-headline">
+            A TUA<br>
+            PRÓXIMA<br>
+            <em>VIAGEM</em><br>
+            COMEÇA AQUI
+          </h2>
+          <p class="auth-desc">
+            Cria a tua conta gratuita e acede a análises de preço exclusivas, alertas personalizados e o maior catálogo automóvel online.
+          </p>
+          <div class="auth-trust">
+            <div class="auth-trust-item">
+              <span class="auth-trust-icon">🔒</span>
+              <span class="auth-trust-text">100% Seguro</span>
+            </div>
+            <div class="auth-trust-item">
+              <span class="auth-trust-icon">⚡</span>
+              <span class="auth-trust-text">Rápido e Simples</span>
+            </div>
+            <div class="auth-trust-item">
+              <span class="auth-trust-icon">🎁</span>
+              <span class="auth-trust-text">Sempre Grátis</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="auth-right">
+        <div class="auth-form-wrap">
+
+          <!-- Back link -->
+          <div style="margin-bottom:28px;">
+            <a href="#" data-nav="home" style="font-size:0.82rem;color:var(--grey-text);display:inline-flex;align-items:center;gap:6px;transition:0.2s;">
+              ← Voltar ao início
+            </a>
+          </div>
+
+          <!-- Tabs -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Entrar</button>
+            <button class="auth-tab" data-tab="register">Criar Conta</button>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <form class="auth-form" id="loginForm" onsubmit="return false">
+            <div class="form-group">
+              <label class="form-label" for="loginEmail">Email</label>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">✉️</span>
+                <input class="form-input" type="email" id="loginEmail" placeholder="o.teu@email.com" autocomplete="email" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="loginPassword">Password</label>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">🔑</span>
+                <input class="form-input" type="password" id="loginPassword" placeholder="A tua password" autocomplete="current-password" />
+                <button type="button" class="password-toggle" tabindex="-1">👁️</button>
+              </div>
+              <div class="form-forgot"><a href="#">Esqueceste-te da password?</a></div>
+            </div>
+            <button type="button" class="btn-auth" id="loginSubmit">
+              Entrar na Conta →
+            </button>
+            <div class="form-divider">ou</div>
+            <button type="button" class="btn-social">
+              <span>G</span> Continuar com Google
+            </button>
+            <button type="button" class="btn-social">
+              <span>f</span> Continuar com Facebook
+            </button>
+            <p class="auth-footer-note">
+              Não tens conta? <a href="#" class="auth-tab-link" data-switch="register">Regista-te grátis</a>
+            </p>
+          </form>
+
+          <!-- REGISTER FORM -->
+          <form class="auth-form hidden" id="registerForm" onsubmit="return false">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="regName">Nome Completo</label>
+                <div class="form-input-wrap">
+                  <span class="form-input-icon">👤</span>
+                  <input class="form-input" type="text" id="regName" placeholder="O teu nome" autocomplete="name" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="regEmail">Email</label>
+                <div class="form-input-wrap">
+                  <span class="form-input-icon">✉️</span>
+                  <input class="form-input" type="email" id="regEmail" placeholder="email@exemplo.com" autocomplete="email" />
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="regPassword">Password</label>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">🔑</span>
+                <input class="form-input" type="password" id="regPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
+                <button type="button" class="password-toggle" tabindex="-1">👁️</button>
+              </div>
+              <div class="password-strength">
+                <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                <div class="strength-text" id="strengthText"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="regConfirm">Confirmar Password</label>
+              <div class="form-input-wrap">
+                <span class="form-input-icon">🔒</span>
+                <input class="form-input" type="password" id="regConfirm" placeholder="Repete a password" autocomplete="new-password" />
+                <button type="button" class="password-toggle" tabindex="-1">👁️</button>
+              </div>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" id="regTerms" />
+              <label class="form-check-label" for="regTerms">
+                Concordo com os <a href="#">Termos de Uso</a> e com a <a href="#">Política de Privacidade</a> do CarGuru.
+              </label>
+            </div>
+            <button type="button" class="btn-auth" id="registerSubmit">
+              Criar Conta Gratuita 🚗
+            </button>
+            <div class="form-divider">ou</div>
+            <button type="button" class="btn-social">
+              <span>G</span> Registar com Google
+            </button>
+            <p class="auth-footer-note">
+              Já tens conta? <a href="#" class="auth-tab-link" data-switch="login">Entra aqui</a>
+            </p>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div><!-- /auth page -->
+
+
+  <!-- =================== TOAST CONTAINER =================== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Tab switch links inside forms
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('.auth-tab-link');
+      if (!link) return;
+      e.preventDefault();
+      const target = link.dataset.switch;
+      const tabs = document.querySelectorAll('.auth-tab');
+      tabs.forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === target);
+      });
+      document.getElementById('loginForm').classList.toggle('hidden', target !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', target !== 'register');
+    });
+
+    // Mobile nav style
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (max-width: 768px) {
+        #navLinks.mobile-open {
+          display: flex !important;
+          flex-direction: column;
+          position: fixed; top: 70px; left: 0; right: 0;
+          background: rgba(10,10,10,0.97);
+          padding: 16px 24px 24px;
+          border-bottom: 1px solid #1E1E1E;
+          backdrop-filter: blur(16px);
+          gap: 4px;
+          z-index: 999;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>
