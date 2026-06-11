@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +7,6 @@
   <meta name="description" content="CarGuru — Encontra, compara e compra o carro dos teus sonhos." />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
 
   <!-- =================== NAVBAR =================== -->
@@ -36,6 +34,7 @@
       <a href="#" data-nav="conta" class="btn btn-ghost btn-sm">Conta</a>
       <div class="nav-avatar" id="navAvatar" data-nav="dashboard">JD</div>
       <span class="nav-user-name" id="navUserName">João</span>
+      <button class="btn btn-ghost btn-sm nav-admin-only hidden" data-nav="admin">Admin</button>
       <button class="nav-logout" id="logoutBtn">Sair</button>
     </div>
     <button class="nav-hamburger" id="hamburger">☰</button>
@@ -61,8 +60,7 @@
             IDEAL
           </h1>
           <p class="hero-subtitle">
-            O CarGuru é a plataforma que te dá o poder de pesquisar, comparar e decidir com total confiança. Do carro de
-            cidade ao SUV de topo — tudo num só lugar.
+            O CarGuru é a plataforma que te dá o poder de pesquisar, comparar e decidir com total confiança. Do carro de cidade ao SUV de topo — tudo num só lugar.
           </p>
           <div class="hero-cta">
             <a href="#" data-nav="vehicles" class="btn btn-primary btn-lg">
@@ -118,29 +116,17 @@
             <label for="searchMarca">Marca</label>
             <select id="searchMarca">
               <option value="">Todas as marcas</option>
-              <option>BMW</option>
-              <option>Mercedes-Benz</option>
-              <option>Audi</option>
-              <option>Volkswagen</option>
-              <option>Toyota</option>
-              <option>Ford</option>
-              <option>Renault</option>
-              <option>Peugeot</option>
-              <option>Porsche</option>
-              <option>Tesla</option>
+              <option>BMW</option><option>Mercedes-Benz</option><option>Audi</option>
+              <option>Volkswagen</option><option>Toyota</option><option>Ford</option>
+              <option>Renault</option><option>Peugeot</option><option>Porsche</option><option>Tesla</option>
             </select>
           </div>
           <div class="search-field">
             <label for="searchTipo">Tipo de Veículo</label>
             <select id="searchTipo">
               <option value="">Todos os tipos</option>
-              <option>Citadino</option>
-              <option>Berlina</option>
-              <option>SUV</option>
-              <option>Coupé</option>
-              <option>Descapotável</option>
-              <option>Monovolume</option>
-              <option>Elétrico</option>
+              <option>Citadino</option><option>Berlina</option><option>SUV</option>
+              <option>Coupé</option><option>Descapotável</option><option>Monovolume</option><option>Elétrico</option>
             </select>
           </div>
           <div class="search-field">
@@ -161,45 +147,38 @@
       <div class="section-header">
         <div class="section-label">Por que CarGuru?</div>
         <h2 class="section-title">TUDO O QUE PRECISAS</h2>
-        <p class="section-subtitle">Ferramentas profissionais para encontrares e avaliares o teu próximo carro sem
-          stress.</p>
+        <p class="section-subtitle">Ferramentas profissionais para encontrares e avaliares o teu próximo carro sem stress.</p>
       </div>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
           <h3 class="feature-title">Pesquisa Avançada</h3>
-          <p class="feature-desc">Filtra por marca, modelo, ano, preço, combustível e muito mais. Encontra exatamente o
-            que procuras em segundos.</p>
+          <p class="feature-desc">Filtra por marca, modelo, ano, preço, combustível e muito mais. Encontra exatamente o que procuras em segundos.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
           <h3 class="feature-title">Comparador de Modelos</h3>
-          <p class="feature-desc">Compara até 4 veículos lado a lado com dados técnicos detalhados, consumos e
-            avaliações reais de proprietários.</p>
+          <p class="feature-desc">Compara até 4 veículos lado a lado com dados técnicos detalhados, consumos e avaliações reais de proprietários.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">💰</div>
           <h3 class="feature-title">Análise de Preço</h3>
-          <p class="feature-desc">Sabe se o preço pedido é justo. O nosso algoritmo analisa o mercado e diz-te se estás
-            a fazer um bom negócio.</p>
+          <p class="feature-desc">Sabe se o preço pedido é justo. O nosso algoritmo analisa o mercado e diz-te se estás a fazer um bom negócio.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⭐</div>
           <h3 class="feature-title">Reviews Verificadas</h3>
-          <p class="feature-desc">Opiniões reais de proprietários verificados. Sem filtros, sem marketing — só
-            experiências autênticas.</p>
+          <p class="feature-desc">Opiniões reais de proprietários verificados. Sem filtros, sem marketing — só experiências autênticas.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🛡️</div>
           <h3 class="feature-title">Historial do Veículo</h3>
-          <p class="feature-desc">Acede ao historial completo: acidentes, revisões, proprietários anteriores e alertas
-            de segurança.</p>
+          <p class="feature-desc">Acede ao historial completo: acidentes, revisões, proprietários anteriores e alertas de segurança.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⚡</div>
           <h3 class="feature-title">Alertas Personalizados</h3>
-          <p class="feature-desc">Define os teus critérios e recebe uma notificação assim que aparecer um veículo a
-            combinar com o teu perfil.</p>
+          <p class="feature-desc">Define os teus critérios e recebe uma notificação assim que aparecer um veículo a combinar com o teu perfil.</p>
         </div>
       </div>
     </section>
@@ -223,18 +202,13 @@
               <span class="car-spec">📏 <strong>48.000</strong> km</span>
             </div>
             <div class="car-card-footer">
-              <div>
-                <div class="car-price">32.500€</div>
-                <div class="car-price-sub">Preço justo ✔</div>
-              </div>
+              <div><div class="car-price">32.500€</div><div class="car-price-sub">Preço justo ✔</div></div>
               <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
             </div>
           </div>
         </div>
         <div class="car-card">
-          <div class="car-card-img"
-            style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(196,75,0,0.3) 0%, #161616 70%);">
-            🏎️<span class="car-card-badge">NOVO</span></div>
+          <div class="car-card-img" style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(196,75,0,0.3) 0%, #161616 70%);">🏎️<span class="car-card-badge">NOVO</span></div>
           <div class="car-card-body">
             <h3 class="car-card-name">Porsche Macan</h3>
             <p class="car-card-sub">GTS • 2023 • Automático</p>
@@ -244,18 +218,13 @@
               <span class="car-spec">📏 <strong>12.000</strong> km</span>
             </div>
             <div class="car-card-footer">
-              <div>
-                <div class="car-price">89.000€</div>
-                <div class="car-price-sub">Preço premium</div>
-              </div>
+              <div><div class="car-price">89.000€</div><div class="car-price-sub">Preço premium</div></div>
               <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
             </div>
           </div>
         </div>
         <div class="car-card">
-          <div class="car-card-img"
-            style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(232,93,4,0.15) 0%, #161616 70%);">
-            🚙<span class="car-card-badge" style="background:#2ecc71;">ELÉTRICO</span></div>
+          <div class="car-card-img" style="background: radial-gradient(ellipse 70% 60% at 50% 60%, rgba(232,93,4,0.15) 0%, #161616 70%);">🚙<span class="car-card-badge" style="background:#2ecc71;">ELÉTRICO</span></div>
           <div class="car-card-body">
             <h3 class="car-card-name">Tesla Model 3</h3>
             <p class="car-card-sub">Long Range • 2023 • Elétrico</p>
@@ -265,10 +234,7 @@
               <span class="car-spec">📏 <strong>8.000</strong> km</span>
             </div>
             <div class="car-card-footer">
-              <div>
-                <div class="car-price">54.900€</div>
-                <div class="car-price-sub">Preço justo ✔</div>
-              </div>
+              <div><div class="car-price">54.900€</div><div class="car-price-sub">Preço justo ✔</div></div>
               <a href="#" data-nav="auth" class="btn btn-outline btn-sm">Ver Detalhes</a>
             </div>
           </div>
@@ -290,36 +256,27 @@
           <a href="#" data-nav="home" class="nav-logo">
             <div class="nav-logo-icon">🚗</div>Car<span>Guru</span>
           </a>
-          <p class="footer-tagline">A plataforma automóvel mais completa de Portugal. Encontra, compara e decide com
-            confiança.</p>
+          <p class="footer-tagline">A plataforma automóvel mais completa de Portugal. Encontra, compara e decide com confiança.</p>
         </div>
         <div>
           <div class="footer-col-title">Explorar</div>
           <ul class="footer-links">
-            <li><a href="#">Todos os Veículos</a></li>
-            <li><a href="#">Por Marca</a></li>
-            <li><a href="#">Por Tipo</a></li>
-            <li><a href="#">Elétricos</a></li>
-            <li><a href="#">Ofertas</a></li>
+            <li><a href="#">Todos os Veículos</a></li><li><a href="#">Por Marca</a></li>
+            <li><a href="#">Por Tipo</a></li><li><a href="#">Elétricos</a></li><li><a href="#">Ofertas</a></li>
           </ul>
         </div>
         <div>
           <div class="footer-col-title">Empresa</div>
           <ul class="footer-links">
-            <li><a href="#">Sobre Nós</a></li>
-            <li><a href="#">Blog</a></li>
-            <li><a href="#">Carreiras</a></li>
-            <li><a href="#">Imprensa</a></li>
-            <li><a href="#">Contacto</a></li>
+            <li><a href="#">Sobre Nós</a></li><li><a href="#">Blog</a></li>
+            <li><a href="#">Carreiras</a></li><li><a href="#">Imprensa</a></li><li><a href="#">Contacto</a></li>
           </ul>
         </div>
         <div>
           <div class="footer-col-title">Legal</div>
           <ul class="footer-links">
-            <li><a href="#">Privacidade</a></li>
-            <li><a href="#">Termos de Uso</a></li>
-            <li><a href="#">Cookies</a></li>
-            <li><a href="#">RGPD</a></li>
+            <li><a href="#">Privacidade</a></li><li><a href="#">Termos de Uso</a></li>
+            <li><a href="#">Cookies</a></li><li><a href="#">RGPD</a></li>
           </ul>
         </div>
       </div>
@@ -342,24 +299,18 @@
             <div class="auth-logo-text">Car<span>Guru</span></div>
           </div>
           <h2 class="auth-headline">A TUA<br>PRÓXIMA<br><em>VIAGEM</em><br>COMEÇA AQUI</h2>
-          <p class="auth-desc">Cria a tua conta gratuita e acede a análises de preço exclusivas, alertas personalizados
-            e o maior catálogo automóvel online.</p>
+          <p class="auth-desc">Cria a tua conta gratuita e acede a análises de preço exclusivas, alertas personalizados e o maior catálogo automóvel online.</p>
           <div class="auth-trust">
-            <div class="auth-trust-item"><span class="auth-trust-icon">🔒</span><span class="auth-trust-text">100%
-                Seguro</span></div>
-            <div class="auth-trust-item"><span class="auth-trust-icon">⚡</span><span class="auth-trust-text">Rápido e
-                Simples</span></div>
-            <div class="auth-trust-item"><span class="auth-trust-icon">🎁</span><span class="auth-trust-text">Sempre
-                Grátis</span></div>
+            <div class="auth-trust-item"><span class="auth-trust-icon">🔒</span><span class="auth-trust-text">100% Seguro</span></div>
+            <div class="auth-trust-item"><span class="auth-trust-icon">⚡</span><span class="auth-trust-text">Rápido e Simples</span></div>
+            <div class="auth-trust-item"><span class="auth-trust-icon">🎁</span><span class="auth-trust-text">Sempre Grátis</span></div>
           </div>
         </div>
       </div>
       <div class="auth-right">
         <div class="auth-form-wrap">
           <div style="margin-bottom:28px;">
-            <a href="#" data-nav="home"
-              style="font-size:0.82rem;color:var(--grey-text);display:inline-flex;align-items:center;gap:6px;">← Voltar
-              ao início</a>
+            <a href="#" data-nav="home" style="font-size:0.82rem;color:var(--grey-text);display:inline-flex;align-items:center;gap:6px;">← Voltar ao início</a>
           </div>
           <div class="auth-tabs">
             <button class="auth-tab active" data-tab="login">Entrar</button>
@@ -372,16 +323,14 @@
               <label class="form-label" for="loginEmail">Email</label>
               <div class="form-input-wrap">
                 <span class="form-input-icon">✉️</span>
-                <input class="form-input" type="email" id="loginEmail" placeholder="o.teu@email.com"
-                  autocomplete="email" />
+                <input class="form-input" type="email" id="loginEmail" placeholder="o.teu@email.com" autocomplete="email" />
               </div>
             </div>
             <div class="form-group">
               <label class="form-label" for="loginPassword">Password</label>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔑</span>
-                <input class="form-input" type="password" id="loginPassword" placeholder="A tua password"
-                  autocomplete="current-password" />
+                <input class="form-input" type="password" id="loginPassword" placeholder="A tua password" autocomplete="current-password" />
                 <button type="button" class="password-toggle" tabindex="-1">👁️</button>
               </div>
               <div class="form-forgot"><a href="#" id="forgotLink">Esqueceste-te da password?</a></div>
@@ -390,14 +339,12 @@
             <div class="form-divider">ou</div>
             <button type="button" class="btn-social"><span>G</span> Continuar com Google</button>
             <button type="button" class="btn-social"><span>f</span> Continuar com Facebook</button>
-            <p class="auth-footer-note">Não tens conta? <a href="#" class="auth-tab-link"
-                data-switch="register">Regista-te grátis</a></p>
+            <p class="auth-footer-note">Não tens conta? <a href="#" class="auth-tab-link" data-switch="register">Regista-te grátis</a></p>
           </form>
 
           <!-- RECUPERAR PASSWORD -->
           <form class="auth-form hidden" id="forgotForm" onsubmit="return false">
-            <p style="font-size:0.85rem;color:var(--grey-text);margin-bottom:16px;">Insere o teu email e enviaremos
-              instruções para recuperares a password.</p>
+            <p style="font-size:0.85rem;color:var(--grey-text);margin-bottom:16px;">Insere o teu email e enviaremos instruções para recuperares a password.</p>
             <div class="form-group">
               <label class="form-label" for="forgotEmail">Email</label>
               <div class="form-input-wrap">
@@ -406,8 +353,7 @@
               </div>
             </div>
             <button type="button" class="btn-auth" id="forgotSubmit">Enviar Instruções 📧</button>
-            <p class="auth-footer-note" style="margin-top:12px;"><a href="#" id="backToLogin"
-                style="color:var(--grey-text);">← Voltar ao login</a></p>
+            <p class="auth-footer-note" style="margin-top:12px;"><a href="#" id="backToLogin" style="color:var(--grey-text);">← Voltar ao login</a></p>
           </form>
 
           <!-- REGISTER -->
@@ -424,8 +370,7 @@
                 <label class="form-label" for="regEmail">Email</label>
                 <div class="form-input-wrap">
                   <span class="form-input-icon">✉️</span>
-                  <input class="form-input" type="email" id="regEmail" placeholder="email@exemplo.com"
-                    autocomplete="email" />
+                  <input class="form-input" type="email" id="regEmail" placeholder="email@exemplo.com" autocomplete="email" />
                 </div>
               </div>
             </div>
@@ -440,14 +385,11 @@
               <label class="form-label" for="regPassword">Password</label>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔑</span>
-                <input class="form-input" type="password" id="regPassword" placeholder="Mínimo 6 caracteres"
-                  autocomplete="new-password" />
+                <input class="form-input" type="password" id="regPassword" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
                 <button type="button" class="password-toggle" tabindex="-1">👁️</button>
               </div>
               <div class="password-strength">
-                <div class="strength-bar">
-                  <div class="strength-fill" id="strengthFill"></div>
-                </div>
+                <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
                 <div class="strength-text" id="strengthText"></div>
               </div>
             </div>
@@ -455,23 +397,20 @@
               <label class="form-label" for="regConfirm">Confirmar Password</label>
               <div class="form-input-wrap">
                 <span class="form-input-icon">🔒</span>
-                <input class="form-input" type="password" id="regConfirm" placeholder="Repete a password"
-                  autocomplete="new-password" />
+                <input class="form-input" type="password" id="regConfirm" placeholder="Repete a password" autocomplete="new-password" />
                 <button type="button" class="password-toggle" tabindex="-1">👁️</button>
               </div>
             </div>
             <div class="form-check">
               <input type="checkbox" id="regTerms" />
               <label class="form-check-label" for="regTerms">
-                Concordo com os <a href="#">Termos de Uso</a> e com a <a href="#">Política de Privacidade</a> do
-                CarGuru.
+                Concordo com os <a href="#">Termos de Uso</a> e com a <a href="#">Política de Privacidade</a> do CarGuru.
               </label>
             </div>
             <button type="button" class="btn-auth" id="registerSubmit">Criar Conta Gratuita 🚗</button>
             <div class="form-divider">ou</div>
             <button type="button" class="btn-social"><span>G</span> Registar com Google</button>
-            <p class="auth-footer-note">Já tens conta? <a href="#" class="auth-tab-link" data-switch="login">Entra
-                aqui</a></p>
+            <p class="auth-footer-note">Já tens conta? <a href="#" class="auth-tab-link" data-switch="login">Entra aqui</a></p>
           </form>
         </div>
       </div>
@@ -556,49 +495,31 @@
             <label for="fMarca">Marca</label>
             <select id="fMarca">
               <option value="">Todas</option>
-              <option>BMW</option>
-              <option>Mercedes-Benz</option>
-              <option>Audi</option>
-              <option>Volkswagen</option>
-              <option>Toyota</option>
-              <option>Ford</option>
-              <option>Renault</option>
-              <option>Peugeot</option>
-              <option>Porsche</option>
-              <option>Tesla</option>
+              <option>BMW</option><option>Mercedes-Benz</option><option>Audi</option>
+              <option>Volkswagen</option><option>Toyota</option><option>Ford</option>
+              <option>Renault</option><option>Peugeot</option><option>Porsche</option><option>Tesla</option>
             </select>
           </div>
           <div class="filter-field">
             <label for="fCombustivel">Combustível</label>
             <select id="fCombustivel">
               <option value="">Todos</option>
-              <option>Gasolina</option>
-              <option>Gasóleo</option>
-              <option>Elétrico</option>
-              <option>Híbrido</option>
-              <option>GPL</option>
+              <option>Gasolina</option><option>Gasóleo</option><option>Elétrico</option><option>Híbrido</option><option>GPL</option>
             </select>
           </div>
           <div class="filter-field">
             <label for="fTransmissao">Transmissão</label>
             <select id="fTransmissao">
               <option value="">Todas</option>
-              <option>Manual</option>
-              <option>Automático</option>
-              <option>CVT</option>
-              <option>DSG</option>
+              <option>Manual</option><option>Automático</option><option>CVT</option><option>DSG</option>
             </select>
           </div>
           <div class="filter-field">
             <label for="fLocalizacao">Localização</label>
             <select id="fLocalizacao">
               <option value="">Todas</option>
-              <option>Lisboa</option>
-              <option>Porto</option>
-              <option>Braga</option>
-              <option>Coimbra</option>
-              <option>Faro</option>
-              <option>Setúbal</option>
+              <option>Lisboa</option><option>Porto</option><option>Braga</option>
+              <option>Coimbra</option><option>Faro</option><option>Setúbal</option>
             </select>
           </div>
           <div class="filter-field">
@@ -796,16 +717,9 @@
             <label class="form-label">Marca</label>
             <select class="form-input" id="vMarca">
               <option value="">Selecionar...</option>
-              <option>BMW</option>
-              <option>Mercedes-Benz</option>
-              <option>Audi</option>
-              <option>Volkswagen</option>
-              <option>Toyota</option>
-              <option>Ford</option>
-              <option>Renault</option>
-              <option>Peugeot</option>
-              <option>Porsche</option>
-              <option>Tesla</option>
+              <option>BMW</option><option>Mercedes-Benz</option><option>Audi</option>
+              <option>Volkswagen</option><option>Toyota</option><option>Ford</option>
+              <option>Renault</option><option>Peugeot</option><option>Porsche</option><option>Tesla</option>
             </select>
           </div>
           <div class="form-group">
@@ -828,21 +742,14 @@
             <label class="form-label">Combustível</label>
             <select class="form-input" id="vCombustivel">
               <option value="">Selecionar...</option>
-              <option>Gasolina</option>
-              <option>Gasóleo</option>
-              <option>Elétrico</option>
-              <option>Híbrido</option>
-              <option>GPL</option>
+              <option>Gasolina</option><option>Gasóleo</option><option>Elétrico</option><option>Híbrido</option><option>GPL</option>
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Transmissão</label>
             <select class="form-input" id="vTransmissao">
               <option value="">Selecionar...</option>
-              <option>Manual</option>
-              <option>Automático</option>
-              <option>CVT</option>
-              <option>DSG</option>
+              <option>Manual</option><option>Automático</option><option>CVT</option><option>DSG</option>
             </select>
           </div>
         </div>
@@ -870,12 +777,8 @@
           <label class="form-label">Localização</label>
           <select class="form-input" id="vLocalizacao">
             <option value="">Selecionar cidade...</option>
-            <option>Lisboa</option>
-            <option>Porto</option>
-            <option>Braga</option>
-            <option>Coimbra</option>
-            <option>Faro</option>
-            <option>Setúbal</option>
+            <option>Lisboa</option><option>Porto</option><option>Braga</option>
+            <option>Coimbra</option><option>Faro</option><option>Setúbal</option>
           </select>
         </div>
         <input type="hidden" id="vEditId" value="" />
@@ -906,6 +809,204 @@
   </div>
 
 
+
+  <!-- =================== ADMIN PAGE =================== -->
+  <div class="page" id="admin">
+    <div class="admin-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+        <h1 style="font-family:var(--font-display);font-size:2.2rem;letter-spacing:2px;">PAINEL DE <span style="color:var(--orange);">ADMINISTRAÇÃO</span></h1>
+        <span style="font-size:0.8rem;color:var(--grey-text);">🛡️ Acesso restrito — Administrador</span>
+      </div>
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-atab="veiculos-pendentes">🚗 Veículos Pendentes</button>
+        <button class="admin-tab" data-atab="utilizadores">👥 Utilizadores</button>
+        <button class="admin-tab" data-atab="combustivel">⛽ Combustível</button>
+        <button class="admin-tab" data-atab="disputas">⚖️ Disputas</button>
+        <button class="admin-tab" data-atab="historico-global">📋 Histórico Global</button>
+      </div>
+
+      <!-- Veículos pendentes -->
+      <div class="admin-section active" id="aSection-veiculos-pendentes">
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="adminVeiculosTable">
+            <thead><tr>
+              <th>Veículo</th><th>Proprietário</th><th>Localização</th><th>Preço/dia</th><th>Estado</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="adminVeiculosTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Utilizadores -->
+      <div class="admin-section" id="aSection-utilizadores">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr>
+              <th>Nome</th><th>Email</th><th>NIF</th><th>Saldo</th><th>Veículos</th><th>Reservas</th><th>Estado</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="adminUtilizadoresTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Combustível dinâmico -->
+      <div class="admin-section" id="aSection-combustivel">
+        <div style="margin-bottom:20px;">
+          <p style="font-size:0.85rem;color:var(--grey-text);">Define o preço base de cada combustível. O sistema aplica variação aleatória de ±5% a cada 10 minutos.</p>
+          <div style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.3);padding:6px 14px;border-radius:20px;font-size:0.78rem;color:#2ecc71;">
+            <span id="fuelTimerDot" style="width:6px;height:6px;background:#2ecc71;border-radius:50%;display:inline-block;animation:pulse 2s ease infinite;"></span>
+            Próxima atualização: <strong id="fuelCountdown">10:00</strong>
+          </div>
+        </div>
+        <div class="fuel-price-grid" id="fuelPriceGrid"></div>
+      </div>
+
+      <!-- Disputas -->
+      <div class="admin-section" id="aSection-disputas">
+        <div id="adminDisputasList">
+          <div class="dash-empty"><div class="dash-empty-icon">⚖️</div><p>Sem disputas abertas.</p></div>
+        </div>
+      </div>
+
+      <!-- Histórico global -->
+      <div class="admin-section" id="aSection-historico-global">
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+          <div class="filter-field" style="flex:1;min-width:160px;">
+            <label>Data início</label>
+            <input type="date" id="adminHistInicio" class="form-input" />
+          </div>
+          <div class="filter-field" style="flex:1;min-width:160px;">
+            <label>Data fim</label>
+            <input type="date" id="adminHistFim" class="form-input" />
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary btn-sm" id="adminHistFilter">Filtrar</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr>
+              <th>ID</th><th>Veículo</th><th>Locatário</th><th>Início</th><th>Fim</th><th>Total</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="adminHistTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- /admin -->
+
+
+  <!-- =================== MODAL KM INICIAL (CAR-14) =================== -->
+  <div class="modal-overlay hidden" id="kmInicialModal">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <div class="modal-title">Registo de KM Inicial</div>
+        <button class="modal-close" id="kmInicialClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="km-modal-info">📍 Regista a quilometragem do veículo no início do aluguer.</div>
+        <div class="form-group">
+          <label class="form-label">Reserva</label>
+          <input class="form-input" type="text" id="kmInicialReservaInfo" disabled />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quilometragem inicial (km)</label>
+          <input class="form-input" type="number" id="kmInicialValor" placeholder="Ex: 48250" min="0" />
+        </div>
+        <input type="hidden" id="kmInicialReservaId" />
+        <button class="btn-auth" id="kmInicialConfirm" style="margin-top:16px;">Confirmar KM Inicial 📍</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL KM FINAL + LIQUIDAÇÃO (CAR-18) =================== -->
+  <div class="modal-overlay hidden" id="kmFinalModal">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title">Devolução &amp; Liquidação</div>
+        <button class="modal-close" id="kmFinalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="km-modal-info">🏁 Regista a km final para calcular o custo do combustível.</div>
+        <div class="form-group">
+          <label class="form-label">KM inicial registado</label>
+          <input class="form-input" type="text" id="kmFinalInicialInfo" disabled />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quilometragem final (km)</label>
+          <input class="form-input" type="number" id="kmFinalValor" placeholder="Ex: 48750" min="0" />
+        </div>
+        <div class="km-summary" id="kmFinalSummary" style="display:none;">
+          <div class="km-summary-row"><span>KMs percorridos</span><span id="kfKms">—</span></div>
+          <div class="km-summary-row"><span>Renda</span><span id="kfRenda">—</span></div>
+          <div class="km-summary-row"><span>Combustível</span><span id="kfCombustivel">—</span></div>
+          <div class="km-summary-row"><span>Caução devolvida</span><span id="kfCaucao">—</span></div>
+          <div class="km-summary-row"><span>Total a cobrar</span><span id="kfTotal">—</span></div>
+        </div>
+        <input type="hidden" id="kmFinalReservaId" />
+        <button class="btn-auth" id="kmFinalConfirm" style="margin-top:16px;">Finalizar Aluguer 🏁</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL AVALIAÇÃO (CAR-25) =================== -->
+  <div class="modal-overlay hidden" id="avaliacaoModal">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-header">
+        <div class="modal-title">Avaliar Aluguer ⭐</div>
+        <button class="modal-close" id="avaliacaoClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;color:var(--grey-text);margin-bottom:20px;" id="avaliacaoDesc">
+          Como foi a tua experiência com este aluguer?
+        </p>
+        <div class="form-group">
+          <label class="form-label">Classificação</label>
+          <div class="star-rating" id="starRating">
+            <button class="star-btn" data-star="1">⭐</button>
+            <button class="star-btn" data-star="2">⭐</button>
+            <button class="star-btn" data-star="3">⭐</button>
+            <button class="star-btn" data-star="4">⭐</button>
+            <button class="star-btn" data-star="5">⭐</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Comentário (opcional)</label>
+          <textarea class="form-input" id="avaliacaoComentario" rows="3" placeholder="Partilha a tua experiência..." style="resize:vertical;"></textarea>
+        </div>
+        <input type="hidden" id="avaliacaoReservaId" />
+        <button class="btn-auth" id="avaliacaoConfirm" style="margin-top:16px;">Submeter Avaliação ⭐</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== MODAL INDISPONIBILIDADE (CAR-16) =================== -->
+  <div class="modal-overlay hidden" id="indispModal">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title">Período de Indisponibilidade</div>
+        <button class="modal-close" id="indispClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;color:var(--grey-text);margin-bottom:16px;" id="indispVeiculoInfo">Veículo</p>
+        <div class="reserva-form-grid">
+          <div class="form-group">
+            <label class="form-label">Data início</label>
+            <input class="form-input" type="date" id="indispInicio" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data fim</label>
+            <input class="form-input" type="date" id="indispFim" />
+          </div>
+        </div>
+        <input type="hidden" id="indispVeiculoId" />
+        <button class="btn-auth" id="indispConfirm" style="margin-top:14px;">Adicionar Período</button>
+        <div class="modal-section-title" style="margin-top:20px;">Períodos registados</div>
+        <div class="indisp-list" id="indispList"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- =================== TOAST =================== -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -920,7 +1021,7 @@
       document.querySelectorAll('.auth-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === target);
       });
-      ['loginForm', 'registerForm', 'forgotForm'].forEach(id => {
+      ['loginForm','registerForm','forgotForm'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById(target === 'login' ? 'loginForm' : 'registerForm').classList.remove('hidden');
@@ -931,5 +1032,4 @@
     document.head.appendChild(style);
   </script>
 </body>
-
 </html>
