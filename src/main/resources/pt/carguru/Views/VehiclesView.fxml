@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.VehiclesController"
+            styleClass="root-bg" prefWidth="1100" prefHeight="700">
+  <top>
+    <VBox>
+      <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+        <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+        <Label text="🚗 CarGuru" styleClass="nav-brand"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+        <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas"/>
+        <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+        <Button text="Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+        <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+      </HBox>
+      <!-- Filtros -->
+      <HBox spacing="12" styleClass="filter-bar" alignment="CENTER_LEFT">
+        <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+        <Label text="Marca:" styleClass="form-label"/>
+        <TextField fx:id="fMarca" promptText="Ex: Toyota" styleClass="filter-input"/>
+        <Label text="Combustível:" styleClass="form-label"/>
+        <ComboBox fx:id="fCombustivel" styleClass="filter-combo"/>
+        <Label text="Transmissão:" styleClass="form-label"/>
+        <ComboBox fx:id="fTransmissao" styleClass="filter-combo"/>
+        <Label text="Local:" styleClass="form-label"/>
+        <TextField fx:id="fLocalizacao" promptText="Ex: Lisboa" styleClass="filter-input"/>
+        <Label text="Preço máx (€):" styleClass="form-label"/>
+        <TextField fx:id="fPrecoMax" promptText="Ex: 100" styleClass="filter-input" prefWidth="80"/>
+        <Button text="🔍 Pesquisar" styleClass="btn-primary" onAction="#carregarVeiculos"/>
+      </HBox>
+    </VBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <FlowPane fx:id="vehiclesGrid" hgap="16" vgap="16" styleClass="vehicles-grid">
+        <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+      </FlowPane>
+    </ScrollPane>
+  </center>
+</BorderPane>

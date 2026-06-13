@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.AuthController"
+            styleClass="root-bg" prefWidth="900" prefHeight="600">
+
+  <center>
+    <VBox alignment="CENTER" spacing="0" styleClass="auth-container">
+
+      <!-- Logo -->
+      <HBox alignment="CENTER" styleClass="auth-logo-row">
+        <Label text="🚗" styleClass="logo-icon"/>
+        <Label text="CarGuru" styleClass="logo-full"/>
+      </HBox>
+      <Label text="CarGuru" styleClass="logo-full" visible="false"/>
+
+      <TabPane fx:id="tabPane" styleClass="auth-tabpane" tabClosingPolicy="UNAVAILABLE">
+
+        <!-- Tab Login -->
+        <Tab text="Entrar">
+          <VBox spacing="14" styleClass="auth-form" alignment="TOP_CENTER">
+            <padding><Insets top="24" right="40" bottom="24" left="40"/></padding>
+            <Label text="Email:" styleClass="form-label"/>
+            <TextField fx:id="loginEmail" promptText="o.teu@email.com" styleClass="form-input"/>
+            <Label text="Password:" styleClass="form-label"/>
+            <PasswordField fx:id="loginPassword" promptText="A tua password" styleClass="form-input"/>
+            <Label fx:id="loginErro" styleClass="error-label" wrapText="true"/>
+            <Button text="Entrar na Conta →" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleLogin"/>
+          </VBox>
+        </Tab>
+
+        <!-- Tab Registo -->
+        <Tab text="Criar Conta">
+          <ScrollPane fitToWidth="true">
+            <VBox spacing="12" styleClass="auth-form" alignment="TOP_CENTER">
+              <padding><Insets top="20" right="40" bottom="20" left="40"/></padding>
+              <Label text="Nome Completo:" styleClass="form-label"/>
+              <TextField fx:id="regNome" promptText="O teu nome" styleClass="form-input"/>
+              <Label text="Email:" styleClass="form-label"/>
+              <TextField fx:id="regEmail" promptText="email@exemplo.com" styleClass="form-input"/>
+              <Label text="NIF:" styleClass="form-label"/>
+              <TextField fx:id="regNif" promptText="Ex: 123456789" styleClass="form-input"/>
+              <Label text="Password:" styleClass="form-label"/>
+              <PasswordField fx:id="regPassword" promptText="Mínimo 6 caracteres" styleClass="form-input"/>
+              <Label text="Confirmar Password:" styleClass="form-label"/>
+              <PasswordField fx:id="regConfirm" promptText="Repete a password" styleClass="form-input"/>
+              <Label fx:id="regErro" styleClass="error-label" wrapText="true"/>
+              <Button text="Criar Conta Gratuita 🚗" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleRegisto"/>
+            </VBox>
+          </ScrollPane>
+        </Tab>
+
+        <!-- Tab Recuperar Password -->
+        <Tab text="Recuperar Password">
+          <VBox spacing="14" styleClass="auth-form" alignment="TOP_CENTER">
+            <padding><Insets top="24" right="40" bottom="24" left="40"/></padding>
+            <Label text="Insere o teu email para recuperar a password." wrapText="true" styleClass="form-label"/>
+            <Label text="Email:" styleClass="form-label"/>
+            <TextField fx:id="forgotEmail" promptText="o.teu@email.com" styleClass="form-input"/>
+            <Label fx:id="forgotMensagem" wrapText="true" styleClass="form-label"/>
+            <Button text="Enviar Instruções 📧" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleRecuperarPassword"/>
+          </VBox>
+        </Tab>
+
+      </TabPane>
+    </VBox>
+  </center>
+</BorderPane>

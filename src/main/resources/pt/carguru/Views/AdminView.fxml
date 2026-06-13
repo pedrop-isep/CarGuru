@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.AdminController"
+            styleClass="root-bg" prefWidth="1200" prefHeight="750">
+  <top>
+    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+      <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+      <Label text="🚗 CarGuru" styleClass="nav-brand"/>
+      <Label text="🛡️ Admin" styleClass="nav-admin-badge"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+      <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+      <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+      <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+    </HBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox spacing="24" styleClass="page-content">
+        <padding><Insets top="28" right="40" bottom="28" left="40"/></padding>
+        <Label text="🛡️ Painel de Administração" styleClass="page-title"/>
+
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+
+          <Tab text="🚗 Veículos Pendentes">
+            <ScrollPane fitToWidth="true">
+              <VBox fx:id="veiculosPendentesList" spacing="8">
+                <padding><Insets top="16" right="0" bottom="16" left="0"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
+          <Tab text="👥 Utilizadores">
+            <ScrollPane fitToWidth="true">
+              <VBox fx:id="utilizadoresList" spacing="8">
+                <padding><Insets top="16" right="0" bottom="16" left="0"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
+          <Tab text="📋 Histórico Global">
+            <ScrollPane fitToWidth="true">
+              <VBox fx:id="historicoList" spacing="6">
+                <padding><Insets top="16" right="0" bottom="16" left="0"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
+        </TabPane>
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

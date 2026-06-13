@@ -1,0 +1,312 @@
+/* ===== CarGuru JavaFX Stylesheet — inspirado no Sprint 3 HTML ===== */
+
+/* ----- Base ----- */
+.root-bg {
+    -fx-background-color: #0d0d0d;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.main-scroll {
+    -fx-background-color: transparent;
+    -fx-background: #0d0d0d;
+}
+.main-scroll > .viewport { -fx-background-color: transparent; }
+
+.page-content { -fx-background-color: #0d0d0d; }
+
+/* ----- Navbar ----- */
+.navbar {
+    -fx-background-color: rgba(13,13,13,0.97);
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 0 0 1 0;
+}
+.nav-brand {
+    -fx-font-size: 1.3em;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 0 16 0 0;
+}
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #aaa;
+    -fx-font-size: 0.88em;
+    -fx-cursor: hand;
+    -fx-padding: 6 14 6 14;
+    -fx-background-radius: 8;
+}
+.nav-btn:hover { -fx-background-color: rgba(255,255,255,0.07); -fx-text-fill: white; }
+.nav-admin { -fx-text-fill: #ff6a00; }
+.nav-logout { -fx-text-fill: #e74c3c; }
+.nav-admin-badge {
+    -fx-background-color: rgba(255,106,0,0.15);
+    -fx-text-fill: #ff6a00;
+    -fx-font-size: 0.75em;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 20;
+}
+
+/* ----- Page Title ----- */
+.page-title {
+    -fx-font-size: 1.9em;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-letter-spacing: 2px;
+}
+
+/* ----- Auth ----- */
+.auth-container {
+    -fx-max-width: 480;
+    -fx-background-color: #161616;
+    -fx-background-radius: 18;
+    -fx-padding: 36 0 36 0;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 30, 0, 0, 10);
+}
+.auth-logo-row { -fx-padding: 0 0 20 0; }
+.logo-icon { -fx-font-size: 2em; }
+.logo-full { -fx-font-size: 1.8em; -fx-font-weight: bold; -fx-text-fill: white; }
+.logo-text { -fx-font-size: 1.6em; -fx-font-weight: bold; -fx-text-fill: white; }
+.logo-accent { -fx-text-fill: #ff6a00; }
+
+.auth-tabpane { -fx-tab-min-width: 140; }
+.auth-tabpane .tab-header-area .tab-header-background { -fx-background-color: #1e1e1e; }
+.auth-tabpane .tab { -fx-background-color: #1e1e1e; -fx-text-base-color: #aaa; }
+.auth-tabpane .tab:selected { -fx-background-color: #ff6a00; -fx-text-base-color: white; }
+.auth-tabpane .tab-content-area { -fx-background-color: #161616; }
+
+.auth-form { -fx-background-color: transparent; }
+
+/* ----- Form controls ----- */
+.form-label { -fx-text-fill: #ccc; -fx-font-size: 0.85em; }
+.form-input {
+    -fx-background-color: #242424;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #666;
+    -fx-padding: 10 14 10 14;
+}
+.form-input:focused { -fx-border-color: #ff6a00; }
+
+.filter-input {
+    -fx-background-color: #242424;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #666;
+    -fx-padding: 8 12 8 12;
+    -fx-pref-width: 130;
+}
+.filter-combo {
+    -fx-background-color: #242424;
+    -fx-border-color: rgba(255,255,255,0.1);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: white;
+    -fx-pref-width: 130;
+}
+.filter-combo .list-cell { -fx-background-color: #242424; -fx-text-fill: white; }
+
+.error-label { -fx-text-fill: #e74c3c; -fx-font-size: 0.82em; }
+
+/* ----- Buttons ----- */
+.btn-auth {
+    -fx-background-color: #ff6a00;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 0.95em;
+    -fx-padding: 12 0 12 0;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+}
+.btn-auth:hover { -fx-background-color: #e05500; }
+
+.btn-primary {
+    -fx-background-color: #ff6a00;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 0.88em;
+    -fx-padding: 8 18 8 18;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+.btn-primary:hover { -fx-background-color: #e05500; }
+
+.btn-outline-sm {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.2);
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #ccc;
+    -fx-font-size: 0.82em;
+    -fx-padding: 5 12 5 12;
+    -fx-cursor: hand;
+}
+.btn-outline-sm:hover { -fx-border-color: #ff6a00; -fx-text-fill: #ff6a00; }
+
+.btn-depositar {
+    -fx-background-color: rgba(46,204,113,0.15);
+    -fx-border-color: rgba(46,204,113,0.4);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #2ecc71;
+    -fx-font-weight: bold;
+    -fx-padding: 10 0 10 0;
+    -fx-cursor: hand;
+}
+.btn-depositar:hover { -fx-background-color: rgba(46,204,113,0.25); }
+
+.btn-levantar {
+    -fx-background-color: rgba(231,76,60,0.12);
+    -fx-border-color: rgba(231,76,60,0.35);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #e74c3c;
+    -fx-font-weight: bold;
+    -fx-padding: 10 0 10 0;
+    -fx-cursor: hand;
+}
+.btn-levantar:hover { -fx-background-color: rgba(231,76,60,0.22); }
+
+/* ----- Dashboard Stats ----- */
+.stat-card {
+    -fx-background-color: #161616;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+    -fx-alignment: CENTER;
+    -fx-spacing: 6;
+}
+.stat-icon { -fx-font-size: 1.8em; }
+.stat-val { -fx-font-size: 2em; -fx-font-weight: bold; -fx-text-fill: white; }
+.stat-label { -fx-font-size: 0.8em; -fx-text-fill: #aaa; }
+
+/* ----- Dashboard Cards ----- */
+.dash-card {
+    -fx-background-color: #161616;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+    -fx-spacing: 12;
+}
+.dash-card-title { -fx-font-size: 1em; -fx-font-weight: bold; -fx-text-fill: white; }
+.dash-item { -fx-text-fill: #ccc; -fx-font-size: 0.88em; -fx-padding: 6 0 6 0; }
+
+/* ----- Vehicle Cards ----- */
+.vehicles-grid { -fx-background-color: transparent; }
+.vehicle-card {
+    -fx-background-color: #161616;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 18;
+    -fx-spacing: 8;
+}
+.vehicle-card:hover { -fx-border-color: rgba(255,106,0,0.4); }
+.card-title { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 1em; }
+.vehicle-card .label { -fx-text-fill: #aaa; -fx-font-size: 0.86em; }
+
+/* ----- Filter bar ----- */
+.filter-bar {
+    -fx-background-color: #111;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 0 0 1 0;
+}
+
+/* ----- Conta ----- */
+.conta-header {
+    -fx-background-color: #161616;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+}
+.conta-avatar {
+    -fx-background-color: #ff6a00;
+    -fx-background-radius: 50;
+    -fx-text-fill: white;
+    -fx-font-size: 1.4em;
+    -fx-font-weight: bold;
+    -fx-min-width: 60;
+    -fx-min-height: 60;
+    -fx-max-width: 60;
+    -fx-max-height: 60;
+    -fx-alignment: center;
+    -fx-padding: 0;
+}
+.conta-name { -fx-font-size: 1.3em; -fx-font-weight: bold; -fx-text-fill: white; }
+.conta-email { -fx-font-size: 0.9em; -fx-text-fill: #aaa; }
+.conta-role { -fx-font-size: 0.82em; -fx-text-fill: #ff6a00; }
+
+.conta-card {
+    -fx-background-color: #161616;
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+}
+.conta-card-title { -fx-font-size: 1em; -fx-font-weight: bold; -fx-text-fill: white; }
+.saldo-val { -fx-font-size: 2.2em; -fx-font-weight: bold; -fx-text-fill: white; }
+
+.veiculo-row {
+    -fx-background-color: #1e1e1e;
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+.veiculo-row .label { -fx-text-fill: #ccc; -fx-font-size: 0.88em; }
+
+/* ----- Reservas ----- */
+.reservas-tabs .tab-header-background { -fx-background-color: #161616; }
+.reservas-tabs .tab { -fx-background-color: #1e1e1e; -fx-text-base-color: #aaa; }
+.reservas-tabs .tab:selected { -fx-background-color: #ff6a00; -fx-text-base-color: white; }
+.reservas-tabs .tab-content-area { -fx-background-color: transparent; }
+
+.reserva-card {
+    -fx-background-color: #161616;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+.reserva-card .label { -fx-text-fill: #ccc; }
+
+/* ----- Admin ----- */
+.admin-row {
+    -fx-background-color: #1e1e1e;
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-text-fill: #ccc;
+    -fx-font-size: 0.88em;
+}
+
+/* ----- Separators ----- */
+.separator .line { -fx-border-color: rgba(255,255,255,0.08); }
+
+/* ----- Scrollbar ----- */
+.scroll-bar { -fx-background-color: #111; }
+.scroll-bar .thumb { -fx-background-color: #333; -fx-background-radius: 4; }
+.scroll-bar .track { -fx-background-color: transparent; }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-background-color: transparent; -fx-padding: 0; }
+
+/* ----- Dialogs ----- */
+.dialog-pane { -fx-background-color: #1e1e1e; }
+.dialog-pane .label { -fx-text-fill: #ccc; }
+.dialog-pane .header-panel { -fx-background-color: #161616; }
+.dialog-pane .content.label { -fx-text-fill: white; }
+.dialog-pane .button-bar .button { -fx-background-color: #ff6a00; -fx-text-fill: white; -fx-background-radius: 8; }
+.dialog-pane .button-bar .button.cancel-button { -fx-background-color: #333; }

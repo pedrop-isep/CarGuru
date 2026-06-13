@@ -1,191 +1,132 @@
-# 🚗 Plataforma de Aluguer de Veículos entre Particulares
+# 🚗 CarGuru — JavaFX Desktop App
 
-Aplicação desktop desenvolvida em **Java** com interface gráfica (GUI) para gestão de aluguer de veículos entre particulares em regime **self-service** (sem condutor). Qualquer utilizador pode anunciar os seus próprios veículos para aluguer, bem como pesquisar, reservar e alugar veículos de outros utilizadores.
-
-> Trabalho Prático 2 — LP2
-
----
-
-## 📋 Índice
-
-- [Funcionalidades](#-funcionalidades)
-- [Requisitos](#-requisitos)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Como Executar](#-como-executar)
-- [Algoritmos Implementados](#-algoritmos-implementados)
-- [Base de Dados](#-base-de-dados)
-- [Extras Implementados](#-extras-implementados)
-
----
-
-## ✨ Funcionalidades
-
-### 👤 Gestão de Utilizadores
-- Registo com email, nome, NIF, carta de condução e password (com hashing)
-- Login / Logout
-- Recuperação de password
-- Cada utilizador pode ser simultaneamente **proprietário** e **locatário**
-
-### 🔍 Consulta de Veículos
-- Listagem de veículos disponíveis com marca, modelo, ano, combustível, consumo, preço/dia, localização e avaliação média
-- Consulta detalhada: fotos, especificações técnicas, avaliações e histórico de alugueres
-- Filtros por marca, preço, localização, transmissão, combustível, lotação e datas
-- **Filtro "kms previstos"**: ordena por custo total estimado (renda + combustível)
-- Preço dinâmico: +20% fins de semana, +30% época alta, -10% para ≥ 7 dias
-
-### 💼 Conta Pessoal
-- Saldo em conta com depósito e levantamento de fundos
-- Gestão de veículos próprios (adicionar, editar, remover)
-- Calendário de indisponibilidade por veículo
-- Histórico de alugueres como locatário e como proprietário
-- Histórico completo de transações
-
-### 📅 Reservas e Alugueres
-- Pedido de reserva com datas de início e fim
-- Proprietário tem **24h** para aceitar ou rejeitar; expiração automática
-- Sem sobreposição de reservas confirmadas para o mesmo veículo
-- **Caução de 20%** sobre o custo total estimado (devolvida no fim sem incidentes)
-- Custo final = renda + combustível efetivo (com base em km inicial/final)
-- Cancelamento até **48h antes** do início com reembolso parcial
-- Avaliação mútua (1-5 estrelas + comentário) após devolução
-
-### 🖥️ Interface Gráfica
-- Painéis distintos: Login, Dashboard, Procurar Veículos, Conta, As Minhas Reservas
-- Mensagens de erro e confirmação amigáveis
-- Feedback visual (loadings, confirmações, etc.)
-
-### 🔧 Administração
-- Dois perfis: administradores e utilizadores
-- Validação e bloqueio de anúncios de veículos
-- Gestão de preços de combustível por tipo (gasolina, gasóleo, GPL, elétrico)
-- Variação aleatória automática do preço a cada 10 minutos
-- Registo do preço corrente em BD hora a hora
-- Resolução de disputas entre proprietários e locatários
-- Histórico de alugueres com filtragem por período
-- Bloqueio de utilizadores com comportamento abusivo
-
----
-
-## 🛠️ Requisitos
-
-- **Java** 17 ou superior
-- **Maven** ou **Gradle** (conforme configuração do projeto)
-- Base de dados relacional (ex: SQLite, PostgreSQL ou MySQL)
-- IDE recomendada: IntelliJ IDEA ou Eclipse
+Plataforma de aluguer peer-to-peer de veículos entre particulares.
+Migração do frontend Sprint 3 (HTML/CSS/JS) para JavaFX com backend Java completo.
 
 ---
 
 ## 📁 Estrutura do Projeto
 
 ```
-src/
-├── main/
-│   ├── java/
-│   │   ├── model/          # Entidades (Utilizador, Veiculo, Reserva, ...)
-│   │   ├── dao/            # Acesso à base de dados
-│   │   ├── service/        # Lógica de negócio
-│   │   ├── ui/             # Painéis e componentes gráficos (Swing/JavaFX)
-│   │   └── util/           # Utilitários (hashing, datas, preços, ...)
-│   └── resources/
-│       └── db/             # Scripts SQL de inicialização
-└── test/                   # Testes unitários
+src/main/
+├── java/pt/carguru/
+│   ├── App.java                        ← Entry point (JavaFX Application)
+│   ├── Models/
+│   │   ├── User.java                   ← Utilizador (id, nome, email, role, saldo…)
+│   │   ├── Veiculo.java                ← Veículo (marca, modelo, preco, estado…)
+│   │   ├── Reserva.java                ← Reserva (datas, total, km, avaliação…)
+│   │   └── Indisponibilidade.java      ← Períodos de indisponibilidade
+│   ├── Repositories/
+│   │   ├── UserRepository.java         ← CRUD utilizadores
+│   │   ├── VeiculoRepository.java      ← CRUD + filtros de pesquisa
+│   │   ├── ReservaRepository.java      ← CRUD + validação sobreposição
+│   │   └── IndisponibilidadeRepository.java
+│   ├── Services/
+│   │   ├── AuthService.java            ← Login, Registo, Recuperação password
+│   │   ├── UserService.java            ← Perfil, Saldo, Admin gestão users
+│   │   ├── VeiculoService.java         ← Adicionar/Editar/Remover/Aprovar veículos
+│   │   └── ReservaService.java         ← Criar/Aprovar/Cancelar/Km/Liquidar/Avaliar
+│   ├── Controllers/
+│   │   ├── AuthController.java         ← Login + Registo + Recuperar Password
+│   │   ├── DashboardController.java    ← Vista principal após login
+│   │   ├── VehiclesController.java     ← Pesquisa e reserva de veículos
+│   │   ├── ContaController.java        ← Perfil + Saldo + Gestão de veículos próprios
+│   │   ├── ReservasController.java     ← Reservas como locatário e proprietário
+│   │   └── AdminController.java        ← Painel admin (veículos, utilizadores, histórico)
+│   └── Utils/
+│       ├── DatabaseConnection.java     ← Singleton JDBC MySQL
+│       ├── PasswordHasher.java         ← BCrypt hash/verify
+│       └── Session.java                ← Utilizador autenticado em memória
+└── resources/pt/carguru/
+    ├── Views/
+    │   ├── LoginView.fxml
+    │   ├── DashboardView.fxml
+    │   ├── VehiclesView.fxml
+    │   ├── ContaView.fxml
+    │   ├── ReservasView.fxml
+    │   └── AdminView.fxml
+    ├── css/style.css                   ← Dark theme inspirado no Sprint 3
+    └── schema.sql                      ← Script criação BD MySQL
 ```
 
 ---
 
-## ▶️ Como Executar
+## 🗃️ Base de Dados — Setup
 
-1. Clona o repositório:
-   ```bash
-   git clone https://github.com/<utilizador>/<repositorio>.git
-   cd <repositorio>
-   ```
+1. Instalar **MySQL 8+**
+2. Executar o script SQL:
+```sql
+mysql -u root -p < src/main/resources/schema.sql
+```
+3. Confirmar em `DatabaseConnection.java` as credenciais:
+```java
+private static final String URL      = "jdbc:mysql://localhost:3306/carguru";
+private static final String USER     = "root";
+private static final String PASSWORD = "";
+```
 
-2. Compila o projeto:
-   ```bash
-   mvn clean install
-   # ou
-   gradle build
-   ```
-
-3. Inicializa a base de dados executando os scripts em `src/main/resources/db/`.
-
-4. Executa a aplicação:
-   ```bash
-   mvn exec:java -Dexec.mainClass="Main"
-   # ou
-   java -jar target/<nome>.jar
-   ```
+### Conta Admin pré-criada
+| Campo    | Valor              |
+|----------|--------------------|
+| Email    | admin@carguru.pt   |
+| Password | admin123           |
+| Role     | admin              |
 
 ---
 
-## ⚙️ Algoritmos Implementados
+## ▶️ Executar
 
-### Preço Dinâmico
-```
-preço_efetivo = preço_base_dia
-    × (1.20 se fim de semana)
-    × (1.30 se época alta: Julho, Agosto, Natal)
-    × (0.90 se duração ≥ 7 dias)
+### Via Maven (recomendado)
+```bash
+mvn javafx:run
 ```
 
-### Custo Total Estimado (com kms previstos)
-```
-custo_total = (n_dias × preço_dia_dinâmico)
-            + (kms_previstos / 100 × consumo × preço_combustível_corrente)
-```
-
-### Custo Final do Aluguer
-```
-renda      = n_dias × preço/dia dinâmico
-combustível = ((km_final − km_inicial) / 100) × consumo × preço_combustível_no_fim
-custo_total = renda + combustível
+### Compilar JAR
+```bash
+mvn package
+java -jar target/carguru-1.0-SNAPSHOT.jar
 ```
 
-### Caução
-```
-caução = 20% × (renda + combustível_estimado)
-# combustível estimado usa 200 km/dia por defeito se não houver histórico
-```
-
-### Variação do Preço de Combustível
-O preço corrente varia automaticamente a cada **10 minutos** com base num algoritmo de variação aleatória em torno do preço base definido pelo administrador. O preço é registado na base de dados **hora a hora**.
+> **Nota**: É necessário Java 17+ com JavaFX 17. Se o JDK não incluir JavaFX, o plugin Maven trata disso automaticamente.
 
 ---
 
-## 🗄️ Base de Dados
+## ✅ Funcionalidades implementadas (Sprint 1 + 2)
 
-Principais tabelas:
+### Sprint 1 — Base da plataforma
+| ID      | Funcionalidade                          | Implementado em           |
+|---------|-----------------------------------------|---------------------------|
+| CAR-11  | Login                                   | AuthService + AuthController |
+| CAR-6   | Registo de utilizador                   | AuthService + AuthController |
+| CAR-17  | Logout                                  | Session.clear() em todas as vistas |
+| CAR-23  | Recuperação de password                 | AuthService + AuthController |
+| CAR-44  | Perfil dual (proprietário/locatário)    | UserService + ContaController |
+| CAR-28  | Gestão de perfil pessoal                | UserService + ContaController |
+| CAR-9   | Adicionar veículo                       | VeiculoService + ContaController |
+| CAR-13  | Editar veículo                          | VeiculoService + ContaController |
+| CAR-15  | Remover veículo                         | VeiculoService + ContaController |
+| CAR-16  | Definir período de indisponibilidade    | VeiculoService + ContaController |
 
-| Tabela | Descrição |
-|---|---|
-| `utilizadores` | Dados dos utilizadores registados |
-| `veiculos` | Anúncios de veículos disponíveis |
-| `reservas` | Pedidos e alugueres (com estado) |
-| `transacoes` | Movimentos de saldo em conta |
-| `avaliacoes` | Avaliações entre locatário e proprietário |
-| `precos_combustivel` | Histórico de preços por tipo de combustível |
-| `indisponibilidades` | Calendário de indisponibilidade por veículo |
+### Sprint 2 — Pesquisa e Reservas
+| ID      | Funcionalidade                          | Implementado em           |
+|---------|-----------------------------------------|---------------------------|
+| CAR-20  | Listagem de veículos disponíveis        | VeiculoService + VehiclesController |
+| CAR-26  | Detalhe do veículo                      | Modal em VehiclesController |
+| CAR-22  | Filtros de pesquisa avançados           | VeiculoRepository.findAprovados() |
+| CAR-24  | Filtro de custo total estimado          | Cálculo no modal de reserva |
+| CAR-8   | Pedido de reserva                       | ReservaService.criarReserva() |
+| CAR-10  | Aprovação de reserva pelo proprietário  | ReservaService.aprovarReserva() |
+| CAR-12  | Validação de sobreposição de reservas   | ReservaRepository.existeSobreposicao() |
+| CAR-21  | Cancelamento de reserva                 | ReservaService.cancelarReserva() |
+| CAR-14  | Registo de quilometragem inicial        | ReservaService.registarKmInicial() |
+| CAR-18  | Registo de km final e liquidação        | ReservaService.registarKmFinalELiquidar() |
 
 ---
 
-## ⭐ Extras Implementados
+## 🎨 Design
 
-- **Notificações por e-mail**: alerta de reserva aceite, lembrete de início e de devolução
-- **Exportação CSV**: histórico de alugueres exportável
-- **Dashboard estatístico**: gráficos de rendimento mensal por veículo e distribuição geográfica das reservas
-
----
-
-## 👥 Autores
-
-| Nome | Número |
-|---|---|
-| ... | ... |
-| ... | ... |
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para fins académicos no âmbito da unidade curricular **LP2**.
+Dark theme inspirado no Sprint 3 HTML/CSS:
+- Fundo `#0d0d0d`, cards `#161616`, inputs `#242424`
+- Accent laranja `#ff6a00`
+- Tipografia `Segoe UI` / sans-serif
+- Estilo definido em `src/main/resources/pt/carguru/css/style.css`

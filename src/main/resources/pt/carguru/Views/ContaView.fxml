@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.ContaController"
+            styleClass="root-bg" prefWidth="1100" prefHeight="700">
+  <top>
+    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+      <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+      <Label text="🚗 CarGuru" styleClass="nav-brand"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+      <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+      <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas"/>
+      <Button text="Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+      <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+    </HBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox spacing="20" styleClass="page-content">
+        <padding><Insets top="28" right="40" bottom="28" left="40"/></padding>
+
+        <!-- Header perfil -->
+        <HBox spacing="20" alignment="CENTER_LEFT" styleClass="conta-header">
+          <Label fx:id="avatarLabel" text="??" styleClass="conta-avatar"/>
+          <VBox spacing="4">
+            <Label fx:id="nomeLabel" text="Nome" styleClass="conta-name"/>
+            <Label fx:id="emailLabel" text="email" styleClass="conta-email"/>
+            <Label text="🚗 Proprietário &amp; Locatário" styleClass="conta-role"/>
+          </VBox>
+        </HBox>
+
+        <HBox spacing="20">
+          <!-- Saldo -->
+          <VBox styleClass="conta-card" spacing="12" HBox.hgrow="ALWAYS">
+            <Label text="💶 Saldo em Conta" styleClass="conta-card-title"/>
+            <Label fx:id="saldoLabel" text="0€" styleClass="saldo-val"/>
+            <HBox spacing="10">
+              <Button text="+ Depositar" styleClass="btn-depositar" onAction="#handleDepositar" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+              <Button text="- Levantar" styleClass="btn-levantar" onAction="#handleLevantar" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            </HBox>
+          </VBox>
+
+          <!-- Perfil pessoal -->
+          <VBox styleClass="conta-card" spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="👤 Perfil Pessoal" styleClass="conta-card-title"/>
+            <Label text="Nome completo:" styleClass="form-label"/>
+            <TextField fx:id="perfilNome" styleClass="form-input"/>
+            <Label text="Email (não editável):" styleClass="form-label"/>
+            <TextField fx:id="perfilEmail" styleClass="form-input" disable="true"/>
+            <Label text="NIF:" styleClass="form-label"/>
+            <TextField fx:id="perfilNif" styleClass="form-input"/>
+            <Label fx:id="perfilErro" styleClass="error-label" wrapText="true"/>
+            <Button text="Guardar alterações" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleGuardarPerfil"/>
+          </VBox>
+        </HBox>
+
+        <!-- Veículos -->
+        <VBox styleClass="conta-card" spacing="12">
+          <HBox alignment="CENTER_LEFT">
+            <Label text="🚗 Os meus veículos" styleClass="conta-card-title" HBox.hgrow="ALWAYS"/>
+            <Button text="+ Adicionar" styleClass="btn-primary" onAction="#handleAdicionarVeiculo"/>
+          </HBox>
+          <VBox fx:id="veiculosList" spacing="8"/>
+        </VBox>
+
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

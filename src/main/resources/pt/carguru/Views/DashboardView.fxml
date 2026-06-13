@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.DashboardController"
+            styleClass="root-bg" prefWidth="1100" prefHeight="700">
+
+  <top>
+    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+      <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+      <Label text="🚗 CarGuru" styleClass="nav-brand"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+      <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas"/>
+      <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+      <Button text="Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+      <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+    </HBox>
+  </top>
+
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox spacing="24" styleClass="page-content">
+        <padding><Insets top="32" right="40" bottom="32" left="40"/></padding>
+
+        <Label fx:id="nomeLabel" styleClass="page-title" text="BEM-VINDO!"/>
+
+        <!-- Stats row -->
+        <HBox spacing="16">
+          <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+            <Label text="🚗" styleClass="stat-icon"/>
+            <Label fx:id="totalVeiculosLabel" text="0" styleClass="stat-val"/>
+            <Label text="Os meus veículos" styleClass="stat-label"/>
+          </VBox>
+          <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+            <Label text="📅" styleClass="stat-icon"/>
+            <Label fx:id="reservasAtivasLabel" text="0" styleClass="stat-val"/>
+            <Label text="Reservas ativas" styleClass="stat-label"/>
+          </VBox>
+          <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" alignment="CENTER">
+            <Label text="💶" styleClass="stat-icon"/>
+            <Label fx:id="saldoLabel" text="0€" styleClass="stat-val"/>
+            <Label text="Saldo em conta" styleClass="stat-label"/>
+          </VBox>
+        </HBox>
+
+        <!-- Cards grid -->
+        <HBox spacing="20">
+          <VBox styleClass="dash-card" HBox.hgrow="ALWAYS" spacing="12">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+              <Label text="🚗 Os meus veículos" styleClass="dash-card-title" HBox.hgrow="ALWAYS"/>
+              <Button text="Gerir" styleClass="btn-outline-sm" onAction="#irParaConta"/>
+            </HBox>
+            <Separator/>
+            <VBox fx:id="veiculosBox" spacing="6"/>
+          </VBox>
+          <VBox styleClass="dash-card" HBox.hgrow="ALWAYS" spacing="12">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+              <Label text="📅 Últimas reservas" styleClass="dash-card-title" HBox.hgrow="ALWAYS"/>
+              <Button text="Ver todas" styleClass="btn-outline-sm" onAction="#irParaReservas"/>
+            </HBox>
+            <Separator/>
+            <VBox fx:id="reservasBox" spacing="6"/>
+          </VBox>
+        </HBox>
+
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.ReservasController"
+            styleClass="root-bg" prefWidth="1100" prefHeight="700">
+  <top>
+    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+      <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+      <Label text="🚗 CarGuru" styleClass="nav-brand"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+      <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+      <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+      <Button text="Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+      <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+    </HBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox spacing="20" styleClass="page-content">
+        <padding><Insets top="28" right="40" bottom="28" left="40"/></padding>
+        <Label text="📅 As minhas Reservas" styleClass="page-title"/>
+
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE" styleClass="reservas-tabs">
+          <Tab text="Como Locatário (Aluguei)">
+            <ScrollPane fitToWidth="true">
+              <VBox fx:id="reservasLocatarioList" spacing="12">
+                <padding><Insets top="16" right="0" bottom="16" left="0"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+          <Tab text="Como Proprietário (Meus veículos)">
+            <ScrollPane fitToWidth="true">
+              <VBox fx:id="reservasProprietarioList" spacing="12">
+                <padding><Insets top="16" right="0" bottom="16" left="0"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+        </TabPane>
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>
