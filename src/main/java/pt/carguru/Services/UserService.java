@@ -52,7 +52,7 @@ public class UserService {
     /** Admin: suspender/reativar utilizador */
     public void toggleAtivo(int userId) throws SQLException {
         User user = userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilizador não encontrado."));
-        user.setAtivo(!user.isAtivo());
+        user.setBloqueado(!user.isBloqueado());
         userRepo.update(user);
     }
 }
