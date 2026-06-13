@@ -36,7 +36,8 @@ src/main/
 │   └── Utils/
 │       ├── DatabaseConnection.java     ← Singleton JDBC MySQL
 │       ├── PasswordHasher.java         ← BCrypt hash/verify
-│       └── Session.java                ← Utilizador autenticado em memória
+│       ├── Session.java                ← Utilizador autenticado em memória
+│       └── EmailSender.java            ← Token de recuperação enviado via e-mail
 └── resources/pt/carguru/
     ├── Views/
     │   ├── LoginView.fxml
