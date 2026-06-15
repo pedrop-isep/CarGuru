@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.VehiclesController"
+            styleClass="root-bg" prefWidth="1200" prefHeight="760">
+  <top>
+    <VBox>
+      <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="4">
+        <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+        <Label text="🚗 Car" styleClass="nav-brand"/>
+        <Label text="Guru" styleClass="nav-brand" style="-fx-text-fill:#dc2626;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+        <Button text="Veículos" styleClass="nav-btn nav-btn-active" disable="true" style="-fx-opacity:1;"/>
+        <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas"/>
+        <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+        <Button fx:id="btnAdmin" text="🛡️ Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+        <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+      </HBox>
+      <!-- Barra de filtros -->
+      <HBox styleClass="filter-bar" spacing="10" alignment="CENTER_LEFT">
+        <padding><Insets top="10" right="24" bottom="10" left="24"/></padding>
+        <Label text="🔍" style="-fx-text-fill:#888;"/>
+        <TextField fx:id="fMarca" promptText="Marca ou modelo" styleClass="filter-input" prefWidth="140"/>
+        <ComboBox fx:id="fCombustivel" promptText="Combustível" styleClass="filter-combo" prefWidth="130"/>
+        <ComboBox fx:id="fTransmissao" promptText="Transmissão" styleClass="filter-combo" prefWidth="120"/>
+        <TextField fx:id="fLocalizacao" promptText="Cidade / Distrito" styleClass="filter-input" prefWidth="140"/>
+        <TextField fx:id="fPrecoMax" promptText="Preço máx. (€)" styleClass="filter-input" prefWidth="120"/>
+        <Button text="Pesquisar" styleClass="btn-primary" onAction="#carregarVeiculos"/>
+        <Button text="Limpar" styleClass="btn-secondary" onAction="#initialize"/>
+      </HBox>
+    </VBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox styleClass="page-content">
+        <padding><Insets top="24" right="32" bottom="32" left="32"/></padding>
+        <FlowPane fx:id="vehiclesGrid" hgap="16" vgap="16" styleClass="vehicles-grid"/>
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

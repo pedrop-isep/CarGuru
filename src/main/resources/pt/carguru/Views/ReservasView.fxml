@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.ReservasController"
+            styleClass="root-bg" prefWidth="1200" prefHeight="760">
+  <top>
+    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="4">
+      <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+      <Label text="🚗 Car" styleClass="nav-brand"/>
+      <Label text="Guru" styleClass="nav-brand" style="-fx-text-fill:#dc2626;"/>
+      <Region HBox.hgrow="ALWAYS"/>
+      <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+      <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+      <Button text="Reservas" styleClass="nav-btn nav-btn-active" disable="true" style="-fx-opacity:1;"/>
+      <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+      <Button fx:id="btnAdmin" text="🛡️ Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+      <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+    </HBox>
+  </top>
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox spacing="24" styleClass="page-content">
+        <padding><Insets top="28" right="40" bottom="28" left="40"/></padding>
+        <Label text="📅 As minhas reservas" styleClass="page-title"/>
+        <TabPane styleClass="reservas-tabs" tabClosingPolicy="UNAVAILABLE">
+          <!-- Locatário -->
+          <Tab text="Como Locatário">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="500">
+              <VBox fx:id="reservasLocatarioList" spacing="12">
+                <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+          <!-- Proprietário -->
+          <Tab text="Como Proprietário">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="500">
+              <VBox fx:id="reservasProprietarioList" spacing="12">
+                <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+        </TabPane>
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>
