@@ -5,15 +5,18 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import pt.carguru.App;
 import pt.carguru.Models.Indisponibilidade;
 import pt.carguru.Models.Veiculo;
+import pt.carguru.Repositories.VeiculoRepository;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.Session;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -24,6 +27,8 @@ public class VehiclesController {
     @FXML private ComboBox<String> fTransmissao;
     @FXML private TextField fLocalizacao;
     @FXML private TextField fPrecoMax;
+    @FXML private DatePicker fDataInicio;
+    @FXML private DatePicker fDataFim;
     @FXML private FlowPane vehiclesGrid;
     @FXML private Button btnAdmin;
 
@@ -41,14 +46,23 @@ public class VehiclesController {
     @FXML
     public void carregarVeiculos() {
         try {
-            String marca = fMarca.getText();
-            String comb  = fCombustivel.getValue();
-            String trans = fTransmissao.getValue();
-            String loc   = fLocalizacao.getText();
+            String marca    = fMarca.getText();
+            String comb     = fCombustivel.getValue();
+            String trans    = fTransmissao.getValue();
+            String loc      = fLocalizacao.getText();
             double precoMax = 0;
             try { precoMax = Double.parseDouble(fPrecoMax.getText()); } catch (Exception ignored) {}
 
-            List<Veiculo> veiculos = veiculoService.pesquisarVeiculos(marca, comb, trans, loc, precoMax);
+            LocalDate dInicio = fDataInicio != null ? fDataInicio.getValue() : null;
+            LocalDate dFim    = fDataFim    != null ? fDataFim.getValue()    : null;
+
+            List<Veiculo> veiculos;
+            if (dInicio != null && dFim != null && dFim.isAfter(dInicio)) {
+                veiculos = veiculoService.pesquisarDisponiveisPorDatas(marca, comb, trans, loc, precoMax, dInicio, dFim);
+            } else {
+                veiculos = veiculoService.pesquisarVeiculos(marca, comb, trans, loc, precoMax);
+            }
+
             vehiclesGrid.getChildren().clear();
 
             if (veiculos.isEmpty()) {
@@ -63,20 +77,39 @@ public class VehiclesController {
         } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
     }
 
+    @FXML
+    public void limparFiltros() {
+        fMarca.clear();
+        fCombustivel.setValue("");
+        fTransmissao.setValue("");
+        fLocalizacao.clear();
+        fPrecoMax.clear();
+        if (fDataInicio != null) fDataInicio.setValue(null);
+        if (fDataFim    != null) fDataFim.setValue(null);
+        carregarVeiculos();
+    }
+
     private VBox criarCardVeiculo(Veiculo v) {
         VBox card = new VBox(0);
         card.getStyleClass().add("vehicle-card");
         card.setPrefWidth(248);
 
-        String emojiFuel = switch (v.getCombustivel() != null ? v.getCombustivel().toUpperCase() : "") {
-            case "ELETRICO" -> "⚡";
-            case "GPL"      -> "🔵";
-            default         -> "🚗";
-        };
-        Label photo = new Label(emojiFuel);
-        photo.getStyleClass().add("vehicle-photo-placeholder");
-        photo.setMaxWidth(Double.MAX_VALUE);
-        photo.setAlignment(Pos.CENTER);
+        // Imagem ou placeholder emoji
+        File imgFile = new File(VeiculoRepository.resolverPathImagem(v.getId()));
+        if (imgFile.exists()) {
+            try {
+                ImageView iv = new ImageView(new Image(imgFile.toURI().toString()));
+                iv.setFitWidth(248);
+                iv.setFitHeight(148);
+                iv.setPreserveRatio(false);
+                iv.setStyle("-fx-background-radius: 12 12 0 0;");
+                card.getChildren().add(iv);
+            } catch (Exception ex) {
+                card.getChildren().add(buildEmojiPlaceholder(v));
+            }
+        } else {
+            card.getChildren().add(buildEmojiPlaceholder(v));
+        }
 
         VBox body = new VBox(6);
         body.setPadding(new Insets(12, 12, 4, 12));
@@ -92,7 +125,7 @@ public class VehiclesController {
         preco.getStyleClass().add("card-price");
 
         HBox badges = new HBox(6);
-        Label badgeFuel = new Label(v.getCombustivel() != null ? v.getCombustivel() : "-");
+        Label badgeFuel  = new Label(v.getCombustivel() != null ? v.getCombustivel() : "-");
         badgeFuel.getStyleClass().addAll("badge", "badge-fuel");
         Label badgeTrans = new Label(v.getTransmissao() != null ? v.getTransmissao() : "-");
         badgeTrans.getStyleClass().addAll("badge", "badge-trans");
@@ -109,8 +142,21 @@ public class VehiclesController {
         VBox.setMargin(btnDetalhes, new Insets(8, 12, 12, 12));
         btnDetalhes.setOnAction(e -> abrirModalDetalhes(v));
 
-        card.getChildren().addAll(photo, body, btnDetalhes);
+        card.getChildren().addAll(body, btnDetalhes);
         return card;
+    }
+
+    private Label buildEmojiPlaceholder(Veiculo v) {
+        String emojiFuel = switch (v.getCombustivel() != null ? v.getCombustivel().toUpperCase() : "") {
+            case "ELETRICO" -> "⚡";
+            case "GPL"      -> "🔵";
+            default         -> "🚗";
+        };
+        Label photo = new Label(emojiFuel);
+        photo.getStyleClass().add("vehicle-photo-placeholder");
+        photo.setMaxWidth(Double.MAX_VALUE);
+        photo.setAlignment(Pos.CENTER);
+        return photo;
     }
 
     private void abrirModalDetalhes(Veiculo v) {
@@ -120,6 +166,20 @@ public class VehiclesController {
         // Detalhes lado esquerdo
         VBox detalhes = new VBox(10);
         detalhes.setPrefWidth(280);
+
+        // Imagem no topo do modal
+        File imgFile = new File(VeiculoRepository.resolverPathImagem(v.getId()));
+        if (imgFile.exists()) {
+            try {
+                ImageView iv = new ImageView(new Image(imgFile.toURI().toString()));
+                iv.setFitWidth(270);
+                iv.setFitHeight(160);
+                iv.setPreserveRatio(false);
+                iv.setStyle("-fx-background-radius: 10;");
+                detalhes.getChildren().add(iv);
+            } catch (Exception ignored) {}
+        }
+
         detalhes.getChildren().addAll(
             detalhe("🚗 Veículo",       v.getMarca() + " " + v.getModelo() + " " + v.getAno()),
             detalhe("⛽ Combustível",   v.getCombustivel()),
@@ -141,41 +201,6 @@ public class VehiclesController {
 
         Label lblReserva = new Label("📅 Fazer Reserva");
         lblReserva.getStyleClass().add("conta-card-title");
-
-        Label lblInicio = new Label("Data de início:");
-        lblInicio.getStyleClass().add("form-label");
-        DatePicker dpInicio = new DatePicker(LocalDate.now().plusDays(1));
-
-        Label lblFim = new Label("Data de fim:");
-        lblFim.getStyleClass().add("form-label");
-        DatePicker dpFim = new DatePicker(LocalDate.now().plusDays(3));
-
-        Label totalLabel = new Label();
-        totalLabel.getStyleClass().add("reserva-total");
-
-        Runnable calcTotal = () -> {
-            if (dpInicio.getValue() != null && dpFim.getValue() != null
-                    && dpFim.getValue().isAfter(dpInicio.getValue())) {
-                long dias = ChronoUnit.DAYS.between(dpInicio.getValue(), dpFim.getValue());
-                totalLabel.setText(String.format("Total: %.2f€  (%d dias)", dias * v.getPrecoPorDia(), dias));
-            } else {
-                totalLabel.setText("Datas inválidas");
-            }
-        };
-        dpInicio.setOnAction(e -> calcTotal.run());
-        dpFim.setOnAction(e -> calcTotal.run());
-        calcTotal.run();
-
-        Button btnReservar = new Button("Solicitar Reserva →");
-        btnReservar.getStyleClass().add("btn-primary");
-        btnReservar.setMaxWidth(Double.MAX_VALUE);
-        btnReservar.setOnAction(e -> {
-            try {
-                reservaService.criarReserva(v.getId(), dpInicio.getValue(), dpFim.getValue());
-                dialog.close();
-                DialogHelper.sucesso("Reserva submetida!\nAguarda aprovação do proprietário.");
-            } catch (Exception ex) { DialogHelper.erro(ex.getMessage()); }
-        });
 
         // Secção de indisponibilidades
         VBox indispBox = new VBox(6);
@@ -205,17 +230,60 @@ public class VehiclesController {
             indispBox.getChildren().add(errLabel);
         }
 
-        reservaBox.getChildren().addAll(lblReserva, indispBox, new Separator(), lblInicio, dpInicio, lblFim, dpFim, totalLabel, btnReservar);
+        Label lblInicio = new Label("Data de início:");
+        lblInicio.getStyleClass().add("form-label");
+        LocalDate defaultInicio = (fDataInicio != null && fDataInicio.getValue() != null)
+            ? fDataInicio.getValue() : LocalDate.now().plusDays(1);
+        DatePicker dpInicio = new DatePicker(defaultInicio);
+
+        Label lblFim = new Label("Data de fim:");
+        lblFim.getStyleClass().add("form-label");
+        LocalDate defaultFim = (fDataFim != null && fDataFim.getValue() != null)
+            ? fDataFim.getValue() : defaultInicio.plusDays(2);
+        DatePicker dpFim = new DatePicker(defaultFim);
+
+        Label totalLabel = new Label();
+        totalLabel.getStyleClass().add("reserva-total");
+
+        Runnable calcTotal = () -> {
+            if (dpInicio.getValue() != null && dpFim.getValue() != null
+                    && dpFim.getValue().isAfter(dpInicio.getValue())) {
+                long dias = ChronoUnit.DAYS.between(dpInicio.getValue(), dpFim.getValue());
+                totalLabel.setText(String.format("Total: %.2f€  (%d dias)", dias * v.getPrecoPorDia(), dias));
+            } else {
+                totalLabel.setText("Datas inválidas");
+            }
+        };
+        dpInicio.setOnAction(e -> calcTotal.run());
+        dpFim.setOnAction(e -> calcTotal.run());
+        calcTotal.run();
+
+        Button btnReservar = new Button("Solicitar Reserva →");
+        btnReservar.getStyleClass().add("btn-primary");
+        btnReservar.setMaxWidth(Double.MAX_VALUE);
+        btnReservar.setOnAction(e -> {
+            try {
+                reservaService.criarReserva(v.getId(), dpInicio.getValue(), dpFim.getValue());
+                dialog.close();
+                DialogHelper.sucesso("Reserva submetida!\nAguarda aprovação do proprietário.");
+            } catch (Exception ex) { DialogHelper.erro(ex.getMessage()); }
+        });
+
+        reservaBox.getChildren().addAll(lblReserva, indispBox, new Separator(),
+            lblInicio, dpInicio, lblFim, dpFim, totalLabel, btnReservar);
 
         HBox layout = new HBox(24, detalhes, new Separator(Orientation.VERTICAL), reservaBox);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-background-color: #141414;");
 
-        dialog.getDialogPane().setContent(layout);
+        ScrollPane sp = new ScrollPane(layout);
+        sp.setFitToWidth(true);
+        sp.setPrefHeight(560);
+        sp.setStyle("-fx-background-color: #141414; -fx-background: #141414;");
+
+        dialog.getDialogPane().setContent(sp);
         dialog.getDialogPane().setStyle("-fx-background-color: #141414;");
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        // Aplicar CSS dark theme
         DialogHelper.estilizar(dialog);
         dialog.showAndWait();
     }
@@ -229,6 +297,7 @@ public class VehiclesController {
         return new VBox(2, lbl, val);
     }
 
+    @FXML public void irParaHome()      { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void irParaReservas()  { App.navigateTo("Reservas"); }

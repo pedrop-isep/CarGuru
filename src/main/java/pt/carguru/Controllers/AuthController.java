@@ -46,7 +46,7 @@ public class AuthController {
         limparErros();
         try {
             authService.login(loginEmail.getText(), loginPassword.getText());
-            App.navigateTo("Dashboard");
+            App.navigateTo("Home");
         } catch (Exception e) { loginErro.setText(e.getMessage()); }
     }
 
@@ -57,7 +57,7 @@ public class AuthController {
             LocalDate validade = regValidadeCarta.getValue();
             authService.registar(regNome.getText(), regEmail.getText(), regPassword.getText(),
                 regConfirmPassword.getText(), regNif.getText(), regCarta.getText(), validade);
-            App.navigateTo("Dashboard");
+            App.navigateTo("Home");
         } catch (Exception e) { regErro.setText(e.getMessage()); }
     }
 

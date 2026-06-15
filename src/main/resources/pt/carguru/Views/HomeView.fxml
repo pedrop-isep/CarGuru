@@ -8,16 +8,29 @@
             fx:controller="pt.carguru.Controllers.HomeController"
             styleClass="root-bg" prefWidth="1200" prefHeight="760">
 
-  <!-- Navbar pública -->
   <top>
-    <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
-      <padding><Insets top="12" right="28" bottom="12" left="28"/></padding>
-      <Label text="🚗 Car" styleClass="nav-brand"/>
-      <Label text="Guru" styleClass="nav-brand" style="-fx-text-fill:#dc2626;"/>
-      <Region HBox.hgrow="ALWAYS"/>
-      <Button text="Entrar" styleClass="btn-outline-sm" onAction="#irParaLogin"/>
-      <Button text="Registar" styleClass="btn-primary" onAction="#irParaRegisto"/>
-    </HBox>
+    <VBox>
+      <!-- Navbar pública (não autenticado) -->
+      <HBox fx:id="navPublica" styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+        <padding><Insets top="12" right="28" bottom="12" left="28"/></padding>
+        <Button text="🚗 CarGuru" styleClass="nav-brand-btn" onAction="#irParaHome"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Entrar" styleClass="btn-outline-sm" onAction="#irParaLogin"/>
+        <Button text="Registar" styleClass="btn-primary" onAction="#irParaRegisto"/>
+      </HBox>
+      <!-- Navbar autenticado -->
+      <HBox fx:id="navAutenticada" styleClass="navbar" alignment="CENTER_LEFT" spacing="4" visible="false" managed="false">
+        <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+        <Button text="🚗 CarGuru" styleClass="nav-brand-btn" onAction="#irParaHome"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
+        <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
+        <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas"/>
+        <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
+        <Button fx:id="btnAdmin" text="🛡️ Admin" styleClass="nav-btn nav-admin" onAction="#irParaAdmin"/>
+        <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
+      </HBox>
+    </VBox>
   </top>
 
   <center>
@@ -26,13 +39,13 @@
 
         <!-- Hero -->
         <VBox styleClass="hero-section" spacing="20" alignment="CENTER">
-          <padding><Insets top="80" right="60" bottom="70" left="60"/></padding>
+          <padding><Insets top="70" right="60" bottom="60" left="60"/></padding>
           <Label text="🚗" style="-fx-font-size:4em;"/>
           <Label styleClass="hero-title" text="Aluga. Partilha. Poupa." wrapText="true" maxWidth="600" style="-fx-alignment:CENTER;"/>
           <Label styleClass="hero-subtitle" text="A plataforma peer-to-peer de aluguer de veículos entre particulares. Encontra o carro perfeito ou rentabiliza o teu." wrapText="true" maxWidth="520" style="-fx-alignment:CENTER;"/>
           <HBox spacing="14" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
-            <Button text="Explorar Veículos →" styleClass="hero-cta" onAction="#irParaLogin"/>
-            <Button text="Anunciar o meu carro" styleClass="hero-cta-outline" onAction="#irParaRegisto"/>
+            <Button text="Explorar Veículos →" styleClass="hero-cta" onAction="#irParaVeiculos"/>
+            <Button text="Anunciar o meu carro" styleClass="hero-cta-outline" onAction="#irParaAnunciar"/>
           </HBox>
         </VBox>
 

@@ -8,14 +8,13 @@
   <top>
     <HBox styleClass="navbar" alignment="CENTER_LEFT" spacing="4">
       <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
-      <Label text="🚗 Car" styleClass="nav-brand"/>
-      <Label text="Guru" styleClass="nav-brand" style="-fx-text-fill:#dc2626;"/>
+      <Button text="🚗 CarGuru" styleClass="nav-brand-btn" onAction="#irParaHome"/>
       <Label text="  🛡️ Painel Admin" style="-fx-text-fill:#dc2626; -fx-font-size:0.85em;"/>
       <Region HBox.hgrow="ALWAYS"/>
       <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard"/>
       <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos"/>
       <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta"/>
-      <Button text="🛡️ Admin" styleClass="nav-btn nav-btn-active" disable="true" style="-fx-opacity:1;"/>
+      <Button text="🛡️ Admin" styleClass="nav-btn nav-btn-active"/>
       <Button text="Logout" styleClass="nav-btn nav-logout" onAction="#logout"/>
     </HBox>
   </top>

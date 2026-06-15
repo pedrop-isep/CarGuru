@@ -69,6 +69,13 @@ public class VeiculoService {
         return indispRepo.findByVeiculo(veiculoId);
     }
 
+    public List<Veiculo> pesquisarDisponiveisPorDatas(String marca, String combustivel, String transmissao,
+            String localizacao, double precoMax, LocalDate dataInicio, LocalDate dataFim) throws SQLException {
+        if (dataInicio == null || dataFim == null || !dataFim.isAfter(dataInicio))
+            throw new IllegalArgumentException("Datas inválidas para pesquisa.");
+        return veiculoRepo.findDisponiveisPorDatas(marca, combustivel, transmissao, localizacao, precoMax, dataInicio, dataFim);
+    }
+
     public List<Veiculo> pesquisarVeiculos(String marca, String combustivel, String transmissao,
                                             String localizacao, double precoMax) throws SQLException {
         return veiculoRepo.findAprovados(marca, combustivel, transmissao, localizacao, precoMax);

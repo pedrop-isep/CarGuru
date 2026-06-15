@@ -138,6 +138,51 @@ public class VeiculoRepository {
         return list;
     }
 
+    public List<Veiculo> findDisponiveisPorDatas(String marca, String combustivel, String transmissao,
+            String localizacao, double precoMax, java.time.LocalDate dataInicio, java.time.LocalDate dataFim) throws SQLException {
+        List<Veiculo> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id " +
+            "WHERE v.estado='DISPONIVEL' AND v.validado=1 " +
+            // Sem indisponibilidade que sobreponha as datas
+            "AND NOT EXISTS (SELECT 1 FROM indisponibilidades i WHERE i.veiculo_id=v.id AND i.data_inicio < ? AND i.data_fim > ?) " +
+            // Sem reserva ACEITE/CONFIRMADA que sobreponha as datas
+            "AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.veiculo_id=v.id AND r.estado IN ('ACEITE','confirmada','CONFIRMADA') AND r.data_inicio < ? AND r.data_fim > ?)");
+        List<Object> params = new ArrayList<>();
+        params.add(Date.valueOf(dataFim));
+        params.add(Date.valueOf(dataInicio));
+        params.add(Date.valueOf(dataFim));
+        params.add(Date.valueOf(dataInicio));
+        if (marca != null && !marca.isBlank()) {
+            sql.append(" AND (v.marca LIKE ? OR v.modelo LIKE ?)");
+            params.add("%" + marca + "%"); params.add("%" + marca + "%");
+        }
+        if (combustivel != null && !combustivel.isBlank()) {
+            sql.append(" AND v.tipo_combustivel=?"); params.add(combustivel.toUpperCase());
+        }
+        if (transmissao != null && !transmissao.isBlank()) {
+            sql.append(" AND v.tipo_transmissao=?"); params.add(transmissao.toUpperCase());
+        }
+        if (localizacao != null && !localizacao.isBlank()) {
+            sql.append(" AND (v.cidade LIKE ? OR v.distrito LIKE ?)");
+            params.add("%" + localizacao + "%"); params.add("%" + localizacao + "%");
+        }
+        if (precoMax > 0) { sql.append(" AND v.preco_dia_base<=?"); params.add(precoMax); }
+        sql.append(" ORDER BY v.avaliacao_media DESC, v.preco_dia_base ASC");
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                Object p = params.get(i);
+                if (p instanceof String) ps.setString(i + 1, (String) p);
+                else if (p instanceof Double) ps.setDouble(i + 1, (Double) p);
+                else if (p instanceof Date) ps.setDate(i + 1, (Date) p);
+            }
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
     public List<Veiculo> findAll() throws SQLException {
         List<Veiculo> list = new ArrayList<>();
         String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado!='REMOVIDO' ORDER BY v.data_criacao DESC";
@@ -175,7 +220,13 @@ public class VeiculoRepository {
         v.setNAvaliacoes(rs.getInt("n_avaliacoes"));
         Timestamp dc = rs.getTimestamp("data_criacao");
         if (dc != null) v.setDataCriacao(dc.toLocalDateTime().toLocalDate());
+        // Imagem guardada localmente como ficheiro, path derivado do id
         return v;
+    }
+
+    /** Utilitário: devolve o caminho local da imagem dum veículo (se existir) */
+    public static String resolverPathImagem(int veiculoId) {
+        return System.getProperty("user.home") + "/.carguru/veiculo_" + veiculoId + ".jpg";
     }
 
     private String normCombustivel(String c) {

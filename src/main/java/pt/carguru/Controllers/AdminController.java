@@ -150,11 +150,7 @@ public class AdminController {
                     });
                     btns.getChildren().add(btnToggle);
 
-                    // Adicionar/Remover saldo com confirmação
-                    Button btnSaldo = new Button("💶 Gerir Saldo");
-                    btnSaldo.getStyleClass().add("btn-secondary");
-                    btnSaldo.setOnAction(e -> gerirSaldoAdmin(u));
-                    btns.getChildren().add(btnSaldo);
+
                 } else {
                     Label youLabel = new Label("(Tu próprio — admin não pode suspender-se)");
                     youLabel.getStyleClass().add("conta-email");
@@ -167,50 +163,6 @@ public class AdminController {
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
-    private void gerirSaldoAdmin(User u) {
-        Dialog<ButtonType> dlg = new Dialog<>();
-        dlg.setTitle("Gerir Saldo — " + u.getNome());
-
-        ComboBox<String> acao = new ComboBox<>();
-        acao.getItems().addAll("Adicionar saldo", "Remover saldo");
-        acao.setValue("Adicionar saldo");
-        TextField valorField = new TextField();
-        valorField.setPromptText("Valor em €");
-        Label saldoAtual = new Label("Saldo atual: " + String.format("%.2f€", u.getSaldo()));
-
-        VBox content = new VBox(10, saldoAtual, new Label("Ação:"), acao,
-            new Label("Valor (€):"), valorField);
-        content.setPadding(new Insets(16));
-        dlg.getDialogPane().setContent(content);
-        dlg.getDialogPane().setStyle("-fx-background-color: #141414;");
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        DialogHelper.estilizar(dlg);
-
-        dlg.showAndWait().ifPresent(bt -> {
-            if (bt == ButtonType.OK) {
-                try {
-                    double valor = Double.parseDouble(valorField.getText().replace(",", "."));
-                    if (valor <= 0) { mostrarErro("Valor tem de ser positivo."); return; }
-                    String acaoStr = acao.getValue();
-                    Optional<ButtonType> conf = confirmar("Confirmar operação de saldo",
-                        acaoStr + " de " + String.format("%.2f€", valor) + " à conta de " + u.getNome() + ".\n\nConfirmas?");
-                    if (conf.isPresent() && conf.get() == ButtonType.YES) {
-                        if ("Adicionar saldo".equals(acaoStr)) {
-                            userService.adicionarSaldoAdmin(u.getId(), valor);
-                        } else {
-                            userService.removerSaldoAdmin(u.getId(), valor);
-                        }
-                        carregarUtilizadores();
-                        mostrarSucesso("Saldo atualizado com sucesso!");
-                    }
-                } catch (NumberFormatException ex) {
-                    mostrarErro("Valor inválido.");
-                } catch (Exception ex) {
-                    mostrarErro(ex.getMessage());
-                }
-            }
-        });
-    }
 
     private void carregarHistorico() {
         try {
@@ -249,6 +201,7 @@ public class AdminController {
         return a.showAndWait();
     }
 
+    @FXML public void irParaHome()     { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }

@@ -208,6 +208,7 @@ public class ReservasController {
         return a.showAndWait().filter(b -> b == ButtonType.YES).isPresent();
     }
 
+    @FXML public void irParaHome()     { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }

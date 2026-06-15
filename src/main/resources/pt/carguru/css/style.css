@@ -21,23 +21,82 @@
     -fx-font-weight: bold;
     -fx-text-fill: white;
     -fx-padding: 0 2 0 0;
-    -fx-letter-spacing: 1px;
 }
 .nav-brand-accent { -fx-text-fill: #dc2626; }
+
+/* Logo clicável */
+.nav-brand-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 1.18em;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 6 14 6 4;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.nav-brand-btn:hover {
+    -fx-text-fill: #ef4444;
+}
+
+/* Botão de navegação base */
 .nav-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #999;
-    -fx-font-size: 0.87em;
+    -fx-font-size: 0.86em;
+    -fx-font-weight: normal;
     -fx-cursor: hand;
-    -fx-padding: 7 16 7 16;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
+    -fx-padding: 7 15 7 15;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
 }
-.nav-btn:hover { -fx-background-color: rgba(255,255,255,0.06); -fx-text-fill: white; }
-.nav-btn-active { -fx-background-color: rgba(220,38,38,0.15); -fx-text-fill: #ef4444; }
-.nav-admin { -fx-text-fill: #dc2626; }
-.nav-logout { -fx-text-fill: #888; }
-.nav-logout:hover { -fx-text-fill: #ef4444; -fx-background-color: rgba(220,38,38,0.1); }
+.nav-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-text-fill: #e5e5e5;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.12) transparent;
+}
+
+/* Página activa — linha vermelha em baixo + texto branco forte */
+.nav-btn-active {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent transparent #dc2626 transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 7 15 7 15;
+}
+.nav-btn-active:disabled {
+    -fx-opacity: 1;
+}
+
+/* Admin */
+.nav-admin {
+    -fx-text-fill: #ef4444;
+}
+.nav-admin:hover {
+    -fx-background-color: rgba(220,38,38,0.1);
+    -fx-text-fill: #f87171;
+    -fx-border-color: transparent transparent rgba(220,38,38,0.5) transparent;
+}
+
+/* Logout */
+.nav-logout {
+    -fx-text-fill: #666;
+    -fx-background-color: rgba(255,255,255,0.03);
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 14 6 14;
+}
+.nav-logout:hover {
+    -fx-text-fill: #ef4444;
+    -fx-background-color: rgba(220,38,38,0.08);
+    -fx-border-color: rgba(220,38,38,0.25);
+}
 .nav-admin-badge {
     -fx-background-color: rgba(220,38,38,0.15);
     -fx-text-fill: #dc2626;

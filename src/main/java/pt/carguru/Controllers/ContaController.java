@@ -108,21 +108,31 @@ public class ContaController {
     @FXML
     public void handleGuardarPerfil() {
         perfilErro.setText("");
-        try {
-            userService.atualizarPerfil(perfilNome.getText(), perfilNif.getText());
-            carregarPerfil(Session.getUser());
-            DialogHelper.sucesso("Perfil atualizado com sucesso!");
-        } catch (Exception e) { perfilErro.setText(e.getMessage()); }
+        DialogHelper.confirmar("Confirmar alterações",
+                "Tens a certeza que queres guardar as alterações ao teu perfil?")
+            .filter(b -> b == ButtonType.YES)
+            .ifPresent(b -> {
+                try {
+                    userService.atualizarPerfil(perfilNome.getText(), perfilNif.getText());
+                    carregarPerfil(Session.getUser());
+                    DialogHelper.sucesso("Perfil atualizado com sucesso!");
+                } catch (Exception e) { perfilErro.setText(e.getMessage()); }
+            });
     }
 
     @FXML
     public void handleGuardarCarta() {
         cartaErro.setText("");
-        try {
-            userService.atualizarCarta(perfilNCarta.getText(), perfilValidadeCarta.getValue());
-            carregarPerfil(Session.getUser());
-            DialogHelper.sucesso("Carta de condução atualizada com sucesso!");
-        } catch (Exception e) { cartaErro.setText(e.getMessage()); }
+        DialogHelper.confirmar("Confirmar carta de condução",
+                "Confirmas a atualização dos dados da carta de condução?")
+            .filter(b -> b == ButtonType.YES)
+            .ifPresent(b -> {
+                try {
+                    userService.atualizarCarta(perfilNCarta.getText(), perfilValidadeCarta.getValue());
+                    carregarPerfil(Session.getUser());
+                    DialogHelper.sucesso("Carta de condução atualizada com sucesso!");
+                } catch (Exception e) { cartaErro.setText(e.getMessage()); }
+            });
     }
 
     @FXML
@@ -264,12 +274,35 @@ public class ContaController {
         desc.setPrefRowCount(3); desc.setPromptText("Descrição opcional...");
         desc.setStyle("-fx-control-inner-background:#1e1e1e; -fx-text-fill:white; -fx-border-color:rgba(255,255,255,0.09); -fx-border-radius:8; -fx-background-radius:8;");
 
+        // Imagem do veículo
+        final File[] imagemSelecionada = { null };
+        Label lblImagemAtual = new Label();
+        lblImagemAtual.setStyle("-fx-text-fill: #aaa; -fx-font-size:0.82em;");
+        if (vExistente != null) {
+            java.io.File imgExist = new java.io.File(pt.carguru.Repositories.VeiculoRepository.resolverPathImagem(vExistente.getId()));
+            lblImagemAtual.setText(imgExist.exists() ? "✅ Imagem já definida" : "Sem imagem");
+        }
+        Button btnEscolherImagem = new Button("📷 Escolher imagem...");
+        btnEscolherImagem.getStyleClass().add("btn-outline-sm");
+        btnEscolherImagem.setMaxWidth(Double.MAX_VALUE);
+        btnEscolherImagem.setOnAction(ev -> {
+            FileChooser fc2 = new FileChooser();
+            fc2.setTitle("Selecionar imagem do veículo");
+            fc2.getExtensionFilters().add(new FileChooser.ExtensionFilter("Imagens", "*.jpg","*.jpeg","*.png","*.gif","*.webp"));
+            File picked = fc2.showOpenDialog(App.getStage());
+            if (picked != null) {
+                imagemSelecionada[0] = picked;
+                lblImagemAtual.setText("📷 " + picked.getName());
+            }
+        });
+
         VBox content = new VBox(8,
             lbl("Marca:"), marca, lbl("Modelo:"), modelo, lbl("Ano:"), ano,
             lbl("Matrícula:"), matricula, lbl("Combustível:"), comb,
             lbl("Transmissão:"), trans, lbl("Localização:"), loc,
             lbl("Preço/dia (€):"), preco, lbl("Consumo (L/100km):"), consumo,
-            lbl("Quilómetros:"), km, lbl("Lotação:"), lotacao, lbl("Descrição:"), desc);
+            lbl("Quilómetros:"), km, lbl("Lotação:"), lotacao, lbl("Descrição:"), desc,
+            lbl("Imagem:"), btnEscolherImagem, lblImagemAtual);
         content.setPadding(new Insets(16));
         content.setStyle("-fx-background-color: #141414;");
 
@@ -290,8 +323,9 @@ public class ContaController {
                     double consV  = Double.parseDouble(consumo.getText().replace(",", ".").trim());
                     int kmVal     = Integer.parseInt(km.getText().trim());
                     int lotV      = Integer.parseInt(lotacao.getText().trim());
+                    pt.carguru.Models.Veiculo veiculoSalvo;
                     if (vExistente == null) {
-                        veiculoService.adicionarVeiculo(marca.getText(), modelo.getText(), anoVal,
+                        veiculoSalvo = veiculoService.adicionarVeiculo(marca.getText(), modelo.getText(), anoVal,
                             comb.getValue(), trans.getValue(), loc.getText(), precoV, consV,
                             desc.getText(), matricula.getText(), kmVal, lotV);
                         DialogHelper.sucesso("Veículo submetido para aprovação!");
@@ -299,7 +333,19 @@ public class ContaController {
                         veiculoService.editarVeiculo(vExistente.getId(), marca.getText(), modelo.getText(), anoVal,
                             comb.getValue(), trans.getValue(), loc.getText(), precoV, consV,
                             desc.getText(), matricula.getText(), kmVal, lotV);
+                        veiculoSalvo = vExistente;
                         DialogHelper.sucesso("Veículo atualizado!");
+                    }
+                    // Guardar imagem se foi selecionada
+                    if (imagemSelecionada[0] != null) {
+                        try {
+                            java.io.File destDir = new java.io.File(System.getProperty("user.home") + "/.carguru");
+                            destDir.mkdirs();
+                            java.io.File dest = new java.io.File(pt.carguru.Repositories.VeiculoRepository.resolverPathImagem(veiculoSalvo.getId()));
+                            java.nio.file.Files.copy(imagemSelecionada[0].toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        } catch (Exception imgEx) {
+                            DialogHelper.erro("Veículo guardado mas falhou ao copiar imagem: " + imgEx.getMessage());
+                        }
                     }
                     carregarVeiculos();
                 } catch (NumberFormatException ex) {
@@ -379,6 +425,7 @@ public class ContaController {
         return l;
     }
 
+    @FXML public void irParaHome()     { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaReservas()  { App.navigateTo("Reservas"); }

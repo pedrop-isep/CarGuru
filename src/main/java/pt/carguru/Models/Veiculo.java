@@ -24,6 +24,7 @@ public class Veiculo {
     private double avaliacaoMedia;
     private int nAvaliacoes;
     private LocalDate dataCriacao;
+    private String imagemPath;
 
     public Veiculo() {}
 
@@ -87,6 +88,9 @@ public class Veiculo {
     public void setNAvaliacoes(int n) { this.nAvaliacoes = n; }
     public LocalDate getDataCriacao() { return dataCriacao; }
     public void setDataCriacao(LocalDate d) { this.dataCriacao = d; }
+
+    public String getImagemPath() { return imagemPath; }
+    public void setImagemPath(String i) { this.imagemPath = i; }
 
     public String getNomeCompleto() { return marca + " " + modelo + " (" + ano + ")"; }
     public String getAvaliacaoStr() {
