@@ -66,6 +66,23 @@
           </VBox>
         </HBox>
 
+        <!-- Carta de Condução -->
+        <VBox styleClass="conta-card" spacing="10">
+          <Label text="🪪 Carta de Condução" styleClass="conta-card-title"/>
+          <HBox spacing="16">
+            <VBox spacing="6" HBox.hgrow="ALWAYS">
+              <Label text="Número da carta:" styleClass="form-label"/>
+              <TextField fx:id="perfilNCarta" promptText="Ex: S-123456-7" styleClass="form-input"/>
+            </VBox>
+            <VBox spacing="6" HBox.hgrow="ALWAYS">
+              <Label text="Validade:" styleClass="form-label"/>
+              <DatePicker fx:id="perfilValidadeCarta" styleClass="form-input" maxWidth="Infinity"/>
+            </VBox>
+          </HBox>
+          <Label fx:id="cartaErro" styleClass="error-label" wrapText="true"/>
+          <Button text="Guardar carta de condução" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleGuardarCarta"/>
+        </VBox>
+
         <!-- Veículos -->
         <VBox styleClass="conta-card" spacing="12">
           <HBox alignment="CENTER_LEFT">

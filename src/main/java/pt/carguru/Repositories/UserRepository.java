@@ -85,6 +85,17 @@ public class UserRepository {
         }
     }
 
+    public void updateCarta(User u) throws SQLException {
+        String sql = "UPDATE utilizadores SET n_carta_conducao=?, validade_carta=? WHERE id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, u.getNCartaConducao());
+            ps.setDate(2, u.getValidadeCarta() != null ? Date.valueOf(u.getValidadeCarta()) : null);
+            ps.setInt(3, u.getId());
+            ps.executeUpdate();
+        }
+    }
+
     public void updatePassword(int userId, String hash) throws SQLException {
         String sql = "UPDATE utilizadores SET password_hash=?, token_recuperacao=NULL, token_expira_em=NULL WHERE id=?";
         try (Connection c = DatabaseConnection.getConnection();

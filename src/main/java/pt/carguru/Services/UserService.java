@@ -5,6 +5,7 @@ import pt.carguru.Repositories.UserRepository;
 import pt.carguru.Utils.Session;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 public class UserService {
@@ -19,6 +20,18 @@ public class UserService {
         user.setNome(novoNome.trim());
         if (novoNif != null && !novoNif.isBlank()) user.setNif(novoNif.trim());
         userRepo.update(user);
+        Session.setUser(user);
+    }
+
+    public void atualizarCarta(String nCarta, LocalDate validadeCarta) throws SQLException {
+        User user = Session.getUser();
+        if (user == null) throw new IllegalStateException("Não estás autenticado.");
+        if (nCarta == null || nCarta.isBlank()) throw new IllegalArgumentException("Número da carta obrigatório.");
+        if (validadeCarta == null) throw new IllegalArgumentException("Validade da carta obrigatória.");
+        if (validadeCarta.isBefore(LocalDate.now())) throw new IllegalArgumentException("A carta de condução está expirada.");
+        user.setNCartaConducao(nCarta.trim());
+        user.setValidadeCarta(validadeCarta);
+        userRepo.updateCarta(user);
         Session.setUser(user);
     }
 

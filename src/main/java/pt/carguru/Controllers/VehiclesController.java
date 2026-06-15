@@ -7,6 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import pt.carguru.App;
+import pt.carguru.Models.Indisponibilidade;
 import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.VeiculoService;
@@ -176,7 +177,35 @@ public class VehiclesController {
             } catch (Exception ex) { DialogHelper.erro(ex.getMessage()); }
         });
 
-        reservaBox.getChildren().addAll(lblReserva, lblInicio, dpInicio, lblFim, dpFim, totalLabel, btnReservar);
+        // Secção de indisponibilidades
+        VBox indispBox = new VBox(6);
+        Label lblIndisp = new Label("🚫 Dias indisponíveis:");
+        lblIndisp.getStyleClass().add("form-label");
+        indispBox.getChildren().add(lblIndisp);
+        try {
+            List<Indisponibilidade> periodos = veiculoService.listarIndisponibilidades(v.getId());
+            if (periodos.isEmpty()) {
+                Label semIndisp = new Label("Nenhum período bloqueado.");
+                semIndisp.setStyle("-fx-text-fill: #4ade80; -fx-font-size: 0.85em;");
+                indispBox.getChildren().add(semIndisp);
+            } else {
+                for (Indisponibilidade ind : periodos) {
+                    Label periodo = new Label("  📅 " + ind.getInicio() + " → " + ind.getFim());
+                    periodo.setStyle("-fx-text-fill: #f87171; -fx-font-size: 0.85em;");
+                    indispBox.getChildren().add(periodo);
+                }
+                Label aviso = new Label("⚠️ Não é possível reservar nestes períodos.");
+                aviso.setStyle("-fx-text-fill: #fbbf24; -fx-font-size: 0.8em;");
+                aviso.setWrapText(true);
+                indispBox.getChildren().add(aviso);
+            }
+        } catch (Exception ex) {
+            Label errLabel = new Label("Não foi possível carregar indisponibilidades.");
+            errLabel.setStyle("-fx-text-fill: #888; -fx-font-size: 0.8em;");
+            indispBox.getChildren().add(errLabel);
+        }
+
+        reservaBox.getChildren().addAll(lblReserva, indispBox, new Separator(), lblInicio, dpInicio, lblFim, dpFim, totalLabel, btnReservar);
 
         HBox layout = new HBox(24, detalhes, new Separator(Orientation.VERTICAL), reservaBox);
         layout.setPadding(new Insets(20));

@@ -34,6 +34,9 @@ public class ContaController {
     @FXML private TextField perfilEmail;
     @FXML private TextField perfilNif;
     @FXML private Label perfilErro;
+    @FXML private TextField perfilNCarta;
+    @FXML private DatePicker perfilValidadeCarta;
+    @FXML private Label cartaErro;
     @FXML private Label saldoLabel;
     @FXML private VBox veiculosList;
     @FXML private Button btnAdmin;
@@ -59,6 +62,8 @@ public class ContaController {
         perfilNome.setText(user.getNome());
         perfilEmail.setText(user.getEmail());
         perfilNif.setText(user.getNif() != null ? user.getNif() : "");
+        perfilNCarta.setText(user.getNCartaConducao() != null && !user.getNCartaConducao().equals("N/A") ? user.getNCartaConducao() : "");
+        perfilValidadeCarta.setValue(user.getValidadeCarta());
         saldoLabel.setText(String.format("%.2f€", user.getSaldo()));
     }
 
@@ -108,6 +113,16 @@ public class ContaController {
             carregarPerfil(Session.getUser());
             DialogHelper.sucesso("Perfil atualizado com sucesso!");
         } catch (Exception e) { perfilErro.setText(e.getMessage()); }
+    }
+
+    @FXML
+    public void handleGuardarCarta() {
+        cartaErro.setText("");
+        try {
+            userService.atualizarCarta(perfilNCarta.getText(), perfilValidadeCarta.getValue());
+            carregarPerfil(Session.getUser());
+            DialogHelper.sucesso("Carta de condução atualizada com sucesso!");
+        } catch (Exception e) { cartaErro.setText(e.getMessage()); }
     }
 
     @FXML
