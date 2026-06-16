@@ -204,6 +204,7 @@ public class AdminController {
     @FXML public void irParaHome()     { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
+    @FXML public void irParaReservas()   { App.navigateTo("Reservas"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void logout()          { Session.clear(); App.navigateTo("Home"); }
 

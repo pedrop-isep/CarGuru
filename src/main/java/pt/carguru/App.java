@@ -17,6 +17,7 @@ public class App extends Application {
         stage.setMinHeight(640);
         stage.setWidth(1200);
         stage.setHeight(760);
+        stage.setMaximized(true);
         navigateTo("Home");
         stage.show();
     }
