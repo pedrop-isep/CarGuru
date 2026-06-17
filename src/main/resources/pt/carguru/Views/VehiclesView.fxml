@@ -29,6 +29,8 @@
           <ComboBox fx:id="fTransmissao" promptText="Transmissão" styleClass="filter-combo" prefWidth="120"/>
           <TextField fx:id="fLocalizacao" promptText="Cidade / Distrito" styleClass="filter-input" prefWidth="140"/>
           <TextField fx:id="fPrecoMax" promptText="Preço máx. (€)" styleClass="filter-input" prefWidth="120"/>
+          <TextField fx:id="fLotacaoMin" promptText="Lotação mín." styleClass="filter-input" prefWidth="110"/>
+          <ComboBox fx:id="fOrdenacao" promptText="Ordenar por" styleClass="filter-combo" prefWidth="130"/>
         </HBox>
         <!-- Linha 2: filtro por datas -->
         <HBox spacing="10" alignment="CENTER_LEFT">

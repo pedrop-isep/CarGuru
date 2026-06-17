@@ -15,6 +15,8 @@ public class Reserva {
     private Integer kmFinal;
     private Integer avaliacao;
     private String comentarioAvaliacao;
+    private double caucao;
+    private String combustivelVeiculo;
 
     // JOIN helpers
     private String veiculoNome;
@@ -59,4 +61,8 @@ public class Reserva {
     public void setLocatarioNome(String n) { this.locatarioNome = n; }
     public String getProprietarioNome() { return proprietarioNome; }
     public void setProprietarioNome(String n) { this.proprietarioNome = n; }
+    public double getCaucao() { return caucao; }
+    public void setCaucao(double c) { this.caucao = c; }
+    public String getCombustivelVeiculo() { return combustivelVeiculo; }
+    public void setCombustivelVeiculo(String c) { this.combustivelVeiculo = c; }
 }

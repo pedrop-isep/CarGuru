@@ -85,6 +85,17 @@ public class UserRepository {
         }
     }
 
+    /** Adiciona (positivo) ou subtrai (negativo) saldo de forma atómica. */
+    public void updateSaldo(int userId, double delta) throws SQLException {
+        String sql = "UPDATE utilizadores SET saldo = saldo + ? WHERE id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setBigDecimal(1, java.math.BigDecimal.valueOf(delta));
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        }
+    }
+
     public void updateCarta(User u) throws SQLException {
         String sql = "UPDATE utilizadores SET n_carta_conducao=?, validade_carta=? WHERE id=?";
         try (Connection c = DatabaseConnection.getConnection();

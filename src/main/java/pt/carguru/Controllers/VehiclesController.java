@@ -27,6 +27,8 @@ public class VehiclesController {
     @FXML private ComboBox<String> fTransmissao;
     @FXML private TextField fLocalizacao;
     @FXML private TextField fPrecoMax;
+    @FXML private TextField fLotacaoMin;
+    @FXML private ComboBox<String> fOrdenacao;
     @FXML private DatePicker fDataInicio;
     @FXML private DatePicker fDataFim;
     @FXML private FlowPane vehiclesGrid;
@@ -40,6 +42,11 @@ public class VehiclesController {
         NavbarHelper.configurar(btnAdmin);
         fCombustivel.getItems().addAll("", "GASOLINA", "GASOLEO", "ELETRICO", "GPL", "HIBRIDO");
         fTransmissao.getItems().addAll("", "MANUAL", "AUTOMATICA");
+        fOrdenacao.getItems().addAll("Avaliação ↓", "Preço ↑", "Preço ↓");
+        fOrdenacao.setValue("Avaliação ↓");
+        // Aplicar a ordenação automaticamente assim que o utilizador escolhe uma opção,
+        // sem precisar de clicar em "Pesquisar".
+        fOrdenacao.valueProperty().addListener((obs, oldVal, newVal) -> carregarVeiculos());
         carregarVeiculos();
     }
 
@@ -56,11 +63,30 @@ public class VehiclesController {
             LocalDate dInicio = fDataInicio != null ? fDataInicio.getValue() : null;
             LocalDate dFim    = fDataFim    != null ? fDataFim.getValue()    : null;
 
+            int lotMin = 0;
+            try { lotMin = Integer.parseInt(fLotacaoMin != null ? fLotacaoMin.getText() : ""); } catch (Exception ignored) {}
+            final int lotacaoMin = lotMin;
+
             List<Veiculo> veiculos;
             if (dInicio != null && dFim != null && dFim.isAfter(dInicio)) {
                 veiculos = veiculoService.pesquisarDisponiveisPorDatas(marca, comb, trans, loc, precoMax, dInicio, dFim);
             } else {
                 veiculos = veiculoService.pesquisarVeiculos(marca, comb, trans, loc, precoMax);
+            }
+
+            // Filtro lotação (client-side)
+            if (lotacaoMin > 0) {
+                veiculos = veiculos.stream().filter(v -> v.getLotacao() >= lotacaoMin).collect(java.util.stream.Collectors.toList());
+            }
+
+            // Ordenação
+            String ord = fOrdenacao != null ? fOrdenacao.getValue() : "Avaliação ↓";
+            if ("Preço ↑".equals(ord)) {
+                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia));
+            } else if ("Preço ↓".equals(ord)) {
+                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia).reversed());
+            } else {
+                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getAvaliacaoMedia).reversed());
             }
 
             vehiclesGrid.getChildren().clear();
@@ -84,8 +110,15 @@ public class VehiclesController {
         fTransmissao.setValue("");
         fLocalizacao.clear();
         fPrecoMax.clear();
+        if (fLotacaoMin != null) fLotacaoMin.clear();
         if (fDataInicio != null) fDataInicio.setValue(null);
         if (fDataFim    != null) fDataFim.setValue(null);
+        // Não usamos setValue aqui sem verificar primeiro, para não disparar o
+        // listener de ordenação (que já chama carregarVeiculos) e pesquisar duas vezes.
+        if (fOrdenacao != null && !"Avaliação ↓".equals(fOrdenacao.getValue())) {
+            fOrdenacao.setValue("Avaliação ↓");
+            return; // o listener já trata de chamar carregarVeiculos()
+        }
         carregarVeiculos();
     }
 
@@ -244,14 +277,34 @@ public class VehiclesController {
 
         Label totalLabel = new Label();
         totalLabel.getStyleClass().add("reserva-total");
+        Label decompLabel = new Label();
+        decompLabel.setWrapText(true);
+        decompLabel.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.82em;");
 
         Runnable calcTotal = () -> {
             if (dpInicio.getValue() != null && dpFim.getValue() != null
                     && dpFim.getValue().isAfter(dpInicio.getValue())) {
                 long dias = ChronoUnit.DAYS.between(dpInicio.getValue(), dpFim.getValue());
-                totalLabel.setText(String.format("Total: %.2f€  (%d dias)", dias * v.getPrecoPorDia(), dias));
+                double precoDin = calcularPrecoDinamicoLocal(v.getPrecoPorDia(), dpInicio.getValue(), dpFim.getValue(), dias);
+                double rendaTotal = precoDin * dias;
+                double caucao = rendaTotal * 0.20;
+                // Estimativa combustível com 100 km por dia
+                double kmsPrev = dias * 100.0;
+                double custoCombEst = (kmsPrev / 100.0) * v.getConsumo() * 1.70;
+
+                totalLabel.setText(String.format("Total estimado: %.2f€  (%d dias × %.2f€/dia)", rendaTotal, dias, precoDin));
+                StringBuilder sb = new StringBuilder();
+                sb.append(String.format("  - Renda: %.2f€\n", rendaTotal));
+                sb.append(String.format("  - Caucao (20%%): %.2f€ (devolvida no fim)\n", caucao));
+                sb.append(String.format("  - Combustivel est. (%.0f km): %.2f€\n", kmsPrev, custoCombEst));
+                // Mostrar fatores ativos
+                if (temEpocaAlta(dpInicio.getValue(), dpFim.getValue())) sb.append("  +30% epoca alta\n");
+                if (temFimSemana(dpInicio.getValue(), dpFim.getValue()))  sb.append("  +20% fim de semana\n");
+                if (dias >= 7) sb.append("  -10% desconto >=7 dias\n");
+                decompLabel.setText(sb.toString().trim());
             } else {
                 totalLabel.setText("Datas inválidas");
+                decompLabel.setText("");
             }
         };
         dpInicio.setOnAction(e -> calcTotal.run());
@@ -270,9 +323,57 @@ public class VehiclesController {
         });
 
         reservaBox.getChildren().addAll(lblReserva, indispBox, new Separator(),
-            lblInicio, dpInicio, lblFim, dpFim, totalLabel, btnReservar);
+            lblInicio, dpInicio, lblFim, dpFim, totalLabel, decompLabel, btnReservar);
 
-        HBox layout = new HBox(24, detalhes, new Separator(Orientation.VERTICAL), reservaBox);
+        // Secção de avaliações/comentários anteriores
+        VBox avaliacoesBox = new VBox(8);
+        avaliacoesBox.setPrefWidth(280);
+        Label lblAvals = new Label("⭐ Avaliações de locatários anteriores");
+        lblAvals.getStyleClass().add("conta-card-title");
+        avaliacoesBox.getChildren().add(lblAvals);
+        try {
+            java.sql.Connection connAv = pt.carguru.Utils.DatabaseConnection.getConnection();
+            java.sql.PreparedStatement psAv = connAv.prepareStatement(
+                "SELECT av.estrelas, av.comentario, u.nome AS avaliador, av.data " +
+                "FROM avaliacoes av " +
+                "JOIN alugueres al ON av.aluguer_id = al.id " +
+                "JOIN reservas rv ON al.reserva_id = rv.id " +
+                "JOIN utilizadores u ON av.avaliador_id = u.id " +
+                "WHERE rv.veiculo_id = ? AND av.tipo = 'LOCATARIO' ORDER BY av.data DESC LIMIT 10");
+            psAv.setInt(1, v.getId());
+            java.sql.ResultSet rsAv = psAv.executeQuery();
+            boolean temAvals = false;
+            while (rsAv.next()) {
+                temAvals = true;
+                int estrelas = rsAv.getInt("estrelas");
+                String coment = rsAv.getString("comentario");
+                String avaliador = rsAv.getString("avaliador");
+                VBox avCard = new VBox(2);
+                avCard.setStyle("-fx-background-color: #1e1e1e; -fx-padding: 8; -fx-background-radius: 6;");
+                Label starsLbl = new Label("★".repeat(estrelas) + "☆".repeat(5 - estrelas) + "  " + avaliador);
+                starsLbl.setStyle("-fx-text-fill: #fbbf24; -fx-font-size: 0.9em;");
+                avCard.getChildren().add(starsLbl);
+                if (coment != null && !coment.isBlank()) {
+                    Label commentLbl = new Label("\"" + coment + "\"");
+                    commentLbl.setWrapText(true);
+                    commentLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.82em; -fx-font-style: italic;");
+                    avCard.getChildren().add(commentLbl);
+                }
+                avaliacoesBox.getChildren().add(avCard);
+            }
+            if (!temAvals) {
+                Label sem = new Label("Ainda sem avaliações.");
+                sem.setStyle("-fx-text-fill: #666; -fx-font-size: 0.85em;");
+                avaliacoesBox.getChildren().add(sem);
+            }
+            rsAv.close(); psAv.close(); connAv.close();
+        } catch (Exception exAv) {
+            Label errAv = new Label("Não foi possível carregar avaliações.");
+            errAv.setStyle("-fx-text-fill: #666; -fx-font-size: 0.82em;");
+            avaliacoesBox.getChildren().add(errAv);
+        }
+
+        HBox layout = new HBox(24, detalhes, new Separator(Orientation.VERTICAL), avaliacoesBox, new Separator(Orientation.VERTICAL), reservaBox);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-background-color: #141414;");
 
@@ -295,6 +396,35 @@ public class VehiclesController {
         val.setWrapText(true);
         val.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.9em;");
         return new VBox(2, lbl, val);
+    }
+
+    // ---- Helpers preço dinâmico (local, sem depender do service) ----
+    private double calcularPrecoDinamicoLocal(double base, java.time.LocalDate inicio, java.time.LocalDate fim, long dias) {
+        double f = 1.0;
+        if (temEpocaAlta(inicio, fim)) f += 0.30;
+        if (temFimSemana(inicio, fim)) f += 0.20;
+        if (dias >= 7) f -= 0.10;
+        return base * f;
+    }
+
+    private boolean temEpocaAlta(java.time.LocalDate inicio, java.time.LocalDate fim) {
+        java.time.LocalDate d = inicio;
+        while (!d.isAfter(fim)) {
+            int m = d.getMonthValue();
+            if (m == 6 || m == 7 || m == 8 || m == 12) return true;
+            d = d.plusDays(1);
+        }
+        return false;
+    }
+
+    private boolean temFimSemana(java.time.LocalDate inicio, java.time.LocalDate fim) {
+        java.time.LocalDate d = inicio;
+        while (!d.isAfter(fim)) {
+            java.time.DayOfWeek dow = d.getDayOfWeek();
+            if (dow == java.time.DayOfWeek.SATURDAY || dow == java.time.DayOfWeek.SUNDAY) return true;
+            d = d.plusDays(1);
+        }
+        return false;
     }
 
     @FXML public void irParaHome()      { App.navigateTo("Home"); }

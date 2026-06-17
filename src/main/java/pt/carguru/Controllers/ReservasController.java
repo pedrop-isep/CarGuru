@@ -97,7 +97,7 @@ public class ReservasController {
             Button btnF = new Button("🏁 Km Final + Liquidar");
             btnF.getStyleClass().add("btn-success");
             btnF.setOnAction(e -> pedirKm("Km Final", km -> {
-                try { reservaService.registarKmFinalELiquidar(r.getId(), km, 1.70, 6.0); carregarLocatario(); mostrarSucesso("Reserva concluída e liquidada!"); }
+                try { reservaService.registarKmFinalELiquidar(r.getId(), km); carregarLocatario(); mostrarSucesso("Reserva concluída e liquidada!"); }
                 catch (Exception ex) { mostrarErro(ex.getMessage()); }
             }));
             btns.getChildren().add(btnF);
@@ -176,9 +176,7 @@ public class ReservasController {
     }
 
     private void pedirKm(String titulo, java.util.function.Consumer<Integer> cb) {
-        TextInputDialog dlg = new TextInputDialog();
-        dlg.setTitle(titulo); dlg.setHeaderText(titulo + ":"); dlg.setContentText("Quilómetros:");
-        dlg.showAndWait().ifPresent(v -> {
+        DialogHelper.pedirTexto(titulo, null, "Quilómetros:").ifPresent(v -> {
             try { cb.accept(Integer.parseInt(v.trim())); }
             catch (NumberFormatException e) { mostrarErro("Valor inválido."); }
         });
@@ -189,11 +187,13 @@ public class ReservasController {
         dlg.setTitle("Avaliar reserva");
         ComboBox<Integer> estrelas = new ComboBox<>();
         estrelas.getItems().addAll(1,2,3,4,5); estrelas.setValue(5);
+        estrelas.getStyleClass().add("filter-combo"); estrelas.setMaxWidth(Double.MAX_VALUE);
         TextArea comentario = new TextArea(); comentario.setPromptText("Comentário (opcional)"); comentario.setPrefRowCount(3);
         VBox c = new VBox(10, new Label("Avaliação (estrelas):"), estrelas, new Label("Comentário:"), comentario);
         c.setPadding(new Insets(16));
         dlg.getDialogPane().setContent(c);
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.estilizar(dlg);
         dlg.showAndWait().ifPresent(bt -> {
             if (bt == ButtonType.OK) {
                 try { reservaService.avaliarReserva(r.getId(), estrelas.getValue(), comentario.getText()); carregarLocatario(); mostrarSucesso("Avaliação submetida!"); }
