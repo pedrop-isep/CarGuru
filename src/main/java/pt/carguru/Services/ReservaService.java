@@ -61,7 +61,7 @@ public class ReservaService {
             throw new IllegalStateException("Sem permissão.");
         if (!"pendente".equals(r.getEstado()))
             throw new IllegalStateException("Só é possível aprovar reservas pendentes.");
-        reservaRepo.updateEstado(reservaId, "ACEITE");
+        reservaRepo.updateEstado(reservaId, "confirmada");
     }
 
     public void cancelarReserva(int reservaId) throws SQLException {
@@ -72,7 +72,7 @@ public class ReservaService {
             throw new IllegalStateException("Sem permissão.");
         if ("cancelada".equals(r.getEstado()) || "concluida".equals(r.getEstado()))
             throw new IllegalStateException("Esta reserva não pode ser cancelada.");
-        reservaRepo.updateEstado(reservaId, "CANCELADA");
+        reservaRepo.updateEstado(reservaId, "cancelada");
     }
 
     public void registarKmInicial(int reservaId, int km) throws SQLException {
