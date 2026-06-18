@@ -73,6 +73,17 @@ public class VeiculoRepository {
     // Soft delete — estado = REMOVIDO
     public void delete(int id) throws SQLException { updateEstado(id, "REMOVIDO"); }
 
+    /** Atualiza apenas a quilometragem do veículo (ex.: após um aluguer terminar com km final registado). */
+    public void updateQuilometragem(int id, int quilometragem) throws SQLException {
+        String sql = "UPDATE veiculos SET quilometragem=? WHERE id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, quilometragem);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
+    }
+
     public Optional<Veiculo> findById(int id) throws SQLException {
         String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.id=?";
         try (Connection c = DatabaseConnection.getConnection();

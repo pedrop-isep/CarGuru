@@ -662,18 +662,118 @@
 
 /* ----- Admin ----- */
 .admin-row {
-    -fx-background-color: #1a1a1a;
-    -fx-background-radius: 8;
-    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-background-color: #161616;
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255,255,255,0.07);
     -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-padding: 12;
+    -fx-border-radius: 10;
+    -fx-padding: 14 16 14 16;
 }
-.admin-row:hover { -fx-border-color: rgba(220,38,38,0.2); }
-.admin-row .label { -fx-text-fill: #ccc; -fx-font-size: 0.87em; }
-.admin-section-title { -fx-font-size: 1em; -fx-font-weight: bold; -fx-text-fill: white; }
-.admin-user-name { -fx-font-weight: bold; -fx-text-fill: white; }
+.admin-row:hover {
+    -fx-border-color: rgba(220,38,38,0.28);
+    -fx-background-color: #1a1a1a;
+}
+
+/* Cabeçalho principal do card */
+.admin-card-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f5f9;
+    -fx-font-size: 0.95em;
+}
+/* Linha de metadados (datas, preços, etc.) */
+.admin-card-meta {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 0.83em;
+}
+/* Badge de estado (aberta/resolvida/ativo/suspenso) */
+.admin-badge-warn  { -fx-text-fill: #f59e0b; -fx-font-weight: bold; -fx-font-size: 0.8em; }
+.admin-badge-ok    { -fx-text-fill: #22c55e; -fx-font-weight: bold; -fx-font-size: 0.8em; }
+.admin-badge-red   { -fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-font-size: 0.8em; }
+.admin-badge-blue  { -fx-text-fill: #60a5fa; -fx-font-weight: bold; -fx-font-size: 0.8em; }
+.admin-badge-muted { -fx-text-fill: #64748b; -fx-font-size: 0.8em; }
+
+/* Descrição / texto secundário */
+.admin-card-desc {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 0.82em;
+}
+/* Texto de resolução */
+.admin-card-resolve {
+    -fx-text-fill: #6ee7b7;
+    -fx-font-size: 0.82em;
+}
+
+.admin-section-title {
+    -fx-font-size: 1.05em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f5f9;
+    -fx-padding: 0 0 4 0;
+}
+
+/* Legado — mantido para compatibilidade */
+.admin-user-name  { -fx-font-weight: bold; -fx-text-fill: #f1f5f9; }
 .admin-user-email { -fx-text-fill: #888; -fx-font-size: 0.84em; }
+
+/* Botões de ação do admin — tamanho uniforme e compacto */
+.btn-admin-ok {
+    -fx-background-color: rgba(34,197,94,0.13);
+    -fx-border-color: rgba(34,197,94,0.35);
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-text-fill: #22c55e;
+    -fx-font-size: 0.82em;
+    -fx-font-weight: bold;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+    -fx-min-width: 100;
+}
+.btn-admin-ok:hover { -fx-background-color: rgba(34,197,94,0.24); }
+
+.btn-admin-danger {
+    -fx-background-color: rgba(220,38,38,0.13);
+    -fx-border-color: rgba(220,38,38,0.35);
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 0.82em;
+    -fx-font-weight: bold;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+    -fx-min-width: 100;
+}
+.btn-admin-danger:hover { -fx-background-color: rgba(220,38,38,0.24); }
+
+.btn-admin-primary {
+    -fx-background-color: #dc2626;
+    -fx-background-radius: 7;
+    -fx-border-radius: 7;
+    -fx-text-fill: white;
+    -fx-font-size: 0.82em;
+    -fx-font-weight: bold;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+    -fx-min-width: 100;
+}
+.btn-admin-primary:hover { -fx-background-color: #b91c1c; }
+
+.btn-admin-neutral {
+    -fx-background-color: #1e293b;
+    -fx-border-color: rgba(255,255,255,0.12);
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 0.82em;
+    -fx-padding: 5 14 5 14;
+    -fx-cursor: hand;
+    -fx-min-width: 100;
+}
+.btn-admin-neutral:hover { -fx-text-fill: #e2e8f0; -fx-border-color: rgba(255,255,255,0.22); }
+
+/* Separador horizontal dentro de cards */
+.admin-divider { -fx-border-color: rgba(255,255,255,0.06); -fx-border-width: 0 0 1 0; -fx-padding: 0 0 8 0; }
 
 /* ----- Separators ----- */
 .separator .line { -fx-border-color: rgba(255,255,255,0.07); }
@@ -810,6 +910,48 @@
 .dialog-pane .button-bar .button.close-button:hover {
     -fx-background-color: #2a2a2a;
     -fx-text-fill: white;
+}
+
+/* ----- Admin TabPane ----- */
+.admin-tabs .tab-header-area .tab-header-background {
+    -fx-background-color: #0f0f0f;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-width: 0 0 1 0;
+}
+.admin-tabs .tab-header-area {
+    -fx-padding: 0 0 0 0;
+}
+.admin-tabs .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-text-base-color: #64748b;
+    -fx-font-size: 0.9em;
+    -fx-font-weight: bold;
+    -fx-padding: 12 20 12 20;
+    -fx-cursor: hand;
+}
+.admin-tabs .tab:hover {
+    -fx-background-color: rgba(255,255,255,0.04);
+    -fx-text-base-color: #cbd5e1;
+}
+.admin-tabs .tab:selected {
+    -fx-background-color: transparent;
+    -fx-text-base-color: #ef4444;
+    -fx-border-color: transparent transparent #dc2626 transparent;
+    -fx-border-width: 0 0 3 0;
+}
+.admin-tabs .tab-content-area {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.admin-tabs .tab-label {
+    -fx-font-size: 0.9em;
+    -fx-font-weight: bold;
+}
+/* Esconder focus ring nas tabs */
+.admin-tabs .tab:focused {
+    -fx-background-color: rgba(255,255,255,0.04);
 }
 
 /* ----- TabPane Generic ----- */

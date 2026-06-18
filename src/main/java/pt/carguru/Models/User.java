@@ -17,6 +17,8 @@ public class User {
     private LocalDateTime dataRegisto;
     private String tokenRecuperacao;
     private LocalDateTime tokenExpiraEm;
+    private double avaliacaoMedia;
+    private int nAvaliacoes;
 
     public User() {}
 
@@ -64,4 +66,15 @@ public class User {
     public void setTokenRecuperacao(String t) { this.tokenRecuperacao = t; }
     public LocalDateTime getTokenExpiraEm() { return tokenExpiraEm; }
     public void setTokenExpiraEm(LocalDateTime t) { this.tokenExpiraEm = t; }
+    public double getAvaliacaoMedia() { return avaliacaoMedia; }
+    public void setAvaliacaoMedia(double a) { this.avaliacaoMedia = a; }
+    public int getNAvaliacoes() { return nAvaliacoes; }
+    public void setNAvaliacoes(int n) { this.nAvaliacoes = n; }
+
+    /** Representação legível da avaliação (ex: "⭐ 4.2 (7 avaliações)"). */
+    public String getAvaliacaoStr() {
+        if (nAvaliacoes == 0) return "Sem avaliações";
+        return String.format("⭐ %.1f (%d %s)", avaliacaoMedia, nAvaliacoes,
+                nAvaliacoes == 1 ? "avaliação" : "avaliações");
+    }
 }

@@ -10,6 +10,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import pt.carguru.App;
 import pt.carguru.Models.Indisponibilidade;
+import pt.carguru.Models.Transacao;
 import pt.carguru.Models.User;
 import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.UserService;
@@ -19,9 +20,13 @@ import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ContaController {
@@ -39,19 +44,35 @@ public class ContaController {
     @FXML private DatePicker perfilValidadeCarta;
     @FXML private Label cartaErro;
     @FXML private Label saldoLabel;
+    @FXML private Label caucaoLabel;
+    @FXML private Label disponivelLabel;
+    @FXML private Label avaliacaoLabel;
     @FXML private VBox veiculosList;
+    @FXML private VBox transacoesList;
     @FXML private Button btnAdmin;
+
+    // Filtros do histórico de transações (criados programaticamente)
+    private ComboBox<String> filtroTipo;
+    private DatePicker filtroDataInicio;
+    private DatePicker filtroDataFim;
+    private List<Transacao> transacoesCache = new java.util.ArrayList<>();
 
     private final UserService userService = new UserService();
     private final VeiculoService veiculoService = new VeiculoService();
+    private static final DateTimeFormatter DATA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     public void initialize() {
         User user = Session.getUser();
         if (user == null) { App.navigateTo("Login"); return; }
         NavbarHelper.configurar(btnAdmin);
+        try {
+            user = userService.getMeuPerfilComAvaliacao();
+        } catch (Exception ignored) {}
         carregarPerfil(user);
         carregarVeiculos();
+        injetarBarraFiltros();
+        carregarHistorico();
         tentarCarregarFoto(user);
     }
 
@@ -60,12 +81,200 @@ public class ContaController {
         nomeLabel.setText(user.getNome());
         emailLabel.setText(user.getEmail());
         roleLabel.setText("ADMINISTRADOR".equals(user.getRole()) ? "🛡️ Administrador" : "🚗 Proprietário & Locatário");
+        if (avaliacaoLabel != null)
+            avaliacaoLabel.setText(user.getAvaliacaoStr());
         perfilNome.setText(user.getNome());
         perfilEmail.setText(user.getEmail());
         perfilNif.setText(user.getNif() != null ? user.getNif() : "");
         perfilNCarta.setText(user.getNCartaConducao() != null && !user.getNCartaConducao().equals("N/A") ? user.getNCartaConducao() : "");
         perfilValidadeCarta.setValue(user.getValidadeCarta());
+        atualizarSaldoUI(user);
+    }
+
+    /** Atualiza as labels de saldo total, caução ativa e saldo disponível para reservar/levantar. */
+    private void atualizarSaldoUI(User user) {
         saldoLabel.setText(String.format("%.2f€", user.getSaldo()));
+        try {
+            double caucoesAtivas = userService.getCaucoesAtivas(user);
+            double disponivel = user.getSaldo() - caucoesAtivas;
+            caucaoLabel.setText(String.format("🔒 Em caução (reservas ativas): %.2f€", caucoesAtivas));
+            disponivelLabel.setText(String.format("✅ Saldo disponível: %.2f€", disponivel));
+        } catch (Exception e) {
+            caucaoLabel.setText("🔒 Em caução: —");
+            disponivelLabel.setText("✅ Saldo disponível: —");
+        }
+    }
+
+    private void carregarHistorico() {
+        carregarHistoricoFiltrado(null, null, null);
+    }
+
+    private void carregarHistoricoFiltrado(String tipo, LocalDate dataInicio, LocalDate dataFim) {
+        try {
+            String tipoFiltro = (tipo != null && !tipo.equals("Todos")) ? tipo : null;
+            transacoesCache = userService.listarHistoricoFiltrado(tipoFiltro, dataInicio, dataFim);
+            transacoesList.getChildren().clear();
+            if (transacoesCache.isEmpty()) {
+                Label vazio = new Label("Não foram encontradas transações com os filtros selecionados.");
+                vazio.getStyleClass().add("conta-email");
+                vazio.setPadding(new Insets(8));
+                transacoesList.getChildren().add(vazio);
+            } else {
+                for (Transacao t : transacoesCache) transacoesList.getChildren().add(criarRowTransacao(t));
+            }
+        } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
+    }
+
+    private HBox criarRowTransacao(Transacao t) {
+        HBox row = new HBox(12);
+        row.getStyleClass().add("veiculo-row");
+        row.setAlignment(Pos.CENTER_LEFT);
+
+        VBox info = new VBox(2);
+        Label tipoLbl = new Label(t.getTipoEmoji() + " " + t.getTipoLabel());
+        tipoLbl.getStyleClass().add("conta-name");
+
+        String dataStr = t.getData() != null ? t.getData().format(DATA_FMT) : "-";
+        String contraparteStr = (t.getContraparte() != null && !t.getContraparte().isBlank())
+                ? "  •  👤 " + t.getContraparte() : "";
+        Label descLbl = new Label(t.getDescricao() + "  •  📅 " + dataStr + contraparteStr);
+        descLbl.getStyleClass().add("conta-email");
+        descLbl.setWrapText(true);
+
+        Label saldoAposLbl = new Label("Saldo após: " + String.format("%.2f€", t.getSaldoApos()));
+        saldoAposLbl.setStyle("-fx-text-fill: #555; -fx-font-size: 0.78em;");
+
+        info.getChildren().addAll(tipoLbl, descLbl, saldoAposLbl);
+        HBox.setHgrow(info, Priority.ALWAYS);
+
+        Label valorLbl = new Label((t.isEntrada() ? "+ " : "− ") + String.format("%.2f€", t.getValor()));
+        valorLbl.setStyle(t.isEntrada()
+            ? "-fx-text-fill: #4ade80; -fx-font-weight: bold; -fx-font-size: 1.05em;"
+            : "-fx-text-fill: #f87171; -fx-font-weight: bold; -fx-font-size: 1.05em;");
+
+        row.getChildren().addAll(info, valorLbl);
+        return row;
+    }
+
+    /** Constrói e injeta a barra de filtros acima do transacoesList. Chamado uma única vez no initialize. */
+    private void injetarBarraFiltros() {
+        // Encontrar o VBox pai (conta-card que contém o histórico)
+        javafx.scene.Parent parent = transacoesList.getParent();
+        if (!(parent instanceof VBox cardVBox)) return;
+
+        // ComboBox tipo
+        filtroTipo = new ComboBox<>();
+        filtroTipo.getItems().addAll("Todos", "DEPOSITO", "LEVANTAMENTO",
+                "PAGAMENTO_ALUGUER", "RECEITA_ALUGUER",
+                "CAUCAO_RETIDA", "CAUCAO_DEVOLVIDA",
+                "REEMBOLSO", "PENALIZACAO");
+        filtroTipo.setValue("Todos");
+        filtroTipo.getStyleClass().add("filter-combo");
+        filtroTipo.setPrefWidth(200);
+
+        // DatePickers
+        filtroDataInicio = new DatePicker();
+        filtroDataInicio.setPromptText("Data início");
+        filtroDataInicio.getStyleClass().add("form-input");
+        filtroDataInicio.setPrefWidth(145);
+
+        filtroDataFim = new DatePicker();
+        filtroDataFim.setPromptText("Data fim");
+        filtroDataFim.getStyleClass().add("form-input");
+        filtroDataFim.setPrefWidth(145);
+
+        // Botão aplicar
+        Button btnFiltrar = new Button("🔍 Filtrar");
+        btnFiltrar.getStyleClass().add("btn-primary");
+        btnFiltrar.setOnAction(e -> aplicarFiltros());
+
+        // Botão limpar
+        Button btnLimpar = new Button("✕ Limpar");
+        btnLimpar.setStyle("-fx-background-color: #374151; -fx-text-fill: #d1d5db; " +
+                "-fx-background-radius: 8; -fx-border-radius: 8;");
+        btnLimpar.setOnAction(e -> {
+            filtroTipo.setValue("Todos");
+            filtroDataInicio.setValue(null);
+            filtroDataFim.setValue(null);
+            carregarHistorico();
+        });
+
+        // Botão exportar CSV
+        Button btnCsv = new Button("📥 Exportar CSV");
+        btnCsv.getStyleClass().add("btn-outline-sm");
+        btnCsv.setOnAction(e -> exportarCsv());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox barraFiltros = new HBox(8,
+                new Label("Tipo:"), filtroTipo,
+                new Label("De:"), filtroDataInicio,
+                new Label("Até:"), filtroDataFim,
+                btnFiltrar, btnLimpar,
+                spacer, btnCsv);
+        barraFiltros.setAlignment(Pos.CENTER_LEFT);
+        barraFiltros.setPadding(new Insets(4, 0, 4, 0));
+        // Estilo subtil nas labels de filtro
+        for (javafx.scene.Node n : barraFiltros.getChildren()) {
+            if (n instanceof Label l) l.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        }
+
+        // Inserir a barra logo antes do transacoesList (que é o último filho do card)
+        int idx = cardVBox.getChildren().indexOf(transacoesList);
+        if (idx >= 0) cardVBox.getChildren().add(idx, barraFiltros);
+        else cardVBox.getChildren().add(1, barraFiltros);
+    }
+
+    private void aplicarFiltros() {
+        String tipo = filtroTipo != null ? filtroTipo.getValue() : null;
+        LocalDate di = filtroDataInicio != null ? filtroDataInicio.getValue() : null;
+        LocalDate df = filtroDataFim   != null ? filtroDataFim.getValue()   : null;
+        if (df != null && di != null && df.isBefore(di)) {
+            DialogHelper.erro("A data de fim não pode ser anterior à data de início.");
+            return;
+        }
+        carregarHistoricoFiltrado(tipo, di, df);
+    }
+
+    private void exportarCsv() {
+        if (transacoesCache == null || transacoesCache.isEmpty()) {
+            DialogHelper.erro("Não há transações para exportar.");
+            return;
+        }
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Guardar histórico CSV");
+        fc.setInitialFileName("historico_transacoes_" + LocalDate.now() + ".csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+        File dest = fc.showSaveDialog(App.getStage());
+        if (dest == null) return;
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(dest, StandardCharsets.UTF_8))) {
+            // BOM para Excel reconhecer UTF-8
+            pw.print('\uFEFF');
+            pw.println("ID,Data,Tipo,Descrição,Contraparte,Valor (€),Saldo Após (€),Referência");
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            for (Transacao t : transacoesCache) {
+                String sinal = t.isEntrada() ? "+" : "-";
+                pw.printf("\"%d\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s%.2f\",\"%.2f\",\"%s\"%n",
+                        t.getId(),
+                        t.getData() != null ? t.getData().format(fmt) : "",
+                        t.getTipoLabel(),
+                        escapeCsv(t.getDescricao()),
+                        escapeCsv(t.getContraparte()),
+                        sinal, t.getValor(),
+                        t.getSaldoApos(),
+                        t.getReferenciaId() != null ? t.getReferenciaTipo() + " #" + t.getReferenciaId() : "");
+            }
+            DialogHelper.sucesso("CSV exportado com sucesso para:\n" + dest.getAbsolutePath());
+        } catch (Exception ex) {
+            DialogHelper.erro("Erro ao exportar CSV: " + ex.getMessage());
+        }
+    }
+
+    private String escapeCsv(String val) {
+        if (val == null) return "";
+        return val.replace("\"", "\"\"");
     }
 
     private void tentarCarregarFoto(User user) {
@@ -149,7 +358,8 @@ public class ContaController {
                         .ifPresent(b -> {
                             try {
                                 userService.depositar(valor);
-                                saldoLabel.setText(String.format("%.2f€", Session.getUser().getSaldo()));
+                                atualizarSaldoUI(Session.getUser());
+                                carregarHistorico();
                                 DialogHelper.sucesso(String.format("%.2f€ depositados com sucesso!", valor));
                             } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
                         });
@@ -170,7 +380,8 @@ public class ContaController {
                         .ifPresent(b -> {
                             try {
                                 userService.levantar(valor);
-                                saldoLabel.setText(String.format("%.2f€", Session.getUser().getSaldo()));
+                                atualizarSaldoUI(Session.getUser());
+                                carregarHistorico();
                                 DialogHelper.sucesso(String.format("%.2f€ levantados com sucesso!", valor));
                             } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
                         });

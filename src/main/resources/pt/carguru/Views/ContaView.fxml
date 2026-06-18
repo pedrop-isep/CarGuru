@@ -35,6 +35,7 @@
             <Label fx:id="nomeLabel" text="Nome" styleClass="conta-name"/>
             <Label fx:id="emailLabel" text="email" styleClass="conta-email"/>
             <Label fx:id="roleLabel" text="" styleClass="conta-role"/>
+            <Label fx:id="avaliacaoLabel" text="Sem avaliações" styleClass="conta-email"/>
           </VBox>
           <Button text="📷 Alterar foto" styleClass="btn-outline-sm" onAction="#handleAlterarFoto"/>
         </HBox>
@@ -44,6 +45,10 @@
           <VBox styleClass="conta-card" spacing="12" HBox.hgrow="ALWAYS">
             <Label text="💶 Saldo em Conta" styleClass="conta-card-title"/>
             <Label fx:id="saldoLabel" text="0€" styleClass="saldo-val"/>
+            <VBox spacing="2">
+              <Label fx:id="caucaoLabel" text="🔒 Em caução: 0,00€" styleClass="conta-email"/>
+              <Label fx:id="disponivelLabel" text="✅ Disponível: 0,00€" styleClass="conta-email"/>
+            </VBox>
             <HBox spacing="10">
               <Button text="+ Depositar" styleClass="btn-depositar" onAction="#handleDepositar"
                       HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
@@ -64,6 +69,13 @@
             <Button text="Guardar alterações" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleGuardarPerfil"/>
           </VBox>
         </HBox>
+
+        <!-- Histórico de Transações -->
+        <VBox styleClass="conta-card" spacing="10">
+          <Label text="📜 Histórico de Transações" styleClass="conta-card-title"/>
+          <Separator/>
+          <VBox fx:id="transacoesList" spacing="6"/>
+        </VBox>
 
         <!-- Carta de Condução -->
         <VBox styleClass="conta-card" spacing="10">

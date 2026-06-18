@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import pt.carguru.Utils.CombustivelScheduler;
 
 public class App extends Application {
 
@@ -18,8 +19,14 @@ public class App extends Application {
         stage.setWidth(1200);
         stage.setHeight(760);
         stage.setMaximized(true);
+        CombustivelScheduler.getInstance().iniciar();
         navigateTo("Home");
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        CombustivelScheduler.getInstance().parar();
     }
 
     /** Navigate preserving window size and maximized state */

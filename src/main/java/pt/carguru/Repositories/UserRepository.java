@@ -139,6 +139,25 @@ public class UserRepository {
         return Optional.empty();
     }
 
+    /**
+     * Calcula a avaliação média e número de avaliações recebidas por um utilizador.
+     * Retorna double[]{media, count}.
+     */
+    public double[] getAvaliacaoMedia(int userId) throws SQLException {
+        String sql = "SELECT AVG(estrelas), COUNT(*) FROM avaliacoes WHERE avaliado_id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                double media = rs.getDouble(1);
+                int count = rs.getInt(2);
+                return new double[]{media, count};
+            }
+        }
+        return new double[]{0.0, 0};
+    }
+
     private User map(ResultSet rs) throws SQLException {
         User u = new User();
         u.setId(rs.getInt("id"));

@@ -39,10 +39,15 @@ public class ReservaService {
         double total = precoDinamico * dias;
         double caucao = total * 0.20;
 
-        if (Session.getUser().getSaldo() < caucao)
+        // A validação tem de considerar o saldo DISPONÍVEL (saldo total menos cauções
+        // já comprometidas noutras reservas pendentes/aceites), e não o saldo total —
+        // caso contrário seria possível reservar vários veículos com o mesmo dinheiro.
+        double caucoesAtivas = reservaRepo.getCaucoesAtivas(Session.getUser().getId());
+        double saldoDisponivel = Session.getUser().getSaldo() - caucoesAtivas;
+        if (saldoDisponivel < caucao)
             throw new IllegalStateException(String.format(
-                "Saldo insuficiente para a caução (%.2f€). Saldo atual: %.2f€",
-                caucao, Session.getUser().getSaldo()));
+                "Saldo disponível insuficiente para a caução (%.2f€). Disponível: %.2f€ (Saldo: %.2f€ − Cauções ativas: %.2f€)",
+                caucao, saldoDisponivel, Session.getUser().getSaldo(), caucoesAtivas));
 
         Reserva r = new Reserva();
         r.setVeiculoId(veiculoId);
@@ -62,6 +67,13 @@ public class ReservaService {
         if (!"pendente".equals(r.getEstado()))
             throw new IllegalStateException("Só é possível aprovar reservas pendentes.");
         reservaRepo.updateEstado(reservaId, "ACEITE");
+
+        // Km inicial é definido automaticamente com a quilometragem atual do veículo
+        // (a que o proprietário registou/atualizou nos detalhes do carro), em vez de
+        // ser pedido manualmente ao locatário.
+        Veiculo v = veiculoRepo.findById(r.getVeiculoId())
+            .orElseThrow(() -> new IllegalArgumentException("Veículo não encontrado."));
+        reservaRepo.updateKmInicial(reservaId, v.getQuilometragem());
     }
 
     public void cancelarReserva(int reservaId) throws SQLException {
@@ -75,6 +87,9 @@ public class ReservaService {
         reservaRepo.updateEstado(reservaId, "CANCELADA");
     }
 
+    /** @deprecated Desde que o registo passou a ser automático (ver {@link #aprovarReserva}),
+     *  este método já não é usado pela interface. Mantido apenas por compatibilidade. */
+    @Deprecated
     public void registarKmInicial(int reservaId, int km) throws SQLException {
         Reserva r = reservaRepo.findById(reservaId)
             .orElseThrow(() -> new IllegalArgumentException("Reserva não encontrada."));
@@ -86,7 +101,16 @@ public class ReservaService {
         reservaRepo.updateKmInicial(reservaId, km);
     }
 
+    /** Regista o km final e liquida o aluguer. Assume-se que não há incidentes (caução devolvida). */
     public void registarKmFinalELiquidar(int reservaId, int kmFinal) throws SQLException {
+        registarKmFinalELiquidar(reservaId, kmFinal, false);
+    }
+
+    /**
+     * Regista o km final e liquida o aluguer.
+     * Se {@code incidente} for true, a caução NÃO é devolvida automaticamente (fica retida para análise).
+     */
+    public void registarKmFinalELiquidar(int reservaId, int kmFinal, boolean incidente) throws SQLException {
         Reserva r = reservaRepo.findById(reservaId)
             .orElseThrow(() -> new IllegalArgumentException("Reserva não encontrada."));
         if (r.getLocatarioId() != Session.getUser().getId())
@@ -99,7 +123,14 @@ public class ReservaService {
             throw new IllegalArgumentException("Km final deve ser maior que o inicial (" + r.getKmInicial() + " km).");
         // Buscar preço atual do combustível do tipo do veículo
         double precoCombustivel = reservaRepo.getPrecoAtualCombustivel(r.getCombustivelVeiculo());
-        reservaRepo.updateKmFinalELiquidacao(reservaId, kmFinal, precoCombustivel);
+        reservaRepo.updateKmFinalELiquidacao(reservaId, kmFinal, precoCombustivel, incidente);
+        // Os quilómetros percorridos passam a ser a nova quilometragem do veículo,
+        // para que a próxima reserva já arranque com o km inicial correto.
+        veiculoRepo.updateQuilometragem(r.getVeiculoId(), kmFinal);
+        // O saldo do locatário (e do proprietário, se for o utilizador atual) é alterado
+        // diretamente na base de dados; recarregar a sessão evita que a UI mostre um saldo
+        // desatualizado até um novo login.
+        Session.refresh();
     }
 
     /** Assinatura de compatibilidade (para chamadas legadas com preço explícito). */
@@ -112,13 +143,28 @@ public class ReservaService {
             throw new IllegalStateException("Regista primeiro o Km inicial.");
         if (kmFinal <= r.getKmInicial())
             throw new IllegalArgumentException("Km final deve ser maior que o inicial.");
-        reservaRepo.updateKmFinalELiquidacao(reservaId, kmFinal, precoCombustivel);
+        reservaRepo.updateKmFinalELiquidacao(reservaId, kmFinal, precoCombustivel, false);
+        veiculoRepo.updateQuilometragem(r.getVeiculoId(), kmFinal);
+        Session.refresh();
     }
 
+    /** Avaliação do locatário (sobre a experiência): guarda como tipo LOCATARIO. */
     public void avaliarReserva(int reservaId, int estrelas, String comentario) throws SQLException {
         if (estrelas < 1 || estrelas > 5)
             throw new IllegalArgumentException("Avaliação deve ser entre 1 e 5.");
         reservaRepo.updateAvaliacao(reservaId, estrelas, comentario);
+    }
+
+    /** Avaliação do proprietário ao locatário: guarda como tipo PROPRIETARIO. */
+    public void avaliarLocatario(int reservaId, int estrelas, String comentario) throws SQLException {
+        if (estrelas < 1 || estrelas > 5)
+            throw new IllegalArgumentException("Avaliação deve ser entre 1 e 5.");
+        reservaRepo.avaliarComoProprietario(reservaId, estrelas, comentario);
+    }
+
+    /** Devolve o preço corrente do combustível (tabela precos_combustivel) para o tipo indicado. */
+    public double getPrecoAtualCombustivel(String tipoCombustivel) {
+        return reservaRepo.getPrecoAtualCombustivel(tipoCombustivel);
     }
 
     /**

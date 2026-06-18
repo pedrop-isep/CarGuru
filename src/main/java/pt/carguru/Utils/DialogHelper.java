@@ -156,6 +156,13 @@ public class DialogHelper {
         box.setPadding(new Insets(4, 0, 4, 0));
         dlg.getDialogPane().setContent(box);
 
+        // Campo obrigatório: impede confirmar com o valor vazio.
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tf.textProperty().addListener((obs, oldV, newV) -> btnOk.setDisable(newV == null || newV.trim().isEmpty()));
+        }
+
         try { dlg.initStyle(StageStyle.TRANSPARENT); } catch (Exception ignored) {}
         return dlg.showAndWait();
     }
