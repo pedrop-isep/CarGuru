@@ -213,6 +213,21 @@ public class ReservaService {
         return reservaRepo.findByProprietario(Session.getUser().getId());
     }
 
+    /**
+     * Devolve as reservas do utilizador como locatário, opcionalmente filtradas por período.
+     * Passa null em qualquer dos parâmetros de data para não aplicar esse limite.
+     */
+    public List<Reserva> minhasReservasComoLocatarioFiltrado(LocalDate de, LocalDate ate) throws SQLException {
+        return reservaRepo.findByLocatarioFiltrado(Session.getUser().getId(), de, ate);
+    }
+
+    /**
+     * Devolve as reservas do utilizador como proprietário, opcionalmente filtradas por período.
+     */
+    public List<Reserva> minhasReservasComoProprietarioFiltrado(LocalDate de, LocalDate ate) throws SQLException {
+        return reservaRepo.findByProprietarioFiltrado(Session.getUser().getId(), de, ate);
+    }
+
     public List<Reserva> listarTodas() throws SQLException {
         if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
         return reservaRepo.findAll();

@@ -25,6 +25,8 @@ public class Veiculo {
     private int nAvaliacoes;
     private LocalDate dataCriacao;
     private String imagemPath;
+    private String proprietarioEmail;
+    private String motivoRejeicao;
 
     public Veiculo() {}
 
@@ -91,6 +93,10 @@ public class Veiculo {
 
     public String getImagemPath() { return imagemPath; }
     public void setImagemPath(String i) { this.imagemPath = i; }
+    public String getProprietarioEmail() { return proprietarioEmail; }
+    public void setProprietarioEmail(String e) { this.proprietarioEmail = e; }
+    public String getMotivoRejeicao() { return motivoRejeicao; }
+    public void setMotivoRejeicao(String m) { this.motivoRejeicao = m; }
 
     public String getNomeCompleto() { return marca + " " + modelo + " (" + ano + ")"; }
     public String getAvaliacaoStr() {

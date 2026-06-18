@@ -315,6 +315,41 @@ public class ReservaRepository {
         return query(buildJoin("v.proprietario_id=?") + " ORDER BY r.data_pedido DESC", proprietarioId);
     }
 
+    /**
+     * Devolve reservas do locatário filtradas por período (data_inicio >= de AND data_fim <= ate).
+     * Passa null em qualquer dos campos de data para não filtrar por esse limite.
+     */
+    public List<Reserva> findByLocatarioFiltrado(int locatarioId, LocalDate de, LocalDate ate) throws SQLException {
+        return queryFiltrado("r.locatario_id", locatarioId, de, ate);
+    }
+
+    /**
+     * Devolve reservas do proprietário filtradas por período.
+     */
+    public List<Reserva> findByProprietarioFiltrado(int proprietarioId, LocalDate de, LocalDate ate) throws SQLException {
+        return queryFiltrado("v.proprietario_id", proprietarioId, de, ate);
+    }
+
+    private List<Reserva> queryFiltrado(String coluna, int userId,
+                                         LocalDate de, LocalDate ate) throws SQLException {
+        StringBuilder where = new StringBuilder(coluna + "=?");
+        if (de  != null) where.append(" AND r.data_inicio >= ?");
+        if (ate != null) where.append(" AND r.data_fim <= ?");
+        String sql = buildJoin(where.toString()) + " ORDER BY r.data_pedido DESC";
+
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            ps.setInt(idx++, userId);
+            if (de  != null) ps.setDate(idx++, Date.valueOf(de));
+            if (ate != null) ps.setDate(idx,   Date.valueOf(ate));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
     public List<Reserva> findAll() throws SQLException {
         List<Reserva> list = new ArrayList<>();
         String sql = buildJoin("1=1") + " ORDER BY r.data_pedido DESC";

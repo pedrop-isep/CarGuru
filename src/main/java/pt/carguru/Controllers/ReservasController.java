@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import pt.carguru.App;
 import pt.carguru.Models.Reserva;
 import pt.carguru.Services.DisputaService;
@@ -13,6 +14,13 @@ import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReservasController {
@@ -20,40 +28,230 @@ public class ReservasController {
     @FXML private VBox reservasProprietarioList;
     @FXML private Button btnAdmin;
 
+    // Filtros do tab Locatário
+    private DatePicker filtroLocDe;
+    private DatePicker filtroLocAte;
+    private List<Reserva> cacheLocatario = new ArrayList<>();
+
+    // Filtros do tab Proprietário
+    private DatePicker filtroPropDe;
+    private DatePicker filtroPropAte;
+    private List<Reserva> cacheProprietario = new ArrayList<>();
+
     private final ReservaService reservaService = new ReservaService();
     private final DisputaService disputaService = new DisputaService();
+
+    private static final DateTimeFormatter DATA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @FXML
     public void initialize() {
         if (Session.getUser() == null) { App.navigateTo("Login"); return; }
         NavbarHelper.configurar(btnAdmin);
-        carregarLocatario();
-        carregarProprietario();
+        injetarBarraLocatario();
+        injetarBarraProprietario();
+        carregarLocatario(null, null);
+        carregarProprietario(null, null);
     }
 
-    private void carregarLocatario() {
+    // ── Locatário ────────────────────────────────────────────────────────────
+
+    private void injetarBarraLocatario() {
+        javafx.scene.Parent parent = reservasLocatarioList.getParent();
+        if (!(parent instanceof VBox card)) return;
+
+        filtroLocDe  = datePicker("Data início");
+        filtroLocAte = datePicker("Data fim");
+
+        Button btnFiltrar = new Button("🔍 Filtrar");
+        btnFiltrar.getStyleClass().add("btn-primary");
+        btnFiltrar.setOnAction(e -> aplicarFiltrosLocatario());
+
+        Button btnLimpar = new Button("✕ Limpar");
+        estilizarBtnLimpar(btnLimpar);
+        btnLimpar.setOnAction(e -> {
+            filtroLocDe.setValue(null);
+            filtroLocAte.setValue(null);
+            carregarLocatario(null, null);
+        });
+
+        Button btnCsv = new Button("📥 Exportar CSV");
+        btnCsv.getStyleClass().add("btn-outline-sm");
+        btnCsv.setOnAction(e -> exportarCsv(cacheLocatario, "locatario"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox barra = new HBox(8,
+                labelFiltro("De:"), filtroLocDe,
+                labelFiltro("Até:"), filtroLocAte,
+                btnFiltrar, btnLimpar,
+                spacer, btnCsv);
+        barra.setAlignment(Pos.CENTER_LEFT);
+        barra.setPadding(new Insets(4, 4, 4, 4));
+
+        int idx = card.getChildren().indexOf(reservasLocatarioList);
+        if (idx >= 0) card.getChildren().add(idx, barra);
+        else card.getChildren().add(0, barra);
+    }
+
+    private void aplicarFiltrosLocatario() {
+        LocalDate de  = filtroLocDe  != null ? filtroLocDe.getValue()  : null;
+        LocalDate ate = filtroLocAte != null ? filtroLocAte.getValue() : null;
+        if (ate != null && de != null && ate.isBefore(de)) {
+            DialogHelper.erro("A data de fim não pode ser anterior à data de início.");
+            return;
+        }
+        carregarLocatario(de, ate);
+    }
+
+    private void carregarLocatario(LocalDate de, LocalDate ate) {
         try {
-            List<Reserva> lista = reservaService.minhasReservasComoLocatario();
+            cacheLocatario = reservaService.minhasReservasComoLocatarioFiltrado(de, ate);
             reservasLocatarioList.getChildren().clear();
-            if (lista.isEmpty()) {
-                reservasLocatarioList.getChildren().add(vazio("Ainda não tens reservas como locatário."));
+            if (cacheLocatario.isEmpty()) {
+                reservasLocatarioList.getChildren().add(vazio("Não foram encontradas reservas com os filtros selecionados."));
             } else {
-                for (Reserva r : lista) reservasLocatarioList.getChildren().add(cardLocatario(r));
+                for (Reserva r : cacheLocatario) reservasLocatarioList.getChildren().add(cardLocatario(r));
             }
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
-    private void carregarProprietario() {
+    // ── Proprietário ─────────────────────────────────────────────────────────
+
+    private void injetarBarraProprietario() {
+        javafx.scene.Parent parent = reservasProprietarioList.getParent();
+        if (!(parent instanceof VBox card)) return;
+
+        filtroPropDe  = datePicker("Data início");
+        filtroPropAte = datePicker("Data fim");
+
+        Button btnFiltrar = new Button("🔍 Filtrar");
+        btnFiltrar.getStyleClass().add("btn-primary");
+        btnFiltrar.setOnAction(e -> aplicarFiltrosProprietario());
+
+        Button btnLimpar = new Button("✕ Limpar");
+        estilizarBtnLimpar(btnLimpar);
+        btnLimpar.setOnAction(e -> {
+            filtroPropDe.setValue(null);
+            filtroPropAte.setValue(null);
+            carregarProprietario(null, null);
+        });
+
+        Button btnCsv = new Button("📥 Exportar CSV");
+        btnCsv.getStyleClass().add("btn-outline-sm");
+        btnCsv.setOnAction(e -> exportarCsv(cacheProprietario, "proprietario"));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox barra = new HBox(8,
+                labelFiltro("De:"), filtroPropDe,
+                labelFiltro("Até:"), filtroPropAte,
+                btnFiltrar, btnLimpar,
+                spacer, btnCsv);
+        barra.setAlignment(Pos.CENTER_LEFT);
+        barra.setPadding(new Insets(4, 4, 4, 4));
+
+        int idx = card.getChildren().indexOf(reservasProprietarioList);
+        if (idx >= 0) card.getChildren().add(idx, barra);
+        else card.getChildren().add(0, barra);
+    }
+
+    private void aplicarFiltrosProprietario() {
+        LocalDate de  = filtroPropDe  != null ? filtroPropDe.getValue()  : null;
+        LocalDate ate = filtroPropAte != null ? filtroPropAte.getValue() : null;
+        if (ate != null && de != null && ate.isBefore(de)) {
+            DialogHelper.erro("A data de fim não pode ser anterior à data de início.");
+            return;
+        }
+        carregarProprietario(de, ate);
+    }
+
+    private void carregarProprietario(LocalDate de, LocalDate ate) {
         try {
-            List<Reserva> lista = reservaService.minhasReservasComoProprietario();
+            cacheProprietario = reservaService.minhasReservasComoProprietarioFiltrado(de, ate);
             reservasProprietarioList.getChildren().clear();
-            if (lista.isEmpty()) {
-                reservasProprietarioList.getChildren().add(vazio("Ainda não tens pedidos de reserva nos teus veículos."));
+            if (cacheProprietario.isEmpty()) {
+                reservasProprietarioList.getChildren().add(vazio("Não foram encontradas reservas com os filtros selecionados."));
             } else {
-                for (Reserva r : lista) reservasProprietarioList.getChildren().add(cardProprietario(r));
+                for (Reserva r : cacheProprietario) reservasProprietarioList.getChildren().add(cardProprietario(r));
             }
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
+
+    // ── Exportação CSV ────────────────────────────────────────────────────────
+
+    /**
+     * Exporta a lista de reservas atualmente visível (já filtrada) para um ficheiro CSV.
+     * Inclui: ID, Veículo, Data Início, Data Fim, Nº Dias, Estado, Valor Renda (€),
+     *         Caução (€), Km Inicial, Km Final, Contraparte (Proprietário ou Locatário).
+     *
+     * @param lista      reservas a exportar (as que estão no cache — podem estar filtradas)
+     * @param perspetiva "locatario" ou "proprietario" — define o campo Contraparte
+     */
+    private void exportarCsv(List<Reserva> lista, String perspetiva) {
+        if (lista == null || lista.isEmpty()) {
+            DialogHelper.erro("Não há reservas para exportar. Ajusta os filtros e tenta de novo.");
+            return;
+        }
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Guardar histórico de alugueres CSV");
+        fc.setInitialFileName("historico_alugueres_" + perspetiva + "_" + LocalDate.now() + ".csv");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV (*.csv)", "*.csv"));
+        File dest = fc.showSaveDialog(App.getStage());
+        if (dest == null) return;
+
+        boolean isLocatario = "locatario".equals(perspetiva);
+
+        try (PrintWriter pw = new PrintWriter(new FileWriter(dest, StandardCharsets.UTF_8))) {
+            // BOM para o Excel reconhecer UTF-8 automaticamente
+            pw.print('\uFEFF');
+
+            // Cabeçalho
+            if (isLocatario) {
+                pw.println("ID Reserva,Veículo,Data Início,Data Fim,Nº Dias,Estado," +
+                           "Valor Renda (€),Caução (€),Km Inicial,Km Final,Proprietário");
+            } else {
+                pw.println("ID Reserva,Veículo,Data Início,Data Fim,Nº Dias,Estado," +
+                           "Valor Renda (€),Caução (€),Km Inicial,Km Final,Locatário");
+            }
+
+            for (Reserva r : lista) {
+                String contraparte = isLocatario
+                        ? csv(r.getProprietarioNome())
+                        : csv(r.getLocatarioNome());
+
+                String kmI = r.getKmInicial() != null ? String.valueOf(r.getKmInicial()) : "";
+                String kmF = r.getKmFinal()   != null ? String.valueOf(r.getKmFinal())   : "";
+
+                pw.printf("\"%d\",\"%s\",\"%s\",\"%s\",\"%d\",\"%s\",\"%.2f\",\"%.2f\",\"%s\",\"%s\",\"%s\"%n",
+                        r.getId(),
+                        csv(r.getVeiculoNome()),
+                        r.getDataInicio().format(DATA_FMT),
+                        r.getDataFim().format(DATA_FMT),
+                        r.getNumeroDias(),
+                        r.getEstado(),
+                        r.getTotal(),
+                        r.getCaucao(),
+                        kmI,
+                        kmF,
+                        contraparte);
+            }
+
+            DialogHelper.sucesso("CSV exportado com sucesso para:\n" + dest.getAbsolutePath());
+        } catch (Exception ex) {
+            DialogHelper.erro("Erro ao exportar CSV: " + ex.getMessage());
+        }
+    }
+
+    /** Escapa aspas duplas dentro de um valor CSV. */
+    private String csv(String val) {
+        if (val == null) return "";
+        return val.replace("\"", "\"\"");
+    }
+
+    // ── Cards UI ──────────────────────────────────────────────────────────────
 
     private VBox cardLocatario(Reserva r) {
         VBox card = new VBox(8);
@@ -75,7 +273,6 @@ public class ReservasController {
         Label prop = new Label("👤 Proprietário: " + (r.getProprietarioNome() != null ? r.getProprietarioNome() : "-"));
         prop.getStyleClass().add("reserva-datas");
 
-        // Mostrar caução sempre que esteja definida
         if (r.getCaucao() > 0) {
             String caucaoStatus = "concluida".equals(r.getEstado()) ? "🔓 Caução: %.2f€ (liquidada)" : "🔒 Caução retida: %.2f€";
             Label caucaoLbl = new Label(String.format(caucaoStatus, r.getCaucao()));
@@ -99,7 +296,7 @@ public class ReservasController {
             btnC.getStyleClass().add("btn-danger");
             btnC.setOnAction(e -> {
                 if (confirmar("Cancelar reserva?")) {
-                    try { reservaService.cancelarReserva(r.getId()); carregarLocatario(); }
+                    try { reservaService.cancelarReserva(r.getId()); carregarLocatario(null, null); }
                     catch (Exception ex) { mostrarErro(ex.getMessage()); }
                 }
             });
@@ -118,7 +315,6 @@ public class ReservasController {
             btns.getChildren().add(btnA);
         }
 
-        // Botão de disputa: disponível para reservas concluídas com incidente, sem disputa já aberta
         if ("concluida".equals(r.getEstado()) && r.getCaucao() > 0) {
             try {
                 boolean jaTemDisputa = disputaService.existeDisputa(r.getId());
@@ -165,21 +361,20 @@ public class ReservasController {
             Button btnAp = new Button("✅ Aprovar");
             btnAp.getStyleClass().add("btn-success");
             btnAp.setOnAction(e -> {
-                try { reservaService.aprovarReserva(r.getId()); carregarProprietario(); mostrarSucesso("Reserva aprovada!"); }
+                try { reservaService.aprovarReserva(r.getId()); carregarProprietario(null, null); mostrarSucesso("Reserva aprovada!"); }
                 catch (Exception ex) { mostrarErro(ex.getMessage()); }
             });
             Button btnRe = new Button("❌ Recusar");
             btnRe.getStyleClass().add("btn-danger");
             btnRe.setOnAction(e -> {
                 if (confirmar("Recusar reserva?")) {
-                    try { reservaService.cancelarReserva(r.getId()); carregarProprietario(); }
+                    try { reservaService.cancelarReserva(r.getId()); carregarProprietario(null, null); }
                     catch (Exception ex) { mostrarErro(ex.getMessage()); }
                 }
             });
             btns.getChildren().addAll(btnAp, btnRe);
         }
 
-        // Botão para o proprietário avaliar o locatário
         if ("concluida".equals(r.getEstado()) && r.getAvaliacaoProprietario() == null) {
             Button btnAP = new Button("⭐ Avaliar Locatário");
             btnAP.getStyleClass().add("btn-primary");
@@ -195,6 +390,8 @@ public class ReservasController {
         if (!btns.getChildren().isEmpty()) card.getChildren().add(btns);
         return card;
     }
+
+    // ── Diálogos ──────────────────────────────────────────────────────────────
 
     private void abrirAvaliacaoProprietario(Reserva r) {
         Dialog<ButtonType> dlg = new Dialog<>();
@@ -219,32 +416,13 @@ public class ReservasController {
             if (bt == ButtonType.OK) {
                 try {
                     reservaService.avaliarLocatario(r.getId(), estrelas.getValue(), comentario.getText());
-                    carregarProprietario();
+                    carregarProprietario(null, null);
                     mostrarSucesso("Avaliação ao locatário submetida!");
                 } catch (Exception e) { mostrarErro(e.getMessage()); }
             }
         });
     }
 
-    private String estadoEmoji(String estado) {
-        return switch (estado) {
-            case "pendente" -> "🕐";
-            case "confirmada" -> "✅";
-            case "cancelada" -> "❌";
-            case "concluida" -> "🏁";
-            default -> "•";
-        };
-    }
-
-    private Label vazio(String msg) {
-        Label l = new Label(msg);
-        l.getStyleClass().add("conta-email");
-        l.setPadding(new Insets(16));
-        return l;
-    }
-
-    /** Diálogo de registo de Km final, com campo obrigatório e opção de reportar incidente
-     *  (caso reportado, a caução não é devolvida automaticamente). */
     private void pedirKmFinal(Reserva r) {
         Dialog<ButtonType> dlg = new Dialog<>();
         dlg.setTitle("Km Final");
@@ -272,7 +450,6 @@ public class ReservasController {
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         DialogHelper.estilizar(dlg);
 
-        // Campo obrigatório: só permite confirmar com um km final válido (> km inicial).
         javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
         if (btnOk != null) {
             btnOk.setDisable(true);
@@ -292,7 +469,7 @@ public class ReservasController {
                     int km = Integer.parseInt(tf.getText().trim());
                     boolean incidente = cbIncidente.isSelected();
                     reservaService.registarKmFinalELiquidar(r.getId(), km, incidente);
-                    carregarLocatario();
+                    carregarLocatario(null, null);
                     if (incidente) mostrarSucesso("Reserva concluída. Incidente reportado — a caução não foi devolvida.");
                     else mostrarSucesso("Reserva concluída e liquidada! Caução devolvida.");
                 } catch (Exception ex) { mostrarErro(ex.getMessage()); }
@@ -326,7 +503,6 @@ public class ReservasController {
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         DialogHelper.estilizar(dlg);
 
-        // Desabilitar OK enquanto o campo estiver vazio
         javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
         if (btnOk != null) {
             btnOk.setDisable(true);
@@ -337,7 +513,7 @@ public class ReservasController {
             if (bt == ButtonType.OK) {
                 try {
                     disputaService.abrirDisputa(r.getId(), tfDesc.getText().trim());
-                    carregarLocatario();
+                    carregarLocatario(null, null);
                     mostrarSucesso("Disputa submetida com sucesso. O administrador irá analisar o caso.");
                 } catch (Exception ex) { mostrarErro(ex.getMessage()); }
             }
@@ -358,10 +534,48 @@ public class ReservasController {
         DialogHelper.estilizar(dlg);
         dlg.showAndWait().ifPresent(bt -> {
             if (bt == ButtonType.OK) {
-                try { reservaService.avaliarReserva(r.getId(), estrelas.getValue(), comentario.getText()); carregarLocatario(); mostrarSucesso("Avaliação submetida!"); }
+                try { reservaService.avaliarReserva(r.getId(), estrelas.getValue(), comentario.getText()); carregarLocatario(null, null); mostrarSucesso("Avaliação submetida!"); }
                 catch (Exception e) { mostrarErro(e.getMessage()); }
             }
         });
+    }
+
+    // ── Helpers UI ────────────────────────────────────────────────────────────
+
+    private DatePicker datePicker(String prompt) {
+        DatePicker dp = new DatePicker();
+        dp.setPromptText(prompt);
+        dp.getStyleClass().add("form-input");
+        dp.setPrefWidth(145);
+        return dp;
+    }
+
+    private Label labelFiltro(String txt) {
+        Label l = new Label(txt);
+        l.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        return l;
+    }
+
+    private void estilizarBtnLimpar(Button btn) {
+        btn.setStyle("-fx-background-color: #374151; -fx-text-fill: #d1d5db; " +
+                "-fx-background-radius: 8; -fx-border-radius: 8;");
+    }
+
+    private String estadoEmoji(String estado) {
+        return switch (estado) {
+            case "pendente"   -> "🕐";
+            case "confirmada" -> "✅";
+            case "cancelada"  -> "❌";
+            case "concluida"  -> "🏁";
+            default           -> "•";
+        };
+    }
+
+    private Label vazio(String msg) {
+        Label l = new Label(msg);
+        l.getStyleClass().add("conta-email");
+        l.setPadding(new Insets(16));
+        return l;
     }
 
     private boolean confirmar(String msg) {
@@ -370,12 +584,14 @@ public class ReservasController {
                 .isPresent();
     }
 
-    @FXML public void irParaHome()     { App.navigateTo("Home"); }
+    // ── Navegação ─────────────────────────────────────────────────────────────
+
+    @FXML public void irParaHome()      { App.navigateTo("Home"); }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void irParaAdmin()     { if (Session.isAdmin()) App.navigateTo("Admin"); }
-    @FXML public void logout() { NavbarHelper.logout(); }
+    @FXML public void logout()          { NavbarHelper.logout(); }
 
     private void mostrarErro(String msg)    { DialogHelper.erro(msg); }
     private void mostrarSucesso(String msg) { DialogHelper.sucesso(msg); }

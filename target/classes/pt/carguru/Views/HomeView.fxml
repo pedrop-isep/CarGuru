@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="pt.carguru.Controllers.HomeController"
+            styleClass="root-bg" prefWidth="1200" prefHeight="760">
+
+  <top>
+    <VBox>
+      <!-- Navbar pública (não autenticado) -->
+      <HBox fx:id="navPublica" styleClass="navbar" alignment="CENTER_LEFT" spacing="8">
+        <padding><Insets top="12" right="28" bottom="12" left="28"/></padding>
+        <Button text="🚗 CarGuru" styleClass="nav-brand-btn" onAction="#irParaHome" focusTraversable="false"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Entrar" styleClass="btn-outline-sm" onAction="#irParaLogin"/>
+        <Button text="Registar" styleClass="btn-primary" onAction="#irParaRegisto"/>
+      </HBox>
+      <!-- Navbar autenticado -->
+      <HBox fx:id="navAutenticada" styleClass="navbar" alignment="CENTER_LEFT" spacing="4" visible="false" managed="false">
+        <padding><Insets top="12" right="24" bottom="12" left="24"/></padding>
+        <Button text="🚗 CarGuru" styleClass="nav-brand-btn" onAction="#irParaHome" focusTraversable="false"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Dashboard" styleClass="nav-btn" onAction="#irParaDashboard" focusTraversable="false"/>
+        <Button text="Veículos" styleClass="nav-btn" onAction="#irParaVeiculos" focusTraversable="false"/>
+        <Button text="Reservas" styleClass="nav-btn" onAction="#irParaReservas" focusTraversable="false"/>
+        <Button text="Conta" styleClass="nav-btn" onAction="#irParaConta" focusTraversable="false"/>
+        <Button fx:id="btnAdmin" text="🛡️ Admin" styleClass="nav-admin" onAction="#irParaAdmin" focusTraversable="false"/>
+        <Button text="Logout" styleClass="nav-logout" onAction="#logout" focusTraversable="false"/>
+      </HBox>
+    </VBox>
+  </top>
+
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll">
+      <VBox styleClass="page-content" spacing="0">
+
+        <!-- Hero -->
+        <VBox styleClass="hero-section" spacing="20" alignment="CENTER">
+          <padding><Insets top="70" right="60" bottom="60" left="60"/></padding>
+          <Label text="🚗" style="-fx-font-size:4em;"/>
+          <Label styleClass="hero-title" text="Aluga. Partilha. Poupa." wrapText="true" maxWidth="600" style="-fx-alignment:CENTER;"/>
+          <Label styleClass="hero-subtitle" text="A plataforma peer-to-peer de aluguer de veículos entre particulares. Encontra o carro perfeito ou rentabiliza o teu." wrapText="true" maxWidth="520" style="-fx-alignment:CENTER;"/>
+          <HBox spacing="14" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
+            <Button text="Explorar Veículos →" styleClass="hero-cta" onAction="#irParaVeiculos" focusTraversable="false"/>
+            <Button text="Anunciar o meu carro" styleClass="hero-cta-outline" onAction="#irParaAnunciar"/>
+          </HBox>
+        </VBox>
+
+        <!-- Stats bar -->
+        <HBox styleClass="stats-bar" alignment="CENTER" spacing="60">
+          <VBox alignment="CENTER" spacing="4">
+            <Label text="500+" styleClass="stats-bar-number"/>
+            <Label text="Veículos disponíveis" styleClass="stats-bar-label"/>
+          </VBox>
+          <VBox alignment="CENTER" spacing="4">
+            <Label text="1200+" styleClass="stats-bar-number"/>
+            <Label text="Utilizadores registados" styleClass="stats-bar-label"/>
+          </VBox>
+          <VBox alignment="CENTER" spacing="4">
+            <Label text="98%" styleClass="stats-bar-number"/>
+            <Label text="Taxa de satisfação" styleClass="stats-bar-label"/>
+          </VBox>
+          <VBox alignment="CENTER" spacing="4">
+            <Label text="24/7" styleClass="stats-bar-number"/>
+            <Label text="Suporte disponível" styleClass="stats-bar-label"/>
+          </VBox>
+        </HBox>
+
+        <!-- Features -->
+        <VBox spacing="32" style="-fx-padding: 60 60 60 60; -fx-background-color: #0d0d0d;">
+          <Label text="Porquê escolher o CarGuru?" styleClass="home-section-title"/>
+          <HBox spacing="20">
+            <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+              <Label text="🔒" styleClass="feature-icon"/>
+              <Label text="100% Seguro" styleClass="feature-title"/>
+              <Label text="Pagamentos seguros com caução. Os teus dados e dinheiro estão sempre protegidos." styleClass="feature-desc" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+              <Label text="💰" styleClass="feature-icon"/>
+              <Label text="Preços Justos" styleClass="feature-title"/>
+              <Label text="Sem intermediários. Negocia diretamente com proprietários e poupa até 40%." styleClass="feature-desc" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+              <Label text="⭐" styleClass="feature-icon"/>
+              <Label text="Avaliações Reais" styleClass="feature-title"/>
+              <Label text="Sistema de avaliações bidirecional. Confia na comunidade CarGuru." styleClass="feature-desc" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="feature-card" HBox.hgrow="ALWAYS">
+              <Label text="📍" styleClass="feature-icon"/>
+              <Label text="Em todo Portugal" styleClass="feature-title"/>
+              <Label text="Veículos disponíveis em todos os distritos. Encontra o mais perto de ti." styleClass="feature-desc" wrapText="true"/>
+            </VBox>
+          </HBox>
+        </VBox>
+
+        <!-- CTA final -->
+        <VBox alignment="CENTER" spacing="16" style="-fx-background-color: #0f0f0f; -fx-padding: 60 60 70 60;">
+          <Label text="Pronto para começar?" styleClass="home-section-title"/>
+          <Label text="Junta-te a mais de 1200 utilizadores que já confiam no CarGuru." styleClass="hero-subtitle" wrapText="true"/>
+          <Button text="Criar conta gratuita →" styleClass="hero-cta" onAction="#irParaRegisto" style="-fx-padding: 14 48 14 48;"/>
+        </VBox>
+
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

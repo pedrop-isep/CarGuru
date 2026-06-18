@@ -59,13 +59,23 @@ public class VeiculoRepository {
     }
 
     public void updateEstado(int id, String estado) throws SQLException {
+        updateEstadoComMotivo(id, estado, null);
+    }
+
+    /**
+     * Atualiza o estado do veículo e guarda opcionalmente um motivo de rejeição.
+     * O motivo é persistido na coluna motivo_rejeicao (TEXT, nullable).
+     */
+    public void updateEstadoComMotivo(int id, String estado, String motivo) throws SQLException {
         boolean validado = "DISPONIVEL".equals(estado);
-        String sql = "UPDATE veiculos SET estado=?, validado=? WHERE id=?";
+        String sql = "UPDATE veiculos SET estado=?, validado=?, motivo_rejeicao=? WHERE id=?";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, estado);
             ps.setBoolean(2, validado);
-            ps.setInt(3, id);
+            if (motivo != null && !motivo.isBlank()) ps.setString(3, motivo);
+            else ps.setNull(3, java.sql.Types.VARCHAR);
+            ps.setInt(4, id);
             ps.executeUpdate();
         }
     }
@@ -232,6 +242,8 @@ public class VeiculoRepository {
         Timestamp dc = rs.getTimestamp("data_criacao");
         if (dc != null) v.setDataCriacao(dc.toLocalDateTime().toLocalDate());
         // Imagem guardada localmente como ficheiro, path derivado do id
+        try { v.setProprietarioEmail(rs.getString("proprietario_email")); } catch (Exception ignored) {}
+        try { v.setMotivoRejeicao(rs.getString("motivo_rejeicao")); } catch (Exception ignored) {}
         return v;
     }
 

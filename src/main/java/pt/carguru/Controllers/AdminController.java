@@ -19,6 +19,9 @@ import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,34 +64,153 @@ public class AdminController {
     }
 
     private VBox rowVeiculoPendente(Veiculo v) {
-        VBox box = new VBox(8);
+        VBox box = new VBox(10);
         box.getStyleClass().add("admin-row");
 
+        // ── Cabeçalho: nome + badge estado ───────────────────────────────────
+        HBox topRow = new HBox(10);
+        topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label titulo = new Label("🚗 " + v.getNomeCompleto());
         titulo.getStyleClass().add("admin-card-title");
+        javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+        HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+        Label badge = new Label("⏳ PENDENTE");
+        badge.getStyleClass().add("admin-badge-warn");
+        topRow.getChildren().addAll(titulo, sp, badge);
 
-        Label meta = new Label(String.format("👤 %s   📍 %s   💶 %.2f€/dia",
-                v.getProprietarioNome(), v.getLocalizacao(), v.getPrecoPorDia()));
-        meta.getStyleClass().add("admin-card-meta");
-        meta.setWrapText(true);
+        // ── Matrícula ────────────────────────────────────────────────────────
+        String matriculaStr = (v.getMatricula() != null && !v.getMatricula().isBlank())
+                ? v.getMatricula() : "⚠️ Não definida";
+        Label matriculaLbl = new Label("🔖 Matrícula: " + matriculaStr);
+        matriculaLbl.setStyle(v.getMatricula() != null && !v.getMatricula().isBlank()
+                ? "-fx-text-fill: #f1f5f9; -fx-font-weight: bold;"
+                : "-fx-text-fill: #f87171; -fx-font-weight: bold;");
 
+        // ── Dados técnicos ────────────────────────────────────────────────────
+        Label dadosTecnicos = new Label(String.format(
+                "⛽ %s   🔧 %s   👥 %d lugares   🛣️ %d km   💶 %.2f€/dia",
+                v.getCombustivel() != null ? v.getCombustivel() : "-",
+                v.getTransmissao() != null ? v.getTransmissao() : "-",
+                v.getLotacao(),
+                v.getQuilometragem(),
+                v.getPrecoPorDia()));
+        dadosTecnicos.getStyleClass().add("admin-card-meta");
+        dadosTecnicos.setWrapText(true);
+
+        // ── Proprietário e localização ────────────────────────────────────────
+        String emailStr = v.getProprietarioEmail() != null ? "  ✉️ " + v.getProprietarioEmail() : "";
+        Label proprietarioLbl = new Label(String.format("👤 %s%s   📍 %s",
+                v.getProprietarioNome(), emailStr, v.getLocalizacao()));
+        proprietarioLbl.getStyleClass().add("admin-card-meta");
+        proprietarioLbl.setWrapText(true);
+
+        // ── Descrição (se existir) ─────────────────────────────────────────────
+        VBox infoBox = new VBox(6, topRow, matriculaLbl, dadosTecnicos, proprietarioLbl);
+        if (v.getDescricao() != null && !v.getDescricao().isBlank()) {
+            Label descLbl = new Label("📝 " + v.getDescricao());
+            descLbl.getStyleClass().add("admin-card-desc");
+            descLbl.setWrapText(true);
+            infoBox.getChildren().add(descLbl);
+        }
+
+        // ── Foto do veículo (se existir localmente) ─────────────────────────
+        HBox contentRow = new HBox(16);
+        contentRow.setAlignment(javafx.geometry.Pos.TOP_LEFT);
+        File imgFile = new File(pt.carguru.Repositories.VeiculoRepository.resolverPathImagem(v.getId()));
+        if (imgFile.exists()) {
+            try {
+                ImageView imgView = new ImageView(new Image(imgFile.toURI().toString()));
+                imgView.setFitWidth(160);
+                imgView.setFitHeight(110);
+                imgView.setPreserveRatio(true);
+                imgView.setStyle("-fx-border-radius: 8; -fx-background-radius: 8;");
+                contentRow.getChildren().add(imgView);
+            } catch (Exception ignored) {}
+        } else {
+            Label semFoto = new Label("📷 Sem foto");
+            semFoto.setStyle("-fx-text-fill: #f87171; -fx-font-size: 0.82em; -fx-padding: 8;");
+            contentRow.getChildren().add(semFoto);
+        }
+        HBox.setHgrow(infoBox, javafx.scene.layout.Priority.ALWAYS);
+        contentRow.getChildren().add(infoBox);
+
+        // ── Botões de ação ────────────────────────────────────────────────────
         Button btnAprovar = new Button("✅ Aprovar");
         btnAprovar.getStyleClass().add("btn-admin-ok");
         btnAprovar.setOnAction(e -> {
-            try { veiculoService.aprovarVeiculo(v.getId()); carregarVeiculosPendentes(); mostrarSucesso("Veículo aprovado!"); }
-            catch (Exception ex) { mostrarErro(ex.getMessage()); }
+            Optional<ButtonType> res = confirmar("Aprovar veículo",
+                    "Confirmas a aprovação de " + v.getNomeCompleto() + "?\n" +
+                    "O veículo ficará disponível na plataforma e o proprietário será notificado.");
+            if (res.isPresent() && res.get() == ButtonType.YES) {
+                try {
+                    veiculoService.aprovarVeiculo(v.getId());
+                    carregarVeiculosPendentes();
+                    mostrarSucesso("Veículo aprovado! Notificação enviada ao proprietário.");
+                } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+            }
         });
+
         Button btnRejeitar = new Button("❌ Rejeitar");
         btnRejeitar.getStyleClass().add("btn-admin-danger");
-        btnRejeitar.setOnAction(e -> {
-            try { veiculoService.rejeitarVeiculo(v.getId()); carregarVeiculosPendentes(); }
-            catch (Exception ex) { mostrarErro(ex.getMessage()); }
-        });
+        btnRejeitar.setOnAction(e -> abrirDialogoRejeicaoVeiculo(v));
 
         HBox btns = new HBox(8, btnAprovar, btnRejeitar);
         btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        box.getChildren().addAll(titulo, meta, btns);
+
+        box.getChildren().addAll(contentRow, btns);
         return box;
+    }
+
+    /**
+     * Abre um diálogo para o administrador introduzir a justificação de rejeição.
+     * O motivo é obrigatório, guardado na BD e enviado por email ao proprietário.
+     */
+    private void abrirDialogoRejeicaoVeiculo(Veiculo v) {
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Rejeitar Anúncio");
+
+        Label infoLbl = new Label(String.format(
+                "Veículo: %s\nProprietário: %s",
+                v.getNomeCompleto(),
+                v.getProprietarioNome() != null ? v.getProprietarioNome() : "-"));
+        infoLbl.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        infoLbl.setWrapText(true);
+
+        Label motivoLbl = new Label("Motivo da rejeição (obrigatório):");
+        motivoLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+
+        javafx.scene.control.TextArea tfMotivo = new javafx.scene.control.TextArea();
+        tfMotivo.setPromptText("Ex: Matrícula ilegível, dados técnicos incorretos, foto em falta...");
+        tfMotivo.setPrefRowCount(4);
+        tfMotivo.setWrapText(true);
+        tfMotivo.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white; " +
+                "-fx-border-color: rgba(255,255,255,0.12); -fx-border-radius: 8; -fx-background-radius: 8;");
+
+        Label avisoLbl = new Label("📧 O proprietário será notificado por email com este motivo.");
+        avisoLbl.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 0.8em;");
+
+        VBox conteudo = new VBox(10, infoLbl, motivoLbl, tfMotivo, avisoLbl);
+        conteudo.setPadding(new Insets(4, 0, 4, 0));
+        dlg.getDialogPane().setContent(conteudo);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.estilizar(dlg);
+
+        // OK só ativo quando há texto
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tfMotivo.textProperty().addListener((obs, o, n) -> btnOk.setDisable(n.trim().isBlank()));
+        }
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt != ButtonType.OK) return;
+            String motivo = tfMotivo.getText().trim();
+            try {
+                veiculoService.rejeitarVeiculoComMotivo(v.getId(), motivo);
+                carregarVeiculosPendentes();
+                mostrarSucesso("Anúncio rejeitado. Proprietário notificado por email.");
+            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+        });
     }
 
     private void carregarTodosVeiculos() {
