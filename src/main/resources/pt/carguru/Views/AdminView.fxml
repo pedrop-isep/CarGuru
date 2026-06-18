@@ -71,6 +71,17 @@
             </ScrollPane>
           </Tab>
 
+          <!-- Disputas de caução -->
+          <Tab text="⚖️ Disputas de Caução">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="580">
+              <VBox spacing="12">
+                <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+                <Label text="Disputas de caução pendentes e resolvidas" styleClass="admin-section-title"/>
+                <VBox fx:id="disputasList" spacing="10"/>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
         </TabPane>
       </VBox>
     </ScrollPane>

@@ -32,6 +32,7 @@ public class VehiclesController {
     @FXML private ComboBox<String> fOrdenacao;
     @FXML private DatePicker fDataInicio;
     @FXML private DatePicker fDataFim;
+    @FXML private TextField fKmsPrevistos;
     @FXML private FlowPane vehiclesGrid;
     @FXML private Button btnAdmin;
 
@@ -80,14 +81,33 @@ public class VehiclesController {
                 veiculos = veiculos.stream().filter(v -> v.getLotacao() >= lotacaoMin).collect(java.util.stream.Collectors.toList());
             }
 
-            // Ordenação
-            String ord = fOrdenacao != null ? fOrdenacao.getValue() : "Avaliação ↓";
-            if ("Preço ↑".equals(ord)) {
-                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia));
-            } else if ("Preço ↓".equals(ord)) {
-                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia).reversed());
+            // Kms previstos (opcional) - se preenchido, calcula-se o custo total estimado
+            // de cada veículo e a lista passa a ser ordenada por esse valor (mais económico primeiro).
+            Integer kmsPrevistos = null;
+            if (fKmsPrevistos != null) {
+                try {
+                    int kms = Integer.parseInt(fKmsPrevistos.getText().trim());
+                    if (kms >= 0) kmsPrevistos = kms;
+                } catch (Exception ignored) {}
+            }
+
+            java.util.Map<Integer, Double> custosEstimados = new java.util.HashMap<>();
+
+            if (kmsPrevistos != null) {
+                for (Veiculo v : veiculos) {
+                    custosEstimados.put(v.getId(), calcularCustoEstimado(v, dInicio, dFim, kmsPrevistos));
+                }
+                veiculos.sort(java.util.Comparator.comparingDouble(v -> custosEstimados.get(v.getId())));
             } else {
-                veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getAvaliacaoMedia).reversed());
+                // Ordenação clássica
+                String ord = fOrdenacao != null ? fOrdenacao.getValue() : "Avaliação ↓";
+                if ("Preço ↑".equals(ord)) {
+                    veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia));
+                } else if ("Preço ↓".equals(ord)) {
+                    veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getPrecoPorDia).reversed());
+                } else {
+                    veiculos.sort(java.util.Comparator.comparingDouble(Veiculo::getAvaliacaoMedia).reversed());
+                }
             }
 
             vehiclesGrid.getChildren().clear();
@@ -99,7 +119,7 @@ public class VehiclesController {
                 vehiclesGrid.getChildren().add(empty);
             } else {
                 for (Veiculo v : veiculos)
-                    vehiclesGrid.getChildren().add(criarCardVeiculo(v));
+                    vehiclesGrid.getChildren().add(criarCardVeiculo(v, custosEstimados.get(v.getId())));
             }
         } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
     }
@@ -114,6 +134,7 @@ public class VehiclesController {
         if (fLotacaoMin != null) fLotacaoMin.clear();
         if (fDataInicio != null) fDataInicio.setValue(null);
         if (fDataFim    != null) fDataFim.setValue(null);
+        if (fKmsPrevistos != null) fKmsPrevistos.clear();
         // Não usamos setValue aqui sem verificar primeiro, para não disparar o
         // listener de ordenação (que já chama carregarVeiculos) e pesquisar duas vezes.
         if (fOrdenacao != null && !"Avaliação ↓".equals(fOrdenacao.getValue())) {
@@ -123,7 +144,7 @@ public class VehiclesController {
         carregarVeiculos();
     }
 
-    private VBox criarCardVeiculo(Veiculo v) {
+    private VBox criarCardVeiculo(Veiculo v, Double custoEstimado) {
         VBox card = new VBox(0);
         card.getStyleClass().add("vehicle-card");
         card.setPrefWidth(248);
@@ -169,6 +190,13 @@ public class VehiclesController {
         rating.getStyleClass().add("card-rating");
 
         body.getChildren().addAll(titulo, ano, preco, badges, rating);
+
+        if (custoEstimado != null) {
+            Label custoLbl = new Label(String.format("💰 Custo estimado: %.2f€", custoEstimado));
+            custoLbl.getStyleClass().add("card-detail");
+            custoLbl.setStyle("-fx-text-fill: #4ade80; -fx-font-weight: bold;");
+            body.getChildren().add(custoLbl);
+        }
 
         Button btnDetalhes = new Button("Ver detalhes / Reservar");
         btnDetalhes.getStyleClass().add("btn-primary");
@@ -415,6 +443,24 @@ public class VehiclesController {
         val.setWrapText(true);
         val.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.9em;");
         return new VBox(2, lbl, val);
+    }
+
+    // ---- Custo total estimado (renda + combustível) para a ordenação por kms previstos ----
+    private double calcularCustoEstimado(Veiculo v, LocalDate inicio, LocalDate fim, int kmsPrevistos) {
+        long dias;
+        double precoDinamico;
+        if (inicio != null && fim != null && fim.isAfter(inicio)) {
+            dias = ChronoUnit.DAYS.between(inicio, fim);
+            precoDinamico = calcularPrecoDinamicoLocal(v.getPrecoPorDia(), inicio, fim, dias);
+        } else {
+            // Sem datas selecionadas: assume-se 1 dia ao preço base (sem fatores sazonais).
+            dias = 1;
+            precoDinamico = v.getPrecoPorDia();
+        }
+        double precoCombustivelCorrente = reservaService.getPrecoAtualCombustivel(v.getCombustivel());
+        double custoRenda = dias * precoDinamico;
+        double custoCombustivel = (kmsPrevistos / 100.0) * v.getConsumo() * precoCombustivelCorrente;
+        return custoRenda + custoCombustivel;
     }
 
     // ---- Helpers preço dinâmico (local, sem depender do service) ----

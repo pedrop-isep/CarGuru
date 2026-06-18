@@ -56,7 +56,7 @@ public class ReservaRepository {
         }
     }
 
-    public void updateKmFinalELiquidacao(int id, int kmFinal, double precoComb) throws SQLException {
+    public void updateKmFinalELiquidacao(int id, int kmFinal, double precoComb, boolean incidente) throws SQLException {
         // 1. Buscar dados da reserva numa única ligação transacional
         String sqlSelect =
             "SELECT r.km_inicial, r.custo_renda, r.caucao, r.locatario_id, v.proprietario_id, v.consumo_medio " +
@@ -81,11 +81,10 @@ public class ReservaRepository {
         int kmsPercorridos = kmFinal - kmInicial;
         double custoCombustivel = (kmsPercorridos / 100.0) * consumo * precoComb;
         double custoTotal = custoRenda + custoCombustivel;
+        // A caução só é devolvida automaticamente se não houver incidente reportado.
+        boolean caucaoDevolvida = !incidente;
 
-        // 3. Guardar km_final e marcar CONCLUIDA
-        String sqlUpdate = "UPDATE reservas SET estado='CONCLUIDA', km_inicial=km_inicial WHERE id=?";
-        // Guardar km_final na tabela alugueres (ou adicionar coluna reservas se não existir)
-        // A tabela alugueres tem km_final — registar aluguer se ainda não existir
+        // 3. Guardar km_final, registo do aluguer e marcar CONCLUIDA
         try (Connection c = DatabaseConnection.getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -99,10 +98,11 @@ public class ReservaRepository {
                 // 3b. Inserir registo na tabela alugueres (se ainda não existir)
                 try (PreparedStatement ps = c.prepareStatement(
                         "INSERT INTO alugueres (reserva_id, km_inicial, km_final, custo_renda, " +
-                        "custo_combustivel, custo_total, preco_combustivel_fim, caucao_devolvida) " +
-                        "VALUES (?,?,?,?,?,?,?,1) " +
+                        "custo_combustivel, custo_total, preco_combustivel_fim, caucao_devolvida, incidente) " +
+                        "VALUES (?,?,?,?,?,?,?,?,?) " +
                         "ON DUPLICATE KEY UPDATE km_final=VALUES(km_final), custo_combustivel=VALUES(custo_combustivel), " +
-                        "custo_total=VALUES(custo_total), preco_combustivel_fim=VALUES(preco_combustivel_fim), caucao_devolvida=1")) {
+                        "custo_total=VALUES(custo_total), preco_combustivel_fim=VALUES(preco_combustivel_fim), " +
+                        "caucao_devolvida=VALUES(caucao_devolvida), incidente=VALUES(incidente)")) {
                     ps.setInt(1, id);
                     ps.setInt(2, kmInicial);
                     ps.setInt(3, kmFinal);
@@ -110,18 +110,23 @@ public class ReservaRepository {
                     ps.setBigDecimal(5, java.math.BigDecimal.valueOf(custoCombustivel));
                     ps.setBigDecimal(6, java.math.BigDecimal.valueOf(custoTotal));
                     ps.setBigDecimal(7, java.math.BigDecimal.valueOf(precoComb));
+                    ps.setBoolean(8, caucaoDevolvida);
+                    ps.setBoolean(9, incidente);
                     ps.executeUpdate();
                 }
 
-                // 3c. Débito ao locatário: custo_total + caucao - caucao_devolvida = custo_total
-                // (a caução foi retida na criação, agora deduzimos o restante e devolvemos caução)
-                // Débito = custo_total (a caução de 20% já foi reservada mas não debitada ainda)
+                // 3c. Débito ao locatário: custo_total (renda + combustível)
+                double saldoLocatarioApos;
                 try (PreparedStatement ps = c.prepareStatement(
                         "UPDATE utilizadores SET saldo = saldo - ? WHERE id=?")) {
                     ps.setBigDecimal(1, java.math.BigDecimal.valueOf(custoTotal));
                     ps.setInt(2, locatarioId);
                     ps.executeUpdate();
                 }
+                saldoLocatarioApos = lerSaldo(c, locatarioId);
+                inserirTransacao(c, locatarioId, "PAGAMENTO_ALUGUER", custoTotal,
+                        String.format("Pagamento do aluguer #%d (renda + combustível)", id),
+                        saldoLocatarioApos, id, "reserva");
 
                 // 3d. Crédito ao proprietário: custo_renda (sem combustível, que fica com o locatário)
                 try (PreparedStatement ps = c.prepareStatement(
@@ -130,13 +135,26 @@ public class ReservaRepository {
                     ps.setInt(2, proprietarioId);
                     ps.executeUpdate();
                 }
+                inserirTransacao(c, proprietarioId, "RECEITA_ALUGUER", custoRenda,
+                        String.format("Receita do aluguer #%d", id),
+                        lerSaldo(c, proprietarioId), id, "reserva");
 
-                // 3e. Devolver caução ao locatário
-                try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE utilizadores SET saldo = saldo + ? WHERE id=?")) {
-                    ps.setBigDecimal(1, java.math.BigDecimal.valueOf(caucao));
-                    ps.setInt(2, locatarioId);
-                    ps.executeUpdate();
+                // 3e. Devolver caução ao locatário — apenas se não houver incidente reportado.
+                //     Em caso de incidente, a caução fica retida (para análise/disputa).
+                if (caucaoDevolvida) {
+                    try (PreparedStatement ps = c.prepareStatement(
+                            "UPDATE utilizadores SET saldo = saldo + ? WHERE id=?")) {
+                        ps.setBigDecimal(1, java.math.BigDecimal.valueOf(caucao));
+                        ps.setInt(2, locatarioId);
+                        ps.executeUpdate();
+                    }
+                    inserirTransacao(c, locatarioId, "CAUCAO_DEVOLVIDA", caucao,
+                            String.format("Devolução da caução do aluguer #%d", id),
+                            lerSaldo(c, locatarioId), id, "reserva");
+                } else {
+                    inserirTransacao(c, locatarioId, "CAUCAO_RETIDA", caucao,
+                            String.format("Caução retida — incidente reportado no aluguer #%d", id),
+                            lerSaldo(c, locatarioId), id, "reserva");
                 }
 
                 c.commit();
@@ -146,6 +164,36 @@ public class ReservaRepository {
             } finally {
                 c.setAutoCommit(true);
             }
+        }
+    }
+
+    /** Lê o saldo atual de um utilizador usando a MESMA ligação/transação (evita leituras fora da transação). */
+    private double lerSaldo(Connection c, int utilizadorId) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement("SELECT saldo FROM utilizadores WHERE id=?")) {
+            ps.setInt(1, utilizadorId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal v = rs.getBigDecimal("saldo");
+                return v != null ? v.doubleValue() : 0.0;
+            }
+        }
+        return 0.0;
+    }
+
+    /** Insere uma linha no histórico de transações, usando a MESMA ligação/transação do chamador. */
+    private void inserirTransacao(Connection c, int utilizadorId, String tipo, double valor,
+                                   String descricao, double saldoApos, Integer referenciaId, String referenciaTipo) throws SQLException {
+        String sql = "INSERT INTO transacoes (utilizador_id, tipo, valor, descricao, saldo_apos, referencia_id, referencia_tipo) " +
+                     "VALUES (?,?,?,?,?,?,?)";
+        try (PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, utilizadorId);
+            ps.setString(2, tipo);
+            ps.setBigDecimal(3, BigDecimal.valueOf(valor));
+            ps.setString(4, descricao);
+            ps.setBigDecimal(5, BigDecimal.valueOf(saldoApos));
+            if (referenciaId != null) ps.setInt(6, referenciaId); else ps.setNull(6, Types.INTEGER);
+            ps.setString(7, referenciaTipo);
+            ps.executeUpdate();
         }
     }
 
@@ -213,6 +261,22 @@ public class ReservaRepository {
             case "GPL"      -> 0.90;
             default         -> 1.70; // GASOLINA
         };
+    }
+
+    /** Soma das cauções de reservas ainda "ativas" (pendentes ou aceites) de um locatário —
+     *  representa o valor que está reservado/comprometido e não está livre para levantamento. */
+    public double getCaucoesAtivas(int locatarioId) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(caucao),0) FROM reservas WHERE locatario_id=? AND estado IN ('PENDENTE','ACEITE')";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, locatarioId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal v = rs.getBigDecimal(1);
+                return v != null ? v.doubleValue() : 0.0;
+            }
+        }
+        return 0.0;
     }
 
     public boolean existeSobreposicao(int veiculoId, LocalDate inicio, LocalDate fim) throws SQLException {
