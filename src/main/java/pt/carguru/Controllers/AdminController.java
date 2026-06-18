@@ -12,6 +12,7 @@ import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.UserService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
+import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 import java.util.List;
@@ -206,7 +207,7 @@ public class AdminController {
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaReservas()   { App.navigateTo("Reservas"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
-    @FXML public void logout()          { Session.clear(); App.navigateTo("Home"); }
+    @FXML public void logout() { NavbarHelper.logout(); }
 
     private void mostrarErro(String msg)   { DialogHelper.erro(msg); }
     private void mostrarSucesso(String msg){ DialogHelper.sucesso(msg); }

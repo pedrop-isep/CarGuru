@@ -14,6 +14,7 @@ import pt.carguru.Repositories.VeiculoRepository;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
+import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 import java.io.File;
@@ -275,6 +276,25 @@ public class VehiclesController {
             ? fDataFim.getValue() : defaultInicio.plusDays(2);
         DatePicker dpFim = new DatePicker(defaultFim);
 
+        // Bloquear datas passadas no dpInicio
+        dpInicio.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisabled(empty || date.isBefore(LocalDate.now()));
+            }
+        });
+
+        // Bloquear datas passadas e anteriores ao início no dpFim
+        dpFim.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisabled(empty || date.isBefore(LocalDate.now().plusDays(1))
+                        || (dpInicio.getValue() != null && date.isBefore(dpInicio.getValue().plusDays(1))));
+            }
+        });
+
         Label totalLabel = new Label();
         totalLabel.getStyleClass().add("reserva-total");
         Label decompLabel = new Label();
@@ -317,11 +337,10 @@ public class VehiclesController {
         btnReservar.setOnAction(e -> {
             try {
                 reservaService.criarReserva(v.getId(), dpInicio.getValue(), dpFim.getValue());
-                dialog.close();
                 DialogHelper.sucesso("Reserva submetida!\nAguarda aprovação do proprietário.");
+                dialog.close();
             } catch (Exception ex) { DialogHelper.erro(ex.getMessage()); }
         });
-
         reservaBox.getChildren().addAll(lblReserva, indispBox, new Separator(),
             lblInicio, dpInicio, lblFim, dpFim, totalLabel, decompLabel, btnReservar);
 
@@ -432,5 +451,5 @@ public class VehiclesController {
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void irParaReservas()  { App.navigateTo("Reservas"); }
     @FXML public void irParaAdmin()     { if (Session.isAdmin()) App.navigateTo("Admin"); }
-    @FXML public void logout()          { Session.clear(); App.navigateTo("Home"); }
+    @FXML public void logout() { NavbarHelper.logout(); }
 }

@@ -9,6 +9,7 @@ import pt.carguru.App;
 import pt.carguru.Models.Reserva;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Utils.DialogHelper;
+import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 import java.util.List;
@@ -203,9 +204,9 @@ public class ReservasController {
     }
 
     private boolean confirmar(String msg) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, msg, ButtonType.YES, ButtonType.NO);
-        a.setHeaderText(null);
-        return a.showAndWait().filter(b -> b == ButtonType.YES).isPresent();
+        return DialogHelper.confirmar("Confirmação", msg)
+                .filter(b -> b == ButtonType.YES)
+                .isPresent();
     }
 
     @FXML public void irParaHome()     { App.navigateTo("Home"); }
@@ -213,7 +214,7 @@ public class ReservasController {
     @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void irParaAdmin()     { if (Session.isAdmin()) App.navigateTo("Admin"); }
-    @FXML public void logout()          { Session.clear(); App.navigateTo("Home"); }
+    @FXML public void logout() { NavbarHelper.logout(); }
 
     private void mostrarErro(String msg)    { DialogHelper.erro(msg); }
     private void mostrarSucesso(String msg) { DialogHelper.sucesso(msg); }

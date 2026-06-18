@@ -818,3 +818,19 @@
 .tab-pane .tab:selected { -fx-background-color: #dc2626; -fx-text-base-color: white; }
 .tab-pane .tab-content-area { -fx-background-color: transparent; }
 .tab-pane .tab:hover { -fx-background-color: #222; -fx-text-base-color: #ccc; }
+
+.auth-tabpane .tab-header-area .control-buttons-tab {
+    -fx-padding: 0;
+    visibility: hidden;
+}
+
+.auth-tabpane .tab-header-area {
+    -fx-padding: 0;
+}
+.auth-tabpane .headers-region {
+    -fx-padding: 0;
+}
+
+.auth-tabpane .tab {
+    -fx-pref-width: 173;
+}

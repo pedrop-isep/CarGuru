@@ -10,6 +10,7 @@ import pt.carguru.Models.User;
 import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.VeiculoService;
+import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 import java.util.List;
@@ -80,5 +81,5 @@ public class DashboardController {
     @FXML public void irParaReservas() { App.navigateTo("Reservas"); }
     @FXML public void irParaConta()    { App.navigateTo("Conta"); }
     @FXML public void irParaAdmin()    { if (Session.isAdmin()) App.navigateTo("Admin"); }
-    @FXML public void logout()         { Session.clear(); App.navigateTo("Home"); }
+    @FXML public void logout() { NavbarHelper.logout(); }
 }

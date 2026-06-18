@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import pt.carguru.App;
+import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
 public class HomeController {
@@ -28,9 +29,12 @@ public class HomeController {
         else App.navigateTo("Login");
     }
     @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
-    @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
+    @FXML public void irParaVeiculos() {
+        if (Session.getUser() != null) App.navigateTo("Vehicles");
+        else App.navigateTo("Login");
+    }
     @FXML public void irParaReservas()  { App.navigateTo("Reservas"); }
     @FXML public void irParaConta()     { App.navigateTo("Conta"); }
     @FXML public void irParaAdmin()     { if (Session.isAdmin()) App.navigateTo("Admin"); }
-    @FXML public void logout()          { Session.clear(); App.navigateTo("Home"); }
+    @FXML public void logout() { NavbarHelper.logout(); }
 }

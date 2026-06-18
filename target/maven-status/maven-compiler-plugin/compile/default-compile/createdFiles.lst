@@ -6,13 +6,14 @@ pt\carguru\Controllers\ContaController.class
 pt\carguru\Controllers\AuthController.class
 pt\carguru\Repositories\UserRepository.class
 pt\carguru\Services\UserService.class
+pt\carguru\Utils\NavbarHelper.class
+pt\carguru\Controllers\VehiclesController$2.class
 pt\carguru\Controllers\VehiclesController.class
 pt\carguru\Repositories\IndisponibilidadeRepository.class
 pt\carguru\App.class
 pt\carguru\Models\Indisponibilidade.class
 pt\carguru\Utils\PasswordHasher.class
 pt\carguru\Utils\EmailSender.class
-pt\carguru\Controllers\NavbarHelper.class
 pt\carguru\Controllers\DashboardController.class
 pt\carguru\Models\Reserva.class
 pt\carguru\Services\AuthService.class
@@ -20,6 +21,7 @@ pt\carguru\Models\Veiculo.class
 pt\carguru\Utils\DatabaseConnection.class
 pt\carguru\Models\User.class
 pt\carguru\Utils\Session.class
+pt\carguru\Controllers\VehiclesController$1.class
 pt\carguru\Controllers\AdminController.class
 pt\carguru\Repositories\ReservaRepository.class
 pt\carguru\Utils\DialogHelper.class

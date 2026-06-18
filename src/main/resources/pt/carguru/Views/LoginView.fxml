@@ -32,7 +32,7 @@
       </VBox>
 
       <!-- TabPane Auth -->
-      <TabPane styleClass="auth-tabpane" tabClosingPolicy="UNAVAILABLE" maxWidth="480">
+      <TabPane styleClass="auth-tabpane" tabClosingPolicy="UNAVAILABLE" maxWidth="520">
         <Tab text="Entrar">
           <VBox styleClass="auth-form" spacing="14">
             <padding><Insets top="24" right="32" bottom="24" left="32"/></padding>

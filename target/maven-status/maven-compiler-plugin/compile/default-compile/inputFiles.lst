@@ -4,6 +4,7 @@ C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Control
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Repositories\IndisponibilidadeRepository.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Utils\EmailSender.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Utils\DatabaseConnection.java
+C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Utils\NavbarHelper.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Controllers\DashboardController.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Models\Veiculo.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Utils\PasswordHasher.java
@@ -23,4 +24,3 @@ C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Reposit
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\App.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Controllers\AdminController.java
 C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Models\Reserva.java
-C:\Enzo\Aulas\LP2\CarGuru\Main_Project\untitled\src\main\java\pt\carguru\Controllers\NavbarHelper.java
