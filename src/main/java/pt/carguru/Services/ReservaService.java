@@ -1,6 +1,7 @@
 package pt.carguru.Services;
 
 import pt.carguru.Models.Reserva;
+import pt.carguru.Models.RendimentoVeiculo;
 import pt.carguru.Repositories.IndisponibilidadeRepository;
 import pt.carguru.Repositories.ReservaRepository;
 import pt.carguru.Repositories.VeiculoRepository;
@@ -9,7 +10,10 @@ import pt.carguru.Utils.Session;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReservaService {
     private final ReservaRepository reservaRepo = new ReservaRepository();
@@ -228,8 +232,63 @@ public class ReservaService {
         return reservaRepo.findByProprietarioFiltrado(Session.getUser().getId(), de, ate);
     }
 
+    /**
+     * Devolve as reservas do utilizador como proprietário, filtradas por período e,
+     * opcionalmente, por um veículo específico (veiculoId == null devolve todos os veículos).
+     */
+    public List<Reserva> minhasReservasComoProprietarioFiltrado(LocalDate de, LocalDate ate, Integer veiculoId) throws SQLException {
+        return reservaRepo.findByProprietarioFiltrado(Session.getUser().getId(), de, ate, veiculoId);
+    }
+
+    /**
+     * Calcula o rendimento total por veículo do proprietário autenticado, considerando
+     * apenas os alugueres já CONCLUÍDOS dentro do período (de/ate) indicado.
+     * A lista devolvida inclui todos os veículos do proprietário, mesmo os que não tiveram
+     * nenhum aluguer no período (com receita 0), para que o resumo seja completo.
+     */
+    public List<RendimentoVeiculo> calcularRendimentoPorVeiculo(LocalDate de, LocalDate ate) throws SQLException {
+        List<Reserva> reservas = reservaRepo.findByProprietarioFiltrado(Session.getUser().getId(), de, ate, null);
+        List<Veiculo> veiculos = veiculoRepo.findByProprietario(Session.getUser().getId());
+
+        Map<Integer, RendimentoVeiculo> porVeiculo = new LinkedHashMap<>();
+        for (Veiculo v : veiculos) {
+            porVeiculo.put(v.getId(), new RendimentoVeiculo(v.getId(), v.getNomeCompleto()));
+        }
+
+        for (Reserva r : reservas) {
+            RendimentoVeiculo rv = porVeiculo.computeIfAbsent(r.getVeiculoId(),
+                    id -> new RendimentoVeiculo(id, r.getVeiculoNome()));
+            rv.setNumeroAlugueresTotal(rv.getNumeroAlugueresTotal() + 1);
+            if ("concluida".equals(r.getEstado())) {
+                rv.setReceitaTotal(rv.getReceitaTotal() + r.getTotal());
+                rv.setNumeroAlugueresConcluidos(rv.getNumeroAlugueresConcluidos() + 1);
+            }
+        }
+
+        List<RendimentoVeiculo> resultado = new ArrayList<>(porVeiculo.values());
+        resultado.sort((a, b) -> Double.compare(b.getReceitaTotal(), a.getReceitaTotal()));
+        return resultado;
+    }
+
     public List<Reserva> listarTodas() throws SQLException {
         if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
         return reservaRepo.findAll();
+    }
+
+    /**
+     * Lista todas as reservas para o administrador com filtros opcionais.
+     * Qualquer parâmetro pode ser null para não aplicar esse filtro.
+     *
+     * @param de          data de início mínima (inclusive)
+     * @param ate         data de fim máxima (inclusive)
+     * @param locatarioId id do utilizador locatário
+     * @param veiculoId   id do veículo
+     * @param estado      "pendente" | "confirmada" | "cancelada" | "concluida"
+     */
+    public List<Reserva> listarTodasFiltrado(LocalDate de, LocalDate ate,
+                                              Integer locatarioId, Integer veiculoId,
+                                              String estado) throws SQLException {
+        if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
+        return reservaRepo.findAllFiltrado(de, ate, locatarioId, veiculoId, estado);
     }
 }

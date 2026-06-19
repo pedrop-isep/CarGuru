@@ -124,5 +124,55 @@ public class EmailSender {
         send(destinatario, assunto, corpo);
     }
 
+    /**
+     * Notifica ambas as partes de uma disputa que foi resolvida pelo administrador.
+     *
+     * @param destinatario  email do utilizador a notificar
+     * @param nomeDestinatario nome do utilizador
+     * @param disputaId     ID da disputa
+     * @param veiculoNome   nome do veículo em causa
+     * @param decisao       texto da decisão escrita pelo admin
+     * @param estadoFinal   "RESOLVIDA_PROPRIETARIO" | "RESOLVIDA_LOCATARIO" | "ENCERRADA"
+     * @param valorMovimento valor financeiro movimentado (0 se nenhum)
+     * @param papelDestinatario "locatário" ou "proprietário"
+     */
+    public static void enviarResolucaoDisputa(String destinatario, String nomeDestinatario,
+                                               int disputaId, String veiculoNome,
+                                               String decisao, String estadoFinal,
+                                               double valorMovimento, String papelDestinatario) {
+        String assunto = String.format("CarGuru — Disputa #%d Resolvida", disputaId);
+
+        String resultadoFinanceiro = "";
+        if (valorMovimento > 0.01) {
+            resultadoFinanceiro = switch (estadoFinal.toUpperCase()) {
+                case "RESOLVIDA_PROPRIETARIO" -> "locatário".equals(papelDestinatario)
+                        ? String.format("💸 Foi aplicada uma penalização de %.2f€ na tua conta.", valorMovimento)
+                        : String.format("💶 Foi creditado o valor de %.2f€ na tua conta.", valorMovimento);
+                case "RESOLVIDA_LOCATARIO" -> "locatário".equals(papelDestinatario)
+                        ? String.format("💶 A caução de %.2f€ foi devolvida à tua conta.", valorMovimento)
+                        : "Não houve transferência financeira para a tua conta nesta resolução.";
+                default -> "";
+            };
+        }
+
+        String corpo = """
+                Olá %s,
+
+                A Disputa #%d relativa ao veículo %s foi resolvida pela equipa de administração CarGuru.
+
+                ─────────────────────────────────────────
+                Decisão do administrador:
+                %s
+                ─────────────────────────────────────────
+                %s
+
+                Se tiveres questões sobre esta decisão, contacta o suporte CarGuru.
+
+                Equipa CarGuru
+                """.formatted(nomeDestinatario, disputaId, veiculoNome, decisao,
+                              resultadoFinanceiro.isBlank() ? "Não houve movimentos financeiros nesta resolução." : resultadoFinanceiro);
+        send(destinatario, assunto, corpo);
+    }
+
 
 }

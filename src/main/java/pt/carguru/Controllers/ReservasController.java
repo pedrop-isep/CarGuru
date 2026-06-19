@@ -8,8 +8,11 @@ import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import pt.carguru.App;
 import pt.carguru.Models.Reserva;
+import pt.carguru.Models.RendimentoVeiculo;
+import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.DisputaService;
 import pt.carguru.Services.ReservaService;
+import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
@@ -36,10 +39,13 @@ public class ReservasController {
     // Filtros do tab Proprietário
     private DatePicker filtroPropDe;
     private DatePicker filtroPropAte;
+    private ComboBox<Veiculo> filtroPropVeiculo;
     private List<Reserva> cacheProprietario = new ArrayList<>();
+    private VBox rendimentoVeiculoBox;
 
     private final ReservaService reservaService = new ReservaService();
     private final DisputaService disputaService = new DisputaService();
+    private final VeiculoService veiculoService = new VeiculoService();
 
     private static final DateTimeFormatter DATA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -50,7 +56,7 @@ public class ReservasController {
         injetarBarraLocatario();
         injetarBarraProprietario();
         carregarLocatario(null, null);
-        carregarProprietario(null, null);
+        carregarProprietario(null, null, null);
     }
 
     // ── Locatário ────────────────────────────────────────────────────────────
@@ -125,6 +131,14 @@ public class ReservasController {
         filtroPropDe  = datePicker("Data início");
         filtroPropAte = datePicker("Data fim");
 
+        filtroPropVeiculo = new ComboBox<>();
+        filtroPropVeiculo.getStyleClass().add("filter-combo");
+        filtroPropVeiculo.setPromptText("Todos os veículos");
+        filtroPropVeiculo.setPrefWidth(190);
+        filtroPropVeiculo.setButtonCell(new VeiculoListCell());
+        filtroPropVeiculo.setCellFactory(lv -> new VeiculoListCell());
+        carregarVeiculosNoFiltro();
+
         Button btnFiltrar = new Button("🔍 Filtrar");
         btnFiltrar.getStyleClass().add("btn-primary");
         btnFiltrar.setOnAction(e -> aplicarFiltrosProprietario());
@@ -134,7 +148,8 @@ public class ReservasController {
         btnLimpar.setOnAction(e -> {
             filtroPropDe.setValue(null);
             filtroPropAte.setValue(null);
-            carregarProprietario(null, null);
+            filtroPropVeiculo.setValue(null);
+            carregarProprietario(null, null, null);
         });
 
         Button btnCsv = new Button("📥 Exportar CSV");
@@ -147,14 +162,43 @@ public class ReservasController {
         HBox barra = new HBox(8,
                 labelFiltro("De:"), filtroPropDe,
                 labelFiltro("Até:"), filtroPropAte,
+                labelFiltro("Veículo:"), filtroPropVeiculo,
                 btnFiltrar, btnLimpar,
                 spacer, btnCsv);
         barra.setAlignment(Pos.CENTER_LEFT);
         barra.setPadding(new Insets(16, 4, 4, 4));
 
+        // Secção "Rendimento por veículo" — resumo agregado, atualizado sempre que os
+        // filtros de período/veículo mudam, para o proprietário acompanhar o que cada
+        // carro está a gerar sem ter de somar manualmente as reservas concluídas.
+        rendimentoVeiculoBox = new VBox(10);
+        rendimentoVeiculoBox.setPadding(new Insets(0, 4, 8, 4));
+
         int idx = card.getChildren().indexOf(reservasProprietarioList);
-        if (idx >= 0) card.getChildren().add(idx, barra);
-        else card.getChildren().add(0, barra);
+        if (idx >= 0) {
+            card.getChildren().add(idx, rendimentoVeiculoBox);
+            card.getChildren().add(idx, barra);
+        } else {
+            card.getChildren().add(0, rendimentoVeiculoBox);
+            card.getChildren().add(0, barra);
+        }
+    }
+
+    /** Carrega os veículos do proprietário no ComboBox de filtro (vazio = "todos"). */
+    private void carregarVeiculosNoFiltro() {
+        try {
+            List<Veiculo> veiculos = veiculoService.listarMeusVeiculos();
+            filtroPropVeiculo.getItems().setAll(veiculos);
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Cell renderer simples para mostrar o nome do veículo no ComboBox. */
+    private static class VeiculoListCell extends ListCell<Veiculo> {
+        @Override
+        protected void updateItem(Veiculo v, boolean empty) {
+            super.updateItem(v, empty);
+            setText(empty || v == null ? "Todos os veículos" : v.getNomeCompleto());
+        }
     }
 
     private void aplicarFiltrosProprietario() {
@@ -164,19 +208,79 @@ public class ReservasController {
             DialogHelper.erro("A data de fim não pode ser anterior à data de início.");
             return;
         }
-        carregarProprietario(de, ate);
+        Veiculo veiculoSel = filtroPropVeiculo != null ? filtroPropVeiculo.getValue() : null;
+        carregarProprietario(de, ate, veiculoSel != null ? veiculoSel.getId() : null);
     }
 
-    private void carregarProprietario(LocalDate de, LocalDate ate) {
+    /** Recarrega a lista/resumo do proprietário mantendo os filtros atualmente selecionados na UI. */
+    private void recarregarProprietarioComFiltrosAtuais() {
+        LocalDate de  = filtroPropDe  != null ? filtroPropDe.getValue()  : null;
+        LocalDate ate = filtroPropAte != null ? filtroPropAte.getValue() : null;
+        Veiculo veiculoSel = filtroPropVeiculo != null ? filtroPropVeiculo.getValue() : null;
+        carregarProprietario(de, ate, veiculoSel != null ? veiculoSel.getId() : null);
+    }
+
+    private void carregarProprietario(LocalDate de, LocalDate ate, Integer veiculoId) {
         try {
-            cacheProprietario = reservaService.minhasReservasComoProprietarioFiltrado(de, ate);
+            cacheProprietario = reservaService.minhasReservasComoProprietarioFiltrado(de, ate, veiculoId);
             reservasProprietarioList.getChildren().clear();
             if (cacheProprietario.isEmpty()) {
                 reservasProprietarioList.getChildren().add(vazio("Não foram encontradas reservas com os filtros selecionados."));
             } else {
                 for (Reserva r : cacheProprietario) reservasProprietarioList.getChildren().add(cardProprietario(r));
             }
+            // O resumo de rendimento por veículo respeita o período escolhido, mas mostra
+            // sempre todos os veículos do proprietário (não fica limitado ao filtro de veículo),
+            // para se poder comparar o rendimento entre carros mesmo a olhar para um deles.
+            carregarRendimentoPorVeiculo(de, ate);
         } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Constrói e mostra os cartões de "Rendimento por veículo" para o período selecionado. */
+    private void carregarRendimentoPorVeiculo(LocalDate de, LocalDate ate) {
+        if (rendimentoVeiculoBox == null) return;
+        rendimentoVeiculoBox.getChildren().clear();
+        try {
+            List<RendimentoVeiculo> rendimentos = reservaService.calcularRendimentoPorVeiculo(de, ate);
+            if (rendimentos.isEmpty()) return;
+
+            Label titulo = new Label("💰 Rendimento por veículo");
+            titulo.getStyleClass().add("dash-card-title");
+
+            double total = rendimentos.stream().mapToDouble(RendimentoVeiculo::getReceitaTotal).sum();
+            Label totalLbl = new Label(String.format("Total no período: %.2f€", total));
+            totalLbl.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.82em;");
+
+            FlowPane grid = new FlowPane(12, 12);
+            for (RendimentoVeiculo rv : rendimentos) grid.getChildren().add(cardRendimentoVeiculo(rv));
+
+            VBox box = new VBox(8, titulo, totalLbl, grid);
+            box.getStyleClass().add("dash-card");
+            rendimentoVeiculoBox.getChildren().add(box);
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Cartão individual com o rendimento total e nº de alugueres de um veículo. */
+    private VBox cardRendimentoVeiculo(RendimentoVeiculo rv) {
+        VBox card = new VBox(4);
+        card.getStyleClass().add("stat-card");
+        card.setPrefWidth(190);
+
+        Label nome = new Label("🚗 " + rv.getVeiculoNome());
+        nome.setStyle("-fx-text-fill: white; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+        nome.setWrapText(true);
+
+        Label valor = new Label(String.format("%.2f€", rv.getReceitaTotal()));
+        valor.getStyleClass().add("stat-val");
+
+        String alugueresTxt = rv.getNumeroAlugueresConcluidos() == 1
+                ? "1 aluguer concluído"
+                : rv.getNumeroAlugueresConcluidos() + " alugueres concluídos";
+        Label alugueres = new Label(alugueresTxt);
+        alugueres.getStyleClass().add("stat-label");
+
+        card.getChildren().addAll(nome, valor, alugueres);
+        return card;
     }
 
     // ── Exportação CSV ────────────────────────────────────────────────────────
@@ -237,6 +341,24 @@ public class ReservasController {
                         kmI,
                         kmF,
                         contraparte);
+            }
+
+            // Para a perspetiva do proprietário, acrescenta um bloco-resumo com o
+            // rendimento total por veículo (apenas alugueres concluídos), para que o
+            // ficheiro exportado também sirva de relatório de rendimentos, e não apenas
+            // de listagem linha-a-linha das reservas.
+            if (!isLocatario) {
+                pw.println();
+                pw.println("Resumo — Rendimento por veículo (apenas alugueres concluídos)");
+                pw.println("Veículo,Receita Total (€),Nº Alugueres Concluídos");
+                try {
+                    LocalDate de  = filtroPropDe  != null ? filtroPropDe.getValue()  : null;
+                    LocalDate ate = filtroPropAte != null ? filtroPropAte.getValue() : null;
+                    for (RendimentoVeiculo rv : reservaService.calcularRendimentoPorVeiculo(de, ate)) {
+                        pw.printf("\"%s\",\"%.2f\",\"%d\"%n",
+                                csv(rv.getVeiculoNome()), rv.getReceitaTotal(), rv.getNumeroAlugueresConcluidos());
+                    }
+                } catch (Exception ignored) {}
             }
 
             DialogHelper.sucesso("CSV exportado com sucesso para:\n" + dest.getAbsolutePath());
@@ -366,14 +488,14 @@ public class ReservasController {
             Button btnAp = new Button("✅ Aprovar");
             btnAp.getStyleClass().add("btn-success");
             btnAp.setOnAction(e -> {
-                try { reservaService.aprovarReserva(r.getId()); carregarProprietario(null, null); mostrarSucesso("Reserva aprovada!"); }
+                try { reservaService.aprovarReserva(r.getId()); recarregarProprietarioComFiltrosAtuais(); mostrarSucesso("Reserva aprovada!"); }
                 catch (Exception ex) { mostrarErro(ex.getMessage()); }
             });
             Button btnRe = new Button("❌ Recusar");
             btnRe.getStyleClass().add("btn-danger");
             btnRe.setOnAction(e -> {
                 if (confirmar("Recusar reserva?")) {
-                    try { reservaService.cancelarReserva(r.getId()); carregarProprietario(null, null); }
+                    try { reservaService.cancelarReserva(r.getId()); recarregarProprietarioComFiltrosAtuais(); }
                     catch (Exception ex) { mostrarErro(ex.getMessage()); }
                 }
             });
@@ -421,7 +543,7 @@ public class ReservasController {
             if (bt == ButtonType.OK) {
                 try {
                     reservaService.avaliarLocatario(r.getId(), estrelas.getValue(), comentario.getText());
-                    carregarProprietario(null, null);
+                    recarregarProprietarioComFiltrosAtuais();
                     mostrarSucesso("Avaliação ao locatário submetida!");
                 } catch (Exception e) { mostrarErro(e.getMessage()); }
             }

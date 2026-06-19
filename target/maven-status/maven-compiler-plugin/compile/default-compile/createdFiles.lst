@@ -7,11 +7,13 @@ pt\carguru\Services\DisputaService.class
 pt\carguru\Repositories\DisputaRepository.class
 pt\carguru\Models\Reserva.class
 pt\carguru\Services\AuthService.class
+pt\carguru\Controllers\ReservasController$VeiculoListCell.class
 pt\carguru\Controllers\AdminController.class
 pt\carguru\Utils\DialogHelper.class
 pt\carguru\Services\CombustivelService.class
 pt\carguru\Services\ReservaService.class
 pt\carguru\Repositories\VeiculoRepository.class
+pt\carguru\Models\RendimentoVeiculo.class
 pt\carguru\Models\Transacao.class
 pt\carguru\Utils\EmailSender$1.class
 pt\carguru\Controllers\ContaController.class

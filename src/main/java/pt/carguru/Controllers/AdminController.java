@@ -24,6 +24,7 @@ import javafx.scene.image.ImageView;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class AdminController {
     @FXML private VBox veiculosPendentesList;
@@ -324,56 +325,272 @@ public class AdminController {
     }
 
 
+    // ── Campos de filtro do histórico ────────────────────────────────────────
+    // Guardados como campos para evitar IllegalArgumentException "duplicate children"
+    // em JavaFX (um nó não pode ter dois pais ao mesmo tempo).
+    private DatePicker filtroHistoricoDataInicio;
+    private DatePicker filtroHistoricoDataFim;
+    private TextField  filtroHistoricoLocatario;
+    private TextField  filtroHistoricoVeiculo;
+    private ComboBox<String> filtroHistoricoEstado;
+    private HBox filtroLinha1;
+    private HBox filtroLinha2;
+    private javafx.scene.control.Separator filtroSep;
+
+    // Lista corrente de reservas (para exportar CSV sem nova query)
+    private List<Reserva> historicoAtual = new java.util.ArrayList<>();
+
     private void carregarHistorico() {
         try {
-            List<Reserva> reservas = reservaService.listarTodas();
             historicoList.getChildren().clear();
+
+            // ── Construir a barra de filtros UMA única vez ────────────────────
+            // (JavaFX não permite um nó ter dois pais — guardamos as HBox como campos)
+            if (filtroLinha1 == null) {
+                filtroHistoricoDataInicio = new DatePicker();
+                filtroHistoricoDataInicio.setPromptText("Data início");
+                filtroHistoricoDataInicio.setPrefWidth(148);
+
+                filtroHistoricoDataFim = new DatePicker();
+                filtroHistoricoDataFim.setPromptText("Data fim");
+                filtroHistoricoDataFim.setPrefWidth(148);
+
+                filtroHistoricoLocatario = new TextField();
+                filtroHistoricoLocatario.setPromptText("Nome locatário…");
+                filtroHistoricoLocatario.setPrefWidth(160);
+
+                filtroHistoricoVeiculo = new TextField();
+                filtroHistoricoVeiculo.setPromptText("Veículo (marca/modelo)…");
+                filtroHistoricoVeiculo.setPrefWidth(180);
+
+                filtroHistoricoEstado = new ComboBox<>();
+                filtroHistoricoEstado.getItems().addAll("(todos)", "pendente", "confirmada", "cancelada", "concluida");
+                filtroHistoricoEstado.setValue("(todos)");
+                filtroHistoricoEstado.setPrefWidth(130);
+
+                Button btnFiltrar = new Button("🔍 Filtrar");
+                btnFiltrar.getStyleClass().add("btn-admin-primary");
+                btnFiltrar.setOnAction(e -> aplicarFiltrosHistorico());
+
+                Button btnLimpar = new Button("✖ Limpar");
+                btnLimpar.getStyleClass().add("btn-admin-neutral");
+                btnLimpar.setOnAction(e -> {
+                    filtroHistoricoDataInicio.setValue(null);
+                    filtroHistoricoDataFim.setValue(null);
+                    filtroHistoricoLocatario.clear();
+                    filtroHistoricoVeiculo.clear();
+                    filtroHistoricoEstado.setValue("(todos)");
+                    aplicarFiltrosHistorico();
+                });
+
+                Button btnExportarCsv = new Button("📥 Exportar CSV");
+                btnExportarCsv.getStyleClass().add("btn-admin-ok");
+                btnExportarCsv.setOnAction(e -> exportarHistoricoCSV());
+
+                Label lblDe     = new Label("De:");
+                Label lblAte    = new Label("Até:");
+                Label lblEstado = new Label("Estado:");
+                for (Label l : new Label[]{lblDe, lblAte, lblEstado})
+                    l.setStyle("-fx-text-fill:#ccc; -fx-font-size:0.85em;");
+
+                filtroLinha1 = new HBox(8, lblDe, filtroHistoricoDataInicio,
+                        lblAte, filtroHistoricoDataFim,
+                        lblEstado, filtroHistoricoEstado,
+                        btnFiltrar, btnLimpar, btnExportarCsv);
+                filtroLinha1.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                filtroLinha1.setStyle("-fx-padding: 0 0 4 0;");
+
+                Label lblLoc = new Label("Locatário:");
+                Label lblVei = new Label("Veículo:");
+                lblLoc.setStyle("-fx-text-fill:#ccc; -fx-font-size:0.85em;");
+                lblVei.setStyle("-fx-text-fill:#ccc; -fx-font-size:0.85em;");
+
+                filtroLinha2 = new HBox(8, lblLoc, filtroHistoricoLocatario,
+                        lblVei, filtroHistoricoVeiculo);
+                filtroLinha2.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+                filtroSep = new javafx.scene.control.Separator();
+                filtroSep.setStyle("-fx-background-color: rgba(255,255,255,0.08);");
+            }
+
+            // Adicionar a barra de filtros ao VBox (os mesmos nós, sem recriar)
+            historicoList.getChildren().addAll(filtroLinha1, filtroLinha2, filtroSep);
+
+            // ── Carregar resultados (sem filtros activos inicialmente) ─────────
+            aplicarFiltrosHistorico();
+
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Aplica os filtros ativos e repopula o VBox de resultados. */
+    private void aplicarFiltrosHistorico() {
+        // Remover apenas as linhas de resultado (após o índice 3: linha1, linha2, sep)
+        if (historicoList.getChildren().size() > 3)
+            historicoList.getChildren().remove(3, historicoList.getChildren().size());
+
+        try {
+            java.time.LocalDate de  = filtroHistoricoDataInicio.getValue();
+            java.time.LocalDate ate = filtroHistoricoDataFim.getValue();
+            String estadoFiltro = filtroHistoricoEstado.getValue();
+            String estadoParam  = "(todos)".equals(estadoFiltro) ? null : estadoFiltro;
+
+            // Carregar todas as reservas com filtros de período e estado
+            List<Reserva> reservas = reservaService.listarTodasFiltrado(de, ate, null, null, estadoParam);
+
+            // Filtro textual em memória (locatário / veículo) — evita query extra
+            String textoLoc = filtroHistoricoLocatario.getText().trim().toLowerCase();
+            String textoVei = filtroHistoricoVeiculo.getText().trim().toLowerCase();
+            if (!textoLoc.isBlank())
+                reservas = reservas.stream()
+                        .filter(r -> r.getLocatarioNome() != null &&
+                                     r.getLocatarioNome().toLowerCase().contains(textoLoc))
+                        .collect(java.util.stream.Collectors.toList());
+            if (!textoVei.isBlank())
+                reservas = reservas.stream()
+                        .filter(r -> r.getVeiculoNome() != null &&
+                                     r.getVeiculoNome().toLowerCase().contains(textoVei))
+                        .collect(java.util.stream.Collectors.toList());
+
+            historicoAtual = reservas;
+
+            // Contador de resultados
+            Label contadorLbl = new Label(String.format("📊 %d reserva(s) encontrada(s)", reservas.size()));
+            contadorLbl.setStyle("-fx-text-fill:#888; -fx-font-size:0.82em; -fx-padding: 4 0 4 0;");
+            historicoList.getChildren().add(contadorLbl);
+
             if (reservas.isEmpty()) {
-                historicoList.getChildren().add(labelInfo("Sem reservas no histórico."));
-            } else {
-                for (Reserva r : reservas) {
-                    VBox box = new VBox(6);
-                    box.getStyleClass().add("admin-row");
+                historicoList.getChildren().add(labelInfo("Nenhuma reserva corresponde aos filtros selecionados."));
+                return;
+            }
 
-                    HBox topRow = new HBox(10);
-                    topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-                    Label titulo = new Label(String.format("#%d  🚗 %s", r.getId(), r.getVeiculoNome()));
-                    titulo.getStyleClass().add("admin-card-title");
-                    javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
-                    HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
-                    String est = r.getEstado().toUpperCase();
-                    Label estadoBadge = new Label(est);
-                    String badgeCls = switch (est) {
-                        case "CONCLUIDA" -> "admin-badge-blue";
-                        case "CONFIRMADA" -> "admin-badge-ok";
-                        case "CANCELADA"  -> "admin-badge-red";
-                        default           -> "admin-badge-warn";
-                    };
-                    estadoBadge.getStyleClass().add(badgeCls);
-                    topRow.getChildren().addAll(titulo, sp, estadoBadge);
+            for (Reserva r : reservas) {
+                VBox box = new VBox(6);
+                box.getStyleClass().add("admin-row");
 
-                    Label meta = new Label(String.format("👤 %s   📅 %s → %s   💶 %.2f€",
-                            r.getLocatarioNome(), r.getDataInicio(), r.getDataFim(), r.getTotal()));
-                    meta.getStyleClass().add("admin-card-meta");
-                    meta.setWrapText(true);
+                HBox topRow = new HBox(10);
+                topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                Label titulo = new Label(String.format("#%d  🚗 %s", r.getId(), r.getVeiculoNome()));
+                titulo.getStyleClass().add("admin-card-title");
+                javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+                HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+                String est = r.getEstado().toUpperCase();
+                Label estadoBadge = new Label(est);
+                String badgeCls = switch (est) {
+                    case "CONCLUIDA" -> "admin-badge-blue";
+                    case "CONFIRMADA" -> "admin-badge-ok";
+                    case "CANCELADA"  -> "admin-badge-red";
+                    default           -> "admin-badge-warn";
+                };
+                estadoBadge.getStyleClass().add(badgeCls);
+                topRow.getChildren().addAll(titulo, sp, estadoBadge);
 
-                    box.getChildren().addAll(topRow, meta);
-                    historicoList.getChildren().add(box);
-                }
+                Label meta = new Label(String.format(
+                        "👤 %s   🏠 %s   📅 %s → %s   💶 %.2f€",
+                        r.getLocatarioNome(),
+                        r.getProprietarioNome(),
+                        r.getDataInicio(), r.getDataFim(),
+                        r.getTotal()));
+                meta.getStyleClass().add("admin-card-meta");
+                meta.setWrapText(true);
+
+                box.getChildren().addAll(topRow, meta);
+                historicoList.getChildren().add(box);
             }
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
+    /** Exporta o histórico atualmente visível para um ficheiro CSV no ambiente do utilizador. */
+    private void exportarHistoricoCSV() {
+        if (historicoAtual == null || historicoAtual.isEmpty()) {
+            mostrarErro("Não há reservas para exportar. Aplica primeiro os filtros desejados.");
+            return;
+        }
+
+        // Diálogo para escolher o destino
+        javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+        fc.setTitle("Guardar CSV");
+        fc.setInitialFileName("historico_reservas.csv");
+        fc.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("CSV (*.csv)", "*.csv"));
+        java.io.File destino = fc.showSaveDialog(historicoList.getScene().getWindow());
+        if (destino == null) return; // utilizador cancelou
+
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(
+                new java.io.OutputStreamWriter(
+                        new java.io.FileOutputStream(destino), java.nio.charset.StandardCharsets.UTF_8))) {
+
+            // BOM UTF-8 para compatibilidade com Excel
+            pw.print('\uFEFF');
+
+            // Cabeçalho
+            pw.println("ID;Veículo;Locatário;Proprietário;Data Início;Data Fim;Estado;Total (€);Caução (€)");
+
+            // Linhas
+            for (Reserva r : historicoAtual) {
+                pw.printf("%d;%s;%s;%s;%s;%s;%s;%.2f;%.2f%n",
+                        r.getId(),
+                        escapeCsv(r.getVeiculoNome()),
+                        escapeCsv(r.getLocatarioNome()),
+                        escapeCsv(r.getProprietarioNome()),
+                        r.getDataInicio(),
+                        r.getDataFim(),
+                        r.getEstado(),
+                        r.getTotal(),
+                        r.getCaucao());
+            }
+            mostrarSucesso("CSV exportado com sucesso:\n" + destino.getAbsolutePath());
+
+        } catch (Exception e) {
+            mostrarErro("Erro ao exportar CSV: " + e.getMessage());
+        }
+    }
+
+    /** Escapa um valor para CSV (envolve em aspas se contiver ponto-e-vírgula ou aspas). */
+    private String escapeCsv(String val) {
+        if (val == null) return "";
+        if (val.contains(";") || val.contains("\"") || val.contains("\n")) {
+            return "\"" + val.replace("\"", "\"\"") + "\"";
+        }
+        return val;
+    }
+
     private void carregarDisputas() {
         try {
-            List<Disputa> disputas = disputaService.listarTodas();
+            List<Disputa> todas = disputaService.listarTodas();
             disputasList.getChildren().clear();
-            if (disputas.isEmpty()) {
-                disputasList.getChildren().add(labelInfo("✅ Não há disputas registadas."));
+
+            List<Disputa> abertas    = todas.stream().filter(d -> !d.isResolvida()).collect(Collectors.toList());
+            List<Disputa> resolvidas = todas.stream().filter(Disputa::isResolvida).collect(Collectors.toList());
+
+            // ── Secção: Disputas Abertas ──────────────────────────────────────
+            Label titAberta = new Label(String.format("🔴 Disputas Abertas / Em Análise  (%d)", abertas.size()));
+            titAberta.setStyle("-fx-text-fill: #f87171; -fx-font-size: 1em; -fx-font-weight: bold; -fx-padding: 6 0 2 0;");
+            disputasList.getChildren().add(titAberta);
+
+            if (abertas.isEmpty()) {
+                disputasList.getChildren().add(labelInfo("✅ Não há disputas abertas."));
             } else {
-                for (Disputa d : disputas)
+                for (Disputa d : abertas)
                     disputasList.getChildren().add(rowDisputa(d));
             }
+
+            // ── Separador ─────────────────────────────────────────────────────
+            javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
+            sep.setStyle("-fx-background-color: rgba(255,255,255,0.08); -fx-padding: 6 0;");
+            disputasList.getChildren().add(sep);
+
+            // ── Secção: Disputas Resolvidas ───────────────────────────────────
+            Label titResolvida = new Label(String.format("🟢 Disputas Resolvidas / Encerradas  (%d)", resolvidas.size()));
+            titResolvida.setStyle("-fx-text-fill: #86efac; -fx-font-size: 1em; -fx-font-weight: bold; -fx-padding: 6 0 2 0;");
+            disputasList.getChildren().add(titResolvida);
+
+            if (resolvidas.isEmpty()) {
+                disputasList.getChildren().add(labelInfo("Sem disputas resolvidas ainda."));
+            } else {
+                for (Disputa d : resolvidas)
+                    disputasList.getChildren().add(rowDisputa(d));
+            }
+
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
@@ -381,42 +598,89 @@ public class AdminController {
         VBox box = new VBox(8);
         box.getStyleClass().add("admin-row");
 
-        // Cabeçalho
+        // ── Cabeçalho: ID + veículo + badge de estado ─────────────────────────
+        HBox topRow = new HBox(10);
+        topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label titulo = new Label(String.format("⚖️ Disputa #%d  •  Reserva #%d  •  🚗 %s",
                 d.getId(), d.getReservaId(), d.getVeiculoNome()));
         titulo.getStyleClass().add("admin-card-title");
         titulo.setWrapText(true);
+        javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+        HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+        Label estadoBadge = new Label(d.getEstadoLabel());
+        String badgeCls = switch (d.getEstado() == null ? "" : d.getEstado().toUpperCase()) {
+            case "ABERTA"                 -> "admin-badge-red";
+            case "EM_ANALISE"             -> "admin-badge-warn";
+            case "RESOLVIDA_PROPRIETARIO",
+                 "RESOLVIDA_LOCATARIO"    -> "admin-badge-ok";
+            default                       -> "admin-badge-muted";
+        };
+        estadoBadge.getStyleClass().add(badgeCls);
+        topRow.getChildren().addAll(titulo, sp, estadoBadge);
+        box.getChildren().add(topRow);
 
+        // ── Partes envolvidas + caução ─────────────────────────────────────────
         Label partes = new Label(String.format(
                 "👤 Locatário: %s   🏠 Proprietário: %s   💰 Caução: %.2f€",
                 d.getLocatarioNome(), d.getProprietarioNome(), d.getCaucao()));
         partes.getStyleClass().add("admin-card-meta");
         partes.setWrapText(true);
+        box.getChildren().add(partes);
 
-        Label estado = new Label(d.getEstadoLabel());
-        estado.getStyleClass().add("admin-badge-warn");
+        // ── Metadados: iniciador + datas + admin atribuído ─────────────────────
+        StringBuilder metaStr = new StringBuilder();
+        metaStr.append(String.format("📅 Aberta: %s",
+                d.getDataCriacao() != null
+                        ? d.getDataCriacao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                        : "-"));
+        metaStr.append(String.format("   🙋 Iniciada por: %s",
+                d.getIniciadorNome() != null ? d.getIniciadorNome() : "-"));
+        if (d.getAdminNome() != null)
+            metaStr.append(String.format("   🛡️ Admin: %s", d.getAdminNome()));
+        if (d.getDataResolucao() != null)
+            metaStr.append(String.format("   ✅ Resolvida: %s",
+                    d.getDataResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))));
+        Label metaLbl = new Label(metaStr.toString());
+        metaLbl.setStyle("-fx-text-fill: #888; -fx-font-size: 0.78em;");
+        metaLbl.setWrapText(true);
+        box.getChildren().add(metaLbl);
 
-        Label descricaoLbl = new Label("📋 " + d.getDescricao());
+        // ── Descrição do problema ──────────────────────────────────────────────
+        Label descricaoLbl = new Label("📋 Descrição: " + d.getDescricao());
         descricaoLbl.getStyleClass().add("admin-card-desc");
         descricaoLbl.setWrapText(true);
+        box.getChildren().add(descricaoLbl);
 
-        box.getChildren().addAll(titulo, partes, estado, descricaoLbl);
-
+        // ── Resolução + valores financeiros (se resolvida) ─────────────────────
         if (d.getResolucao() != null && !d.getResolucao().isBlank()) {
-            Label resLbl = new Label("✏️ Resolução: " + d.getResolucao());
+            Label resLbl = new Label("✏️ Decisão: " + d.getResolucao());
             resLbl.getStyleClass().add("admin-card-resolve");
             resLbl.setWrapText(true);
             box.getChildren().add(resLbl);
+
+            // Mostrar valores financeiros da resolução
+            StringBuilder finStr = new StringBuilder();
+            if (d.getReembolsoForcado() != null && d.getReembolsoForcado() > 0.01)
+                finStr.append(String.format("💶 Devolvido ao locatário: %.2f€", d.getReembolsoForcado()));
+            if (d.getPenalizacao() != null && d.getPenalizacao() > 0.01) {
+                if (finStr.length() > 0) finStr.append("   ");
+                finStr.append(String.format("💸 Penalização aplicada: %.2f€", d.getPenalizacao()));
+            }
+            if (finStr.length() > 0) {
+                Label finLbl = new Label(finStr.toString());
+                finLbl.setStyle("-fx-text-fill: #4ade80; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+                box.getChildren().add(finLbl);
+            }
         }
 
-        // Botões de ação (apenas para disputas não resolvidas)
-
+        // ── Botões de ação (apenas para disputas não resolvidas) ─────────────
         if (!d.isResolvida()) {
             HBox btns = new HBox(8);
             btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
             Button btnAnalise = new Button("🔍 Em Análise");
             btnAnalise.getStyleClass().add("btn-admin-primary");
+            btnAnalise.setDisable("EM_ANALISE".equals(d.getEstado()));
             btnAnalise.setOnAction(e -> {
                 try {
                     disputaService.iniciarAnalise(d.getId());
@@ -425,11 +689,11 @@ public class AdminController {
                 } catch (Exception ex) { mostrarErro(ex.getMessage()); }
             });
 
-            Button btnFavProp = new Button("🏠 Proprietário");
+            Button btnFavProp = new Button("🏠 Favor Proprietário");
             btnFavProp.getStyleClass().add("btn-admin-danger");
             btnFavProp.setOnAction(e -> abrirDialogoResolucao(d, "proprietario"));
 
-            Button btnFavLoc = new Button("👤 Locatário");
+            Button btnFavLoc = new Button("👤 Favor Locatário");
             btnFavLoc.getStyleClass().add("btn-admin-ok");
             btnFavLoc.setOnAction(e -> abrirDialogoResolucao(d, "locatario"));
 
@@ -468,16 +732,19 @@ public class AdminController {
         tfResolucao.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white; " +
                 "-fx-border-color: rgba(255,255,255,0.12); -fx-border-radius: 8; -fx-background-radius: 8;");
 
-        VBox conteudo = new VBox(10, infoLbl, resolucaoLbl, tfResolucao);
+        // Aviso de notificação por email
+        Label avisoEmail = new Label("📧 Ambas as partes serão notificadas por email com esta decisão.");
+        avisoEmail.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 0.8em;");
+
+        VBox conteudo = new VBox(10, infoLbl, resolucaoLbl, tfResolucao, avisoEmail);
 
         // Campo de valor apenas quando há transferência financeira
         javafx.scene.control.TextField tfValor = null;
-        Label valorLbl = null;
         if (!modo.equals("encerrar")) {
             String labelValor = modo.equals("proprietario")
                     ? String.format("Penalização ao locatário (máx. %.2f€):", d.getCaucao())
                     : String.format("Valor a devolver ao locatário (máx. %.2f€):", d.getCaucao());
-            valorLbl = new Label(labelValor);
+            Label valorLbl = new Label(labelValor);
             valorLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.85em; -fx-font-weight: bold;");
             tfValor = new javafx.scene.control.TextField(String.format("%.2f", d.getCaucao()));
             tfValor.setStyle("-fx-background-color: #1e1e1e; -fx-border-color: rgba(255,255,255,0.12); " +
@@ -490,6 +757,13 @@ public class AdminController {
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         DialogHelper.estilizar(dlg);
 
+        // OK só ativo quando há texto de decisão
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tfResolucao.textProperty().addListener((obs, o, n) -> btnOk.setDisable(n.trim().isBlank()));
+        }
+
         final javafx.scene.control.TextField tfValorFinal = tfValor;
         dlg.showAndWait().ifPresent(bt -> {
             if (bt != ButtonType.OK) return;
@@ -500,16 +774,18 @@ public class AdminController {
                     case "proprietario" -> {
                         double pen = parseValor(tfValorFinal, d.getCaucao());
                         disputaService.resolverFavorProprietario(d.getId(), resolucao, pen);
-                        mostrarSucesso(String.format("Disputa resolvida a favor do proprietário. Penalização: %.2f€", pen));
+                        mostrarSucesso(String.format(
+                                "Disputa resolvida a favor do proprietário. Penalização: %.2f€\nAmbas as partes foram notificadas por email.", pen));
                     }
                     case "locatario" -> {
                         double ree = parseValor(tfValorFinal, d.getCaucao());
                         disputaService.resolverFavorLocatario(d.getId(), resolucao, ree);
-                        mostrarSucesso(String.format("Disputa resolvida a favor do locatário. Devolvido: %.2f€", ree));
+                        mostrarSucesso(String.format(
+                                "Disputa resolvida a favor do locatário. Devolvido: %.2f€\nAmbas as partes foram notificadas por email.", ree));
                     }
                     default -> {
                         disputaService.encerrar(d.getId(), resolucao);
-                        mostrarSucesso("Disputa encerrada sem penalização.");
+                        mostrarSucesso("Disputa encerrada sem penalização.\nAmbas as partes foram notificadas por email.");
                     }
                 }
                 carregarDisputas();

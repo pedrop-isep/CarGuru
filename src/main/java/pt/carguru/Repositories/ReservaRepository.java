@@ -320,21 +320,30 @@ public class ReservaRepository {
      * Passa null em qualquer dos campos de data para não filtrar por esse limite.
      */
     public List<Reserva> findByLocatarioFiltrado(int locatarioId, LocalDate de, LocalDate ate) throws SQLException {
-        return queryFiltrado("r.locatario_id", locatarioId, de, ate);
+        return queryFiltrado("r.locatario_id", locatarioId, de, ate, null);
     }
 
     /**
      * Devolve reservas do proprietário filtradas por período.
      */
     public List<Reserva> findByProprietarioFiltrado(int proprietarioId, LocalDate de, LocalDate ate) throws SQLException {
-        return queryFiltrado("v.proprietario_id", proprietarioId, de, ate);
+        return queryFiltrado("v.proprietario_id", proprietarioId, de, ate, null);
+    }
+
+    /**
+     * Devolve reservas do proprietário filtradas por período e, opcionalmente, por um veículo
+     * específico (passa null em veiculoId para incluir todos os veículos do proprietário).
+     */
+    public List<Reserva> findByProprietarioFiltrado(int proprietarioId, LocalDate de, LocalDate ate, Integer veiculoId) throws SQLException {
+        return queryFiltrado("v.proprietario_id", proprietarioId, de, ate, veiculoId);
     }
 
     private List<Reserva> queryFiltrado(String coluna, int userId,
-                                         LocalDate de, LocalDate ate) throws SQLException {
+                                         LocalDate de, LocalDate ate, Integer veiculoId) throws SQLException {
         StringBuilder where = new StringBuilder(coluna + "=?");
         if (de  != null) where.append(" AND r.data_inicio >= ?");
         if (ate != null) where.append(" AND r.data_fim <= ?");
+        if (veiculoId != null) where.append(" AND r.veiculo_id = ?");
         String sql = buildJoin(where.toString()) + " ORDER BY r.data_pedido DESC";
 
         List<Reserva> list = new ArrayList<>();
@@ -343,7 +352,8 @@ public class ReservaRepository {
             int idx = 1;
             ps.setInt(idx++, userId);
             if (de  != null) ps.setDate(idx++, Date.valueOf(de));
-            if (ate != null) ps.setDate(idx,   Date.valueOf(ate));
+            if (ate != null) ps.setDate(idx++, Date.valueOf(ate));
+            if (veiculoId != null) ps.setInt(idx, veiculoId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(map(rs));
         }
@@ -356,6 +366,49 @@ public class ReservaRepository {
         try (Connection c = DatabaseConnection.getConnection();
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    /**
+     * Pesquisa de reservas para o painel de administração, com filtros opcionais:
+     *  - período (data_inicio >= de AND data_fim <= ate)
+     *  - locatário por id
+     *  - veículo por id
+     *  - estado (ex: "pendente", "confirmada", "cancelada", "concluida")
+     * Passa null em qualquer parâmetro para não aplicar esse filtro.
+     */
+    public List<Reserva> findAllFiltrado(LocalDate de, LocalDate ate,
+                                          Integer locatarioId, Integer veiculoId,
+                                          String estado) throws SQLException {
+        StringBuilder where = new StringBuilder("1=1");
+        if (de         != null) where.append(" AND r.data_inicio >= ?");
+        if (ate        != null) where.append(" AND r.data_fim <= ?");
+        if (locatarioId != null) where.append(" AND r.locatario_id = ?");
+        if (veiculoId  != null) where.append(" AND r.veiculo_id = ?");
+        if (estado     != null && !estado.isBlank()) {
+            // Mapear estado normalizado → valor(es) na BD
+            String dbEstado = switch (estado.toLowerCase()) {
+                case "pendente"   -> "PENDENTE";
+                case "confirmada" -> "ACEITE";
+                case "cancelada"  -> "CANCELADA";
+                case "concluida"  -> "CONCLUIDA";
+                default           -> estado.toUpperCase();
+            };
+            where.append(" AND r.estado = '").append(dbEstado.replace("'", "''")).append("'");
+        }
+
+        String sql = buildJoin(where.toString()) + " ORDER BY r.data_pedido DESC";
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            if (de          != null) ps.setDate(idx++, Date.valueOf(de));
+            if (ate         != null) ps.setDate(idx++, Date.valueOf(ate));
+            if (locatarioId != null) ps.setInt(idx++, locatarioId);
+            if (veiculoId   != null) ps.setInt(idx, veiculoId);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(map(rs));
         }
         return list;
