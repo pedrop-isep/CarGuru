@@ -48,6 +48,15 @@ public final class ScrollSpeedUtil {
     private static void acelerar(ScrollPane scrollPane) {
         scrollPane.addEventFilter(javafx.scene.input.ScrollEvent.SCROLL, event -> {
             if (event.getDeltaY() == 0) return;
+
+            // Se o evento ocorreu dentro de um ScrollPane mais interno (ex.: o
+            // ScrollPane de uma Tab, dentro do ScrollPane geral da página),
+            // deixa esse ScrollPane interno tratar o scroll e não o consumas aqui.
+            if (event.getTarget() instanceof Node alvo) {
+                ScrollPane maisInterno = encontrarScrollPaneAncestral(alvo);
+                if (maisInterno != null && maisInterno != scrollPane) return;
+            }
+
             double alturaConteudo = scrollPane.getContent() != null
                     ? scrollPane.getContent().getBoundsInLocal().getHeight()
                     : 1;
@@ -59,5 +68,15 @@ public final class ScrollSpeedUtil {
             scrollPane.setVvalue(scrollPane.getVvalue() - deslocamento);
             event.consume();
         });
+    }
+
+    /** Devolve o ScrollPane mais próximo (ancestral mais interno) a partir do nó dado, ou null se não houver nenhum. */
+    private static ScrollPane encontrarScrollPaneAncestral(Node node) {
+        Node atual = node;
+        while (atual != null) {
+            if (atual instanceof ScrollPane sp) return sp;
+            atual = atual.getParent();
+        }
+        return null;
     }
 }

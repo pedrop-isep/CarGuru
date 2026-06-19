@@ -291,6 +291,11 @@ public class ReservasController {
         }
 
         HBox btns = new HBox(8);
+        Button btnDetalhe = new Button("🔍 Ver detalhe");
+        btnDetalhe.getStyleClass().add("btn-outline-sm");
+        btnDetalhe.setOnAction(e -> abrirDetalheLocatario(r));
+        btns.getChildren().add(btnDetalhe);
+
         if ("pendente".equals(r.getEstado()) || "confirmada".equals(r.getEstado())) {
             Button btnC = new Button("❌ Cancelar");
             btnC.getStyleClass().add("btn-danger");
@@ -554,6 +559,70 @@ public class ReservasController {
         Label l = new Label(txt);
         l.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
         return l;
+    }
+
+    /**
+     * Mostra o detalhe completo de um aluguer ao locatário: veículo, período,
+     * estado, valores pagos (renda + caução), quilometragem e avaliação.
+     */
+    private void abrirDetalheLocatario(Reserva r) {
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Detalhe do Aluguer #" + r.getId());
+
+        VBox conteudo = new VBox(10);
+        conteudo.setPadding(new Insets(4, 0, 4, 0));
+
+        conteudo.getChildren().add(linhaDetalhe("🚗 Veículo", r.getVeiculoNome()));
+        conteudo.getChildren().add(linhaDetalhe("👤 Proprietário",
+                r.getProprietarioNome() != null ? r.getProprietarioNome() : "-"));
+        conteudo.getChildren().add(linhaDetalhe("📅 Início", r.getDataInicio().format(DATA_FMT)));
+        conteudo.getChildren().add(linhaDetalhe("📅 Fim", r.getDataFim().format(DATA_FMT)));
+        conteudo.getChildren().add(linhaDetalhe("🗓️ Duração", r.getNumeroDias() + " dia(s)"));
+        conteudo.getChildren().add(linhaDetalhe("📌 Estado", estadoEmoji(r.getEstado()) + " " + r.getEstado().toUpperCase()));
+        conteudo.getChildren().add(linhaDetalhe("💶 Valor da renda", String.format("%.2f€", r.getTotal())));
+
+        if (r.getCaucao() > 0) {
+            String status = "concluida".equals(r.getEstado()) ? "Liquidada" : "Retida";
+            conteudo.getChildren().add(linhaDetalhe("🔒 Caução", String.format("%.2f€ (%s)", r.getCaucao(), status)));
+        }
+
+        boolean caucaoPaga = "confirmada".equals(r.getEstado()) || "concluida".equals(r.getEstado());
+        double pago = r.getTotal() + (caucaoPaga ? r.getCaucao() : 0);
+        conteudo.getChildren().add(linhaDetalhe("💰 Total pago", String.format("%.2f€", pago)));
+
+        if (r.getKmInicial() != null) {
+            String km = "Km inicial: " + r.getKmInicial();
+            if (r.getKmFinal() != null) km += "   |   Km final: " + r.getKmFinal();
+            conteudo.getChildren().add(linhaDetalhe("🔢 Quilometragem", km));
+        }
+
+        if (r.getCombustivelVeiculo() != null) {
+            conteudo.getChildren().add(linhaDetalhe("⛽ Combustível", r.getCombustivelVeiculo()));
+        }
+
+        if (r.getAvaliacao() != null) {
+            conteudo.getChildren().add(linhaDetalhe("⭐ A tua avaliação", "★".repeat(r.getAvaliacao()) + " (" + r.getAvaliacao() + "/5)"));
+        }
+
+        dlg.getDialogPane().setContent(conteudo);
+        dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        DialogHelper.estilizar(dlg);
+        dlg.showAndWait();
+    }
+
+    /** Constrói uma linha "rótulo: valor" usada nos diálogos de detalhe. */
+    private HBox linhaDetalhe(String rotulo, String valor) {
+        Label lblRotulo = new Label(rotulo + ":");
+        lblRotulo.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 0.88em; -fx-font-weight: bold;");
+        lblRotulo.setPrefWidth(160);
+
+        Label lblValor = new Label(valor != null ? valor : "-");
+        lblValor.setStyle("-fx-text-fill: #f1f5f9; -fx-font-size: 0.88em;");
+        lblValor.setWrapText(true);
+
+        HBox linha = new HBox(8, lblRotulo, lblValor);
+        linha.setAlignment(Pos.CENTER_LEFT);
+        return linha;
     }
 
     private void estilizarBtnLimpar(Button btn) {
