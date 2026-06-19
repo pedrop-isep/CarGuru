@@ -217,6 +217,26 @@ public class ReservaRepository {
         } catch (Exception ignored) {}
     }
 
+    /** Avaliação do proprietário ao locatário (tipo PROPRIETARIO). */
+    public void avaliarComoProprietario(int reservaId, int estrelas, String comentario) throws SQLException {
+        try {
+            String sql = "INSERT IGNORE INTO avaliacoes (aluguer_id, avaliador_id, avaliado_id, estrelas, comentario, tipo) " +
+                         "SELECT al.id, v.proprietario_id, r.locatario_id, ?, ?, 'PROPRIETARIO' " +
+                         "FROM reservas r JOIN alugueres al ON al.reserva_id=r.id JOIN veiculos v ON v.id=r.veiculo_id WHERE r.id=?";
+            try (Connection c = DatabaseConnection.getConnection();
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setInt(1, estrelas);
+                ps.setString(2, comentario != null ? comentario : "");
+                ps.setInt(3, reservaId);
+                ps.executeUpdate();
+            }
+            // Recalcular avaliação_média do locatário (cache na tabela utilizadores não existe
+            // — a média é calculada on-the-fly via query no UserRepository)
+        } catch (Exception e) {
+            throw new SQLException("Erro ao registar avaliação do proprietário: " + e.getMessage(), e);
+        }
+    }
+
     /** Recalcula a média e contagem de avaliações do veículo associado à reserva
      *  e grava o resultado em veiculos.avaliacao_media / veiculos.n_avaliacoes. */
     private void atualizarAvaliacaoCacheVeiculo(int reservaId) throws SQLException {
@@ -243,24 +263,9 @@ public class ReservaRepository {
         }
     }
 
-    /** Obtém o preço corrente do combustível para um tipo específico (tabela precos_combustivel).
-     *  Devolve valor padrão se a tabela não existir ou estiver vazia. */
+    /** Obtém o preço corrente do combustível via CombustivelService (tabela precos_combustivel). */
     public double getPrecoAtualCombustivel(String tipoCombustivel) {
-        try (Connection c = DatabaseConnection.getConnection();
-             PreparedStatement ps = c.prepareStatement(
-                     "SELECT preco_corrente FROM precos_combustivel WHERE tipo_combustivel=? ORDER BY ultima_atualizacao DESC LIMIT 1")) {
-            ps.setString(1, tipoCombustivel != null ? tipoCombustivel.toUpperCase() : "GASOLINA");
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getBigDecimal("preco_corrente").doubleValue();
-        } catch (Exception ignored) {}
-        // Defaults caso a tabela não tenha dados
-        if (tipoCombustivel == null) return 1.70;
-        return switch (tipoCombustivel.toUpperCase()) {
-            case "GASOLEO"  -> 1.60;
-            case "ELETRICO" -> 0.20;
-            case "GPL"      -> 0.90;
-            default         -> 1.70; // GASOLINA
-        };
+        return new pt.carguru.Services.CombustivelService().getPrecoCorrente(tipoCombustivel);
     }
 
     /** Soma das cauções de reservas ainda "ativas" (pendentes ou aceites) de um locatário —
@@ -310,6 +315,41 @@ public class ReservaRepository {
         return query(buildJoin("v.proprietario_id=?") + " ORDER BY r.data_pedido DESC", proprietarioId);
     }
 
+    /**
+     * Devolve reservas do locatário filtradas por período (data_inicio >= de AND data_fim <= ate).
+     * Passa null em qualquer dos campos de data para não filtrar por esse limite.
+     */
+    public List<Reserva> findByLocatarioFiltrado(int locatarioId, LocalDate de, LocalDate ate) throws SQLException {
+        return queryFiltrado("r.locatario_id", locatarioId, de, ate);
+    }
+
+    /**
+     * Devolve reservas do proprietário filtradas por período.
+     */
+    public List<Reserva> findByProprietarioFiltrado(int proprietarioId, LocalDate de, LocalDate ate) throws SQLException {
+        return queryFiltrado("v.proprietario_id", proprietarioId, de, ate);
+    }
+
+    private List<Reserva> queryFiltrado(String coluna, int userId,
+                                         LocalDate de, LocalDate ate) throws SQLException {
+        StringBuilder where = new StringBuilder(coluna + "=?");
+        if (de  != null) where.append(" AND r.data_inicio >= ?");
+        if (ate != null) where.append(" AND r.data_fim <= ?");
+        String sql = buildJoin(where.toString()) + " ORDER BY r.data_pedido DESC";
+
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            ps.setInt(idx++, userId);
+            if (de  != null) ps.setDate(idx++, Date.valueOf(de));
+            if (ate != null) ps.setDate(idx,   Date.valueOf(ate));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
     public List<Reserva> findAll() throws SQLException {
         List<Reserva> list = new ArrayList<>();
         String sql = buildJoin("1=1") + " ORDER BY r.data_pedido DESC";
@@ -336,13 +376,15 @@ public class ReservaRepository {
         return "SELECT r.*, v.proprietario_id, v.marca, v.modelo, v.ano, v.tipo_combustivel, " +
                "ul.nome AS locatario_nome, up.nome AS proprietario_nome, " +
                "al.km_final, " +
-               "av.estrelas AS avaliacao_estrelas " +
+               "av_loc.estrelas AS avaliacao_estrelas, " +
+               "av_prop.estrelas AS avaliacao_proprietario_estrelas " +
                "FROM reservas r " +
                "JOIN veiculos v ON r.veiculo_id=v.id " +
                "JOIN utilizadores ul ON r.locatario_id=ul.id " +
                "JOIN utilizadores up ON v.proprietario_id=up.id " +
                "LEFT JOIN alugueres al ON al.reserva_id=r.id " +
-               "LEFT JOIN avaliacoes av ON av.aluguer_id=al.id AND av.avaliador_id=r.locatario_id " +
+               "LEFT JOIN avaliacoes av_loc ON av_loc.aluguer_id=al.id AND av_loc.tipo='LOCATARIO' " +
+               "LEFT JOIN avaliacoes av_prop ON av_prop.aluguer_id=al.id AND av_prop.tipo='PROPRIETARIO' " +
                "WHERE " + where;
     }
 
@@ -362,6 +404,7 @@ public class ReservaRepository {
         try { BigDecimal cau = rs.getBigDecimal("caucao"); if (cau != null) r.setCaucao(cau.doubleValue()); } catch (Exception ignored) {}
         try { r.setCombustivelVeiculo(rs.getString("tipo_combustivel")); } catch (Exception ignored) {}
         try { int av = rs.getInt("avaliacao_estrelas"); if (!rs.wasNull()) r.setAvaliacao(av); } catch (Exception ignored) {}
+        try { int avP = rs.getInt("avaliacao_proprietario_estrelas"); if (!rs.wasNull()) r.setAvaliacaoProprietario(avP); } catch (Exception ignored) {}
         r.setVeiculoNome(rs.getString("marca") + " " + rs.getString("modelo") + " (" + rs.getInt("ano") + ")");
         r.setLocatarioNome(rs.getString("locatario_nome"));
         r.setProprietarioNome(rs.getString("proprietario_nome"));

@@ -7,12 +7,16 @@ C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\Veiculo
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Indisponibilidade.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\ReservaRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\DashboardController.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\ScrollSpeedUtil.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\App.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\AdminController.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\IndisponibilidadeRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\UserService.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\CombustivelScheduler.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\EmailSender.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\PrecoCombustivel.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\ReservaService.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\CombustivelService.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\ContaController.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\NavbarHelper.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\DisputaService.java
@@ -26,6 +30,7 @@ C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\Rese
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\UserRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\HomeController.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Transacao.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\CombustivelRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\DialogHelper.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\User.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Veiculo.java

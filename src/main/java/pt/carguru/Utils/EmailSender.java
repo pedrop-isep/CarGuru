@@ -79,4 +79,50 @@ public class EmailSender {
                 """.formatted(nomeVeiculo, dataInicio, dataFim);
         send(destinatario, assunto, corpo);
     }
+    /**
+     * Notifica o proprietário que o seu anúncio de veículo foi aprovado pelo administrador.
+     */
+    public static void enviarAprovacaoVeiculo(String destinatario, String nomeProprietario, String nomeVeiculo) {
+        String assunto = "CarGuru — Anúncio Aprovado 🎉";
+        String corpo = """
+                Olá %s,
+
+                Ótimas notícias! O teu anúncio foi aprovado pela nossa equipa de administração.
+
+                Veículo: %s
+
+                O veículo já se encontra disponível na plataforma e pode ser reservado por outros utilizadores.
+
+                Obrigado por fazeres parte da comunidade CarGuru! 🚗
+
+                Equipa CarGuru
+                """.formatted(nomeProprietario, nomeVeiculo);
+        send(destinatario, assunto, corpo);
+    }
+
+    /**
+     * Notifica o proprietário que o seu anúncio de veículo foi rejeitado, incluindo o motivo.
+     */
+    public static void enviarRejeicaoVeiculo(String destinatario, String nomeProprietario,
+                                              String nomeVeiculo, String motivo) {
+        String assunto = "CarGuru — Anúncio Rejeitado";
+        String corpo = """
+                Olá %s,
+
+                Após análise, o teu anúncio não foi aprovado pela nossa equipa de administração.
+
+                Veículo: %s
+
+                Motivo da rejeição:
+                %s
+
+                Podes corrigir os dados indicados e submeter novamente o teu veículo na área "Conta".
+                Se tiveres dúvidas, contacta o suporte.
+
+                Equipa CarGuru
+                """.formatted(nomeProprietario, nomeVeiculo, motivo);
+        send(destinatario, assunto, corpo);
+    }
+
+
 }

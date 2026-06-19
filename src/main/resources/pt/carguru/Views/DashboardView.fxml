@@ -43,7 +43,7 @@
         <HBox spacing="20">
           <VBox styleClass="dash-card" HBox.hgrow="ALWAYS" spacing="12">
             <HBox alignment="CENTER_LEFT" spacing="12">
-              <Label text="🚗 Os meus veículos" styleClass="dash-card-title" HBox.hgrow="ALWAYS"/>
+              <Label text="🚗 Os meus veículos" styleClass="dash-card-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
               <Button text="Gerir →" styleClass="btn-outline-sm" onAction="#irParaConta"/>
             </HBox>
             <Separator/>
@@ -51,7 +51,7 @@
           </VBox>
           <VBox styleClass="dash-card" HBox.hgrow="ALWAYS" spacing="12">
             <HBox alignment="CENTER_LEFT" spacing="12">
-              <Label text="📅 Últimas reservas" styleClass="dash-card-title" HBox.hgrow="ALWAYS"/>
+              <Label text="📅 Últimas reservas" styleClass="dash-card-title" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
               <Button text="Ver todas →" styleClass="btn-outline-sm" onAction="#irParaReservas"/>
             </HBox>
             <Separator/>

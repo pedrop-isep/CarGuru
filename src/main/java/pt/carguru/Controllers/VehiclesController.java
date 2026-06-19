@@ -15,6 +15,7 @@ import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
+import pt.carguru.Utils.ScrollSpeedUtil;
 import pt.carguru.Utils.Session;
 
 import java.io.File;
@@ -428,6 +429,7 @@ public class VehiclesController {
         sp.setFitToWidth(true);
         sp.setPrefHeight(560);
         sp.setStyle("-fx-background-color: #141414; -fx-background: #141414;");
+        ScrollSpeedUtil.aplicar(sp);
 
         dialog.getDialogPane().setContent(sp);
         dialog.getDialogPane().setStyle("-fx-background-color: #141414;");

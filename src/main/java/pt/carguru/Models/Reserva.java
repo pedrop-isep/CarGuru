@@ -13,7 +13,8 @@ public class Reserva {
     private double total;
     private Integer kmInicial;
     private Integer kmFinal;
-    private Integer avaliacao;
+    private Integer avaliacao;           // avaliação do locatário ao proprietário
+    private Integer avaliacaoProprietario; // avaliação do proprietário ao locatário
     private String comentarioAvaliacao;
     private double caucao;
     private String combustivelVeiculo;
@@ -53,6 +54,8 @@ public class Reserva {
     public void setKmFinal(Integer k) { this.kmFinal = k; }
     public Integer getAvaliacao() { return avaliacao; }
     public void setAvaliacao(Integer a) { this.avaliacao = a; }
+    public Integer getAvaliacaoProprietario() { return avaliacaoProprietario; }
+    public void setAvaliacaoProprietario(Integer a) { this.avaliacaoProprietario = a; }
     public String getComentarioAvaliacao() { return comentarioAvaliacao; }
     public void setComentarioAvaliacao(String c) { this.comentarioAvaliacao = c; }
     public String getVeiculoNome() { return veiculoNome; }

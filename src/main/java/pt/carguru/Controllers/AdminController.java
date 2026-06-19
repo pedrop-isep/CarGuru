@@ -6,9 +6,11 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import pt.carguru.App;
 import pt.carguru.Models.Disputa;
+import pt.carguru.Models.PrecoCombustivel;
 import pt.carguru.Models.Reserva;
 import pt.carguru.Models.User;
 import pt.carguru.Models.Veiculo;
+import pt.carguru.Services.CombustivelService;
 import pt.carguru.Services.DisputaService;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.UserService;
@@ -17,6 +19,9 @@ import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,11 +31,13 @@ public class AdminController {
     @FXML private VBox utilizadoresList;
     @FXML private VBox historicoList;
     @FXML private VBox disputasList;
+    @FXML private VBox combustivelList;
 
     private final VeiculoService veiculoService = new VeiculoService();
     private final UserService userService = new UserService();
     private final ReservaService reservaService = new ReservaService();
     private final DisputaService disputaService = new DisputaService();
+    private final CombustivelService combustivelService = new CombustivelService();
 
     @FXML
     public void initialize() {
@@ -40,6 +47,7 @@ public class AdminController {
         carregarUtilizadores();
         carregarHistorico();
         carregarDisputas();
+        carregarCombustivel();
     }
 
     private void carregarVeiculosPendentes() {
@@ -56,30 +64,153 @@ public class AdminController {
     }
 
     private VBox rowVeiculoPendente(Veiculo v) {
-        VBox box = new VBox(6);
+        VBox box = new VBox(10);
         box.getStyleClass().add("admin-row");
-        box.setPadding(new Insets(10));
 
-        Label info = new Label(String.format("🚗 %s  |  👤 %s  |  📍 %s  |  %.2f€/dia",
-            v.getNomeCompleto(), v.getProprietarioNome(), v.getLocalizacao(), v.getPrecoPorDia()));
-        info.getStyleClass().add("admin-user-name");
-        info.setWrapText(true);
+        // ── Cabeçalho: nome + badge estado ───────────────────────────────────
+        HBox topRow = new HBox(10);
+        topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label titulo = new Label("🚗 " + v.getNomeCompleto());
+        titulo.getStyleClass().add("admin-card-title");
+        javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+        HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+        Label badge = new Label("⏳ PENDENTE");
+        badge.getStyleClass().add("admin-badge-warn");
+        topRow.getChildren().addAll(titulo, sp, badge);
 
+        // ── Matrícula ────────────────────────────────────────────────────────
+        String matriculaStr = (v.getMatricula() != null && !v.getMatricula().isBlank())
+                ? v.getMatricula() : "⚠️ Não definida";
+        Label matriculaLbl = new Label("🔖 Matrícula: " + matriculaStr);
+        matriculaLbl.setStyle(v.getMatricula() != null && !v.getMatricula().isBlank()
+                ? "-fx-text-fill: #f1f5f9; -fx-font-weight: bold;"
+                : "-fx-text-fill: #f87171; -fx-font-weight: bold;");
+
+        // ── Dados técnicos ────────────────────────────────────────────────────
+        Label dadosTecnicos = new Label(String.format(
+                "⛽ %s   🔧 %s   👥 %d lugares   🛣️ %d km   💶 %.2f€/dia",
+                v.getCombustivel() != null ? v.getCombustivel() : "-",
+                v.getTransmissao() != null ? v.getTransmissao() : "-",
+                v.getLotacao(),
+                v.getQuilometragem(),
+                v.getPrecoPorDia()));
+        dadosTecnicos.getStyleClass().add("admin-card-meta");
+        dadosTecnicos.setWrapText(true);
+
+        // ── Proprietário e localização ────────────────────────────────────────
+        String emailStr = v.getProprietarioEmail() != null ? "  ✉️ " + v.getProprietarioEmail() : "";
+        Label proprietarioLbl = new Label(String.format("👤 %s%s   📍 %s",
+                v.getProprietarioNome(), emailStr, v.getLocalizacao()));
+        proprietarioLbl.getStyleClass().add("admin-card-meta");
+        proprietarioLbl.setWrapText(true);
+
+        // ── Descrição (se existir) ─────────────────────────────────────────────
+        VBox infoBox = new VBox(6, topRow, matriculaLbl, dadosTecnicos, proprietarioLbl);
+        if (v.getDescricao() != null && !v.getDescricao().isBlank()) {
+            Label descLbl = new Label("📝 " + v.getDescricao());
+            descLbl.getStyleClass().add("admin-card-desc");
+            descLbl.setWrapText(true);
+            infoBox.getChildren().add(descLbl);
+        }
+
+        // ── Foto do veículo (se existir localmente) ─────────────────────────
+        HBox contentRow = new HBox(16);
+        contentRow.setAlignment(javafx.geometry.Pos.TOP_LEFT);
+        File imgFile = new File(pt.carguru.Repositories.VeiculoRepository.resolverPathImagem(v.getId()));
+        if (imgFile.exists()) {
+            try {
+                ImageView imgView = new ImageView(new Image(imgFile.toURI().toString()));
+                imgView.setFitWidth(160);
+                imgView.setFitHeight(110);
+                imgView.setPreserveRatio(true);
+                imgView.setStyle("-fx-border-radius: 8; -fx-background-radius: 8;");
+                contentRow.getChildren().add(imgView);
+            } catch (Exception ignored) {}
+        } else {
+            Label semFoto = new Label("📷 Sem foto");
+            semFoto.setStyle("-fx-text-fill: #f87171; -fx-font-size: 0.82em; -fx-padding: 8;");
+            contentRow.getChildren().add(semFoto);
+        }
+        HBox.setHgrow(infoBox, javafx.scene.layout.Priority.ALWAYS);
+        contentRow.getChildren().add(infoBox);
+
+        // ── Botões de ação ────────────────────────────────────────────────────
         Button btnAprovar = new Button("✅ Aprovar");
-        btnAprovar.getStyleClass().add("btn-success");
+        btnAprovar.getStyleClass().add("btn-admin-ok");
         btnAprovar.setOnAction(e -> {
-            try { veiculoService.aprovarVeiculo(v.getId()); carregarVeiculosPendentes(); mostrarSucesso("Veículo aprovado!"); }
-            catch (Exception ex) { mostrarErro(ex.getMessage()); }
-        });
-        Button btnRejeitar = new Button("❌ Rejeitar");
-        btnRejeitar.getStyleClass().add("btn-danger");
-        btnRejeitar.setOnAction(e -> {
-            try { veiculoService.rejeitarVeiculo(v.getId()); carregarVeiculosPendentes(); }
-            catch (Exception ex) { mostrarErro(ex.getMessage()); }
+            Optional<ButtonType> res = confirmar("Aprovar veículo",
+                    "Confirmas a aprovação de " + v.getNomeCompleto() + "?\n" +
+                    "O veículo ficará disponível na plataforma e o proprietário será notificado.");
+            if (res.isPresent() && res.get() == ButtonType.YES) {
+                try {
+                    veiculoService.aprovarVeiculo(v.getId());
+                    carregarVeiculosPendentes();
+                    mostrarSucesso("Veículo aprovado! Notificação enviada ao proprietário.");
+                } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+            }
         });
 
-        box.getChildren().addAll(info, new HBox(8, btnAprovar, btnRejeitar));
+        Button btnRejeitar = new Button("❌ Rejeitar");
+        btnRejeitar.getStyleClass().add("btn-admin-danger");
+        btnRejeitar.setOnAction(e -> abrirDialogoRejeicaoVeiculo(v));
+
+        HBox btns = new HBox(8, btnAprovar, btnRejeitar);
+        btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        box.getChildren().addAll(contentRow, btns);
         return box;
+    }
+
+    /**
+     * Abre um diálogo para o administrador introduzir a justificação de rejeição.
+     * O motivo é obrigatório, guardado na BD e enviado por email ao proprietário.
+     */
+    private void abrirDialogoRejeicaoVeiculo(Veiculo v) {
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Rejeitar Anúncio");
+
+        Label infoLbl = new Label(String.format(
+                "Veículo: %s\nProprietário: %s",
+                v.getNomeCompleto(),
+                v.getProprietarioNome() != null ? v.getProprietarioNome() : "-"));
+        infoLbl.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        infoLbl.setWrapText(true);
+
+        Label motivoLbl = new Label("Motivo da rejeição (obrigatório):");
+        motivoLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+
+        javafx.scene.control.TextArea tfMotivo = new javafx.scene.control.TextArea();
+        tfMotivo.setPromptText("Ex: Matrícula ilegível, dados técnicos incorretos, foto em falta...");
+        tfMotivo.setPrefRowCount(4);
+        tfMotivo.setWrapText(true);
+        tfMotivo.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white; " +
+                "-fx-border-color: rgba(255,255,255,0.12); -fx-border-radius: 8; -fx-background-radius: 8;");
+
+        Label avisoLbl = new Label("📧 O proprietário será notificado por email com este motivo.");
+        avisoLbl.setStyle("-fx-text-fill: #f59e0b; -fx-font-size: 0.8em;");
+
+        VBox conteudo = new VBox(10, infoLbl, motivoLbl, tfMotivo, avisoLbl);
+        conteudo.setPadding(new Insets(4, 0, 4, 0));
+        dlg.getDialogPane().setContent(conteudo);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.estilizar(dlg);
+
+        // OK só ativo quando há texto
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tfMotivo.textProperty().addListener((obs, o, n) -> btnOk.setDisable(n.trim().isBlank()));
+        }
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt != ButtonType.OK) return;
+            String motivo = tfMotivo.getText().trim();
+            try {
+                veiculoService.rejeitarVeiculoComMotivo(v.getId(), motivo);
+                carregarVeiculosPendentes();
+                mostrarSucesso("Anúncio rejeitado. Proprietário notificado por email.");
+            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+        });
     }
 
     private void carregarTodosVeiculos() {
@@ -96,27 +227,40 @@ public class AdminController {
     }
 
     private VBox rowVeiculoAdmin(Veiculo v) {
-        VBox box = new VBox(6);
+        VBox box = new VBox(8);
         box.getStyleClass().add("admin-row");
-        box.setPadding(new Insets(10));
 
-        Label info = new Label(String.format("🚗 %s  |  👤 %s  |  📍 %s  |  %.2f€/dia  |  %s",
-            v.getNomeCompleto(), v.getProprietarioNome(), v.getLocalizacao(), v.getPrecoPorDia(), v.getEstado()));
-        info.setWrapText(true);
+        HBox topRow = new HBox(10);
+        topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        Label titulo = new Label("🚗 " + v.getNomeCompleto());
+        titulo.getStyleClass().add("admin-card-title");
+        javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+        HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+        String estadoStr = v.getEstado() != null ? v.getEstado().toUpperCase() : "-";
+        Label estadoBadge = new Label(estadoStr);
+        estadoBadge.getStyleClass().add(estadoStr.contains("APROVADO") || estadoStr.contains("DISPONIVEL")
+                ? "admin-badge-ok" : estadoStr.contains("PENDENTE") ? "admin-badge-warn" : "admin-badge-red");
+        topRow.getChildren().addAll(titulo, sp, estadoBadge);
 
-        // Admin pode remover (soft delete) qualquer veículo
+        Label meta = new Label(String.format("👤 %s   📍 %s   💶 %.2f€/dia",
+                v.getProprietarioNome(), v.getLocalizacao(), v.getPrecoPorDia()));
+        meta.getStyleClass().add("admin-card-meta");
+        meta.setWrapText(true);
+
         Button btnRemover = new Button("🗑️ Remover");
-        btnRemover.getStyleClass().add("btn-danger");
+        btnRemover.getStyleClass().add("btn-admin-danger");
         btnRemover.setOnAction(e -> {
             Optional<ButtonType> res = confirmar("Remover veículo?",
-                "Tens a certeza que queres remover " + v.getNomeCompleto() + "?\nEsta ação é reversível apenas por base de dados.");
+                    "Tens a certeza que queres remover " + v.getNomeCompleto() + "?\nEsta ação é reversível apenas por base de dados.");
             if (res.isPresent() && res.get() == ButtonType.YES) {
                 try { veiculoService.removerVeiculoAdmin(v.getId()); carregarTodosVeiculos(); mostrarSucesso("Veículo removido."); }
                 catch (Exception ex) { mostrarErro(ex.getMessage()); }
             }
         });
 
-        box.getChildren().addAll(info, new HBox(8, btnRemover));
+        HBox btns = new HBox(8, btnRemover);
+        btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        box.getChildren().addAll(topRow, meta, btns);
         return box;
     }
 
@@ -127,43 +271,53 @@ public class AdminController {
             int adminId = Session.getUser().getId();
 
             for (User u : users) {
-                VBox box = new VBox(6);
+                VBox box = new VBox(8);
                 box.getStyleClass().add("admin-row");
-                box.setPadding(new Insets(10));
 
-                Label nome = new Label("👤 " + u.getNome() + "  |  " + u.getEmail() +
-                    "  |  NIF: " + (u.getNif() != null ? u.getNif() : "-") +
-                    "  |  Saldo: " + String.format("%.2f€", u.getSaldo()) +
-                    "  |  " + (u.isBloqueado() ? "🔴 Suspenso" : "🟢 Ativo") +
-                    "  |  Role: " + u.getRole());
-                nome.getStyleClass().add("admin-user-name");
-                nome.setWrapText(true);
+                // Cabeçalho: nome + badge de estado
+                HBox topRow = new HBox(10);
+                topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                Label nomeLabel = new Label("👤 " + u.getNome());
+                nomeLabel.getStyleClass().add("admin-card-title");
+                javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+                HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+                Label badge = new Label(u.isBloqueado() ? "🔴 Suspenso" : "🟢 Ativo");
+                badge.getStyleClass().add(u.isBloqueado() ? "admin-badge-red" : "admin-badge-ok");
+                Label roleBadge = new Label("ADMINISTRADOR".equals(u.getRole()) ? "🛡️ Admin" : "Utilizador");
+                roleBadge.getStyleClass().add("ADMINISTRADOR".equals(u.getRole()) ? "admin-badge-warn" : "admin-badge-muted");
+                topRow.getChildren().addAll(nomeLabel, sp, roleBadge, badge);
+
+                // Metadados
+                Label meta = new Label(String.format("✉️ %s   🪪 NIF %s   💶 Saldo: %.2f€",
+                        u.getEmail(),
+                        u.getNif() != null ? u.getNif() : "-",
+                        u.getSaldo()));
+                meta.getStyleClass().add("admin-card-meta");
+                meta.setWrapText(true);
 
                 HBox btns = new HBox(8);
+                btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-                // Admin NÃO pode suspender a si próprio
                 if (u.getId() != adminId) {
                     Button btnToggle = new Button(u.isBloqueado() ? "✅ Reativar" : "🚫 Suspender");
-                    btnToggle.getStyleClass().add(u.isBloqueado() ? "btn-success" : "btn-danger");
+                    btnToggle.getStyleClass().add(u.isBloqueado() ? "btn-admin-ok" : "btn-admin-danger");
                     btnToggle.setOnAction(e -> {
                         String acao = u.isBloqueado() ? "reativar" : "suspender";
                         Optional<ButtonType> res = confirmar("Confirmar ação",
-                            "Tens a certeza que queres " + acao + " o utilizador " + u.getNome() + "?");
+                                "Tens a certeza que queres " + acao + " o utilizador " + u.getNome() + "?");
                         if (res.isPresent() && res.get() == ButtonType.YES) {
                             try { userService.toggleAtivo(u.getId()); carregarUtilizadores(); }
                             catch (Exception ex) { mostrarErro(ex.getMessage()); }
                         }
                     });
                     btns.getChildren().add(btnToggle);
-
-
                 } else {
                     Label youLabel = new Label("(Tu próprio — admin não pode suspender-se)");
                     youLabel.getStyleClass().add("conta-email");
                     btns.getChildren().add(youLabel);
                 }
 
-                box.getChildren().addAll(nome, btns);
+                box.getChildren().addAll(topRow, meta, btns);
                 utilizadoresList.getChildren().add(box);
             }
         } catch (Exception e) { mostrarErro(e.getMessage()); }
@@ -178,15 +332,32 @@ public class AdminController {
                 historicoList.getChildren().add(labelInfo("Sem reservas no histórico."));
             } else {
                 for (Reserva r : reservas) {
-                    VBox box = new VBox(4);
+                    VBox box = new VBox(6);
                     box.getStyleClass().add("admin-row");
-                    box.setPadding(new Insets(8));
-                    Label l = new Label(String.format("#%d  |  🚗 %s  |  👤 %s  |  %s → %s  |  %.2f€  |  %s",
-                        r.getId(), r.getVeiculoNome(), r.getLocatarioNome(),
-                        r.getDataInicio(), r.getDataFim(), r.getTotal(),
-                        r.getEstado().toUpperCase()));
-                    l.setWrapText(true);
-                    box.getChildren().add(l);
+
+                    HBox topRow = new HBox(10);
+                    topRow.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+                    Label titulo = new Label(String.format("#%d  🚗 %s", r.getId(), r.getVeiculoNome()));
+                    titulo.getStyleClass().add("admin-card-title");
+                    javafx.scene.layout.Region sp = new javafx.scene.layout.Region();
+                    HBox.setHgrow(sp, javafx.scene.layout.Priority.ALWAYS);
+                    String est = r.getEstado().toUpperCase();
+                    Label estadoBadge = new Label(est);
+                    String badgeCls = switch (est) {
+                        case "CONCLUIDA" -> "admin-badge-blue";
+                        case "CONFIRMADA" -> "admin-badge-ok";
+                        case "CANCELADA"  -> "admin-badge-red";
+                        default           -> "admin-badge-warn";
+                    };
+                    estadoBadge.getStyleClass().add(badgeCls);
+                    topRow.getChildren().addAll(titulo, sp, estadoBadge);
+
+                    Label meta = new Label(String.format("👤 %s   📅 %s → %s   💶 %.2f€",
+                            r.getLocatarioNome(), r.getDataInicio(), r.getDataFim(), r.getTotal()));
+                    meta.getStyleClass().add("admin-card-meta");
+                    meta.setWrapText(true);
+
+                    box.getChildren().addAll(topRow, meta);
                     historicoList.getChildren().add(box);
                 }
             }
@@ -209,42 +380,43 @@ public class AdminController {
     private VBox rowDisputa(Disputa d) {
         VBox box = new VBox(8);
         box.getStyleClass().add("admin-row");
-        box.setPadding(new javafx.geometry.Insets(12));
 
         // Cabeçalho
-        Label titulo = new Label(String.format("⚖️ Disputa #%d  |  Reserva #%d  |  🚗 %s",
+        Label titulo = new Label(String.format("⚖️ Disputa #%d  •  Reserva #%d  •  🚗 %s",
                 d.getId(), d.getReservaId(), d.getVeiculoNome()));
-        titulo.getStyleClass().add("admin-user-name");
+        titulo.getStyleClass().add("admin-card-title");
         titulo.setWrapText(true);
 
         Label partes = new Label(String.format(
-                "👤 Locatário: %s   |   🏠 Proprietário: %s   |   💰 Caução: %.2f€",
+                "👤 Locatário: %s   🏠 Proprietário: %s   💰 Caução: %.2f€",
                 d.getLocatarioNome(), d.getProprietarioNome(), d.getCaucao()));
-        partes.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        partes.getStyleClass().add("admin-card-meta");
         partes.setWrapText(true);
 
         Label estado = new Label(d.getEstadoLabel());
-        estado.setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold; -fx-font-size: 0.85em;");
+        estado.getStyleClass().add("admin-badge-warn");
 
         Label descricaoLbl = new Label("📋 " + d.getDescricao());
-        descricaoLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.82em;");
+        descricaoLbl.getStyleClass().add("admin-card-desc");
         descricaoLbl.setWrapText(true);
 
         box.getChildren().addAll(titulo, partes, estado, descricaoLbl);
 
         if (d.getResolucao() != null && !d.getResolucao().isBlank()) {
             Label resLbl = new Label("✏️ Resolução: " + d.getResolucao());
-            resLbl.setStyle("-fx-text-fill: #6ee7b7; -fx-font-size: 0.82em;");
+            resLbl.getStyleClass().add("admin-card-resolve");
             resLbl.setWrapText(true);
             box.getChildren().add(resLbl);
         }
 
         // Botões de ação (apenas para disputas não resolvidas)
+
         if (!d.isResolvida()) {
             HBox btns = new HBox(8);
+            btns.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-            Button btnAnalise = new Button("🔍 Marcar Em Análise");
-            btnAnalise.getStyleClass().add("btn-primary");
+            Button btnAnalise = new Button("🔍 Em Análise");
+            btnAnalise.getStyleClass().add("btn-admin-primary");
             btnAnalise.setOnAction(e -> {
                 try {
                     disputaService.iniciarAnalise(d.getId());
@@ -253,17 +425,16 @@ public class AdminController {
                 } catch (Exception ex) { mostrarErro(ex.getMessage()); }
             });
 
-            Button btnFavProp = new Button("🏠 Resolver → Proprietário");
-            btnFavProp.getStyleClass().add("btn-danger");
+            Button btnFavProp = new Button("🏠 Proprietário");
+            btnFavProp.getStyleClass().add("btn-admin-danger");
             btnFavProp.setOnAction(e -> abrirDialogoResolucao(d, "proprietario"));
 
-            Button btnFavLoc = new Button("👤 Resolver → Locatário");
-            btnFavLoc.getStyleClass().add("btn-success");
+            Button btnFavLoc = new Button("👤 Locatário");
+            btnFavLoc.getStyleClass().add("btn-admin-ok");
             btnFavLoc.setOnAction(e -> abrirDialogoResolucao(d, "locatario"));
 
-            Button btnEncerrar = new Button("⚫ Encerrar sem penalização");
-            btnEncerrar.setStyle("-fx-background-color: #374151; -fx-text-fill: #d1d5db; " +
-                    "-fx-background-radius: 8; -fx-border-radius: 8; -fx-font-size: 0.82em;");
+            Button btnEncerrar = new Button("⚫ Encerrar");
+            btnEncerrar.getStyleClass().add("btn-admin-neutral");
             btnEncerrar.setOnAction(e -> abrirDialogoResolucao(d, "encerrar"));
 
             btns.getChildren().addAll(btnAnalise, btnFavProp, btnFavLoc, btnEncerrar);
@@ -357,6 +528,106 @@ public class AdminController {
         }
     }
 
+    private void carregarCombustivel() {
+        try {
+            List<PrecoCombustivel> precos = combustivelService.listarPrecos();
+            combustivelList.getChildren().clear();
+
+            if (precos.isEmpty()) {
+                combustivelList.getChildren().add(labelInfo(
+                    "⚠️ Nenhum preço configurado ainda. Define os preços base abaixo."));
+            }
+
+            // Cards de preço corrente por tipo
+            HBox cardsRow = new HBox(12);
+            for (PrecoCombustivel p : precos) {
+                cardsRow.getChildren().add(cardPreco(p));
+            }
+            combustivelList.getChildren().add(cardsRow);
+
+            // Secção de edição
+            Label editLabel = new Label("✏️ Definir preço base");
+            editLabel.setStyle("-fx-text-fill: #ccc; -fx-font-weight: bold; -fx-font-size: 1em;");
+            combustivelList.getChildren().add(editLabel);
+
+            // Uma linha de edição por tipo
+            for (String tipo : CombustivelService.TIPOS) {
+                combustivelList.getChildren().add(rowEditarPreco(tipo, precos));
+            }
+
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    private VBox cardPreco(PrecoCombustivel p) {
+        VBox card = new VBox(6);
+        card.getStyleClass().add("admin-row");
+        card.setPadding(new javafx.geometry.Insets(14));
+        card.setPrefWidth(200);
+
+        Label tipoLbl = new Label(p.getTipoLabel());
+        tipoLbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #f1f5f9; -fx-font-size: 1em;");
+
+        Label corrLbl = new Label(String.format("%.4f %s", p.getPrecoCorrente(), p.getUnidade()));
+        corrLbl.setStyle("-fx-font-size: 1.35em; -fx-font-weight: bold; -fx-text-fill: #4ade80;");
+
+        Label baseLbl = new Label(String.format("Base: %.4f %s", p.getPrecoBase(), p.getUnidade()));
+        baseLbl.setStyle("-fx-font-size: 0.8em; -fx-text-fill: #aaa;");
+
+        String atualizado = p.getUltimaAtualizacao() != null
+            ? "⏱ " + p.getUltimaAtualizacao().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))
+            : "";
+        Label tsLbl = new Label(atualizado);
+        tsLbl.setStyle("-fx-font-size: 0.75em; -fx-text-fill: #666;");
+
+        card.getChildren().addAll(tipoLbl, corrLbl, baseLbl, tsLbl);
+        return card;
+    }
+
+    private HBox rowEditarPreco(String tipo, List<PrecoCombustivel> precos) {
+        // Encontrar preço atual se existir
+        double precoAtual = precos.stream()
+            .filter(p -> tipo.equals(p.getTipoCombustivel()))
+            .mapToDouble(PrecoCombustivel::getPrecoBase)
+            .findFirst().orElse(0.0);
+
+        String unidade = "ELETRICO".equals(tipo) ? "€/kWh" : "€/L";
+        String emoji   = switch (tipo) {
+            case "GASOLINA" -> "⛽";
+            case "GASOLEO"  -> "🛢️";
+            case "GPL"      -> "🔵";
+            default         -> "⚡";
+        };
+
+        Label lbl = new Label(String.format("%s %-10s (%s):", emoji, tipo, unidade));
+        lbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.88em;");
+        lbl.setPrefWidth(220);
+
+        TextField tf = new TextField(precoAtual > 0 ? String.format("%.4f", precoAtual) : "");
+        tf.setPromptText("ex: 1.7350");
+        tf.setPrefWidth(120);
+        tf.setStyle("-fx-background-color: #1e1e1e; -fx-border-color: rgba(255,255,255,0.12); " +
+                "-fx-border-radius: 8; -fx-background-radius: 8; -fx-text-fill: white; -fx-padding: 6 10;");
+
+        Button btn = new Button("💾 Guardar");
+        btn.getStyleClass().add("btn-admin-primary");
+        btn.setOnAction(e -> {
+            try {
+                double valor = Double.parseDouble(tf.getText().trim().replace(",", "."));
+                combustivelService.definirPrecoBase(tipo, valor);
+                carregarCombustivel();
+                mostrarSucesso(String.format("Preço base de %s atualizado para %.4f %s", tipo, valor, unidade));
+            } catch (NumberFormatException ex) {
+                mostrarErro("Valor inválido. Usa o formato: 1.7350");
+            } catch (Exception ex) {
+                mostrarErro(ex.getMessage());
+            }
+        });
+
+        HBox row = new HBox(12, lbl, tf, btn);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        return row;
+    }
+
     private Label labelInfo(String txt) {
         Label l = new Label(txt);
         l.getStyleClass().add("conta-email");
@@ -365,10 +636,7 @@ public class AdminController {
     }
 
     private Optional<ButtonType> confirmar(String titulo, String msg) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION, msg, ButtonType.YES, ButtonType.NO);
-        a.setTitle(titulo);
-        a.setHeaderText(null);
-        return a.showAndWait();
+        return DialogHelper.confirmar(titulo, msg);
     }
 
     @FXML public void irParaHome()     { App.navigateTo("Home"); }

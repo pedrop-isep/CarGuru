@@ -59,13 +59,23 @@ public class VeiculoRepository {
     }
 
     public void updateEstado(int id, String estado) throws SQLException {
+        updateEstadoComMotivo(id, estado, null);
+    }
+
+    /**
+     * Atualiza o estado do veículo e guarda opcionalmente um motivo de rejeição.
+     * O motivo é persistido na coluna motivo_rejeicao (TEXT, nullable).
+     */
+    public void updateEstadoComMotivo(int id, String estado, String motivo) throws SQLException {
         boolean validado = "DISPONIVEL".equals(estado);
-        String sql = "UPDATE veiculos SET estado=?, validado=? WHERE id=?";
+        String sql = "UPDATE veiculos SET estado=?, validado=?, motivo_rejeicao=? WHERE id=?";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, estado);
             ps.setBoolean(2, validado);
-            ps.setInt(3, id);
+            if (motivo != null && !motivo.isBlank()) ps.setString(3, motivo);
+            else ps.setNull(3, java.sql.Types.VARCHAR);
+            ps.setInt(4, id);
             ps.executeUpdate();
         }
     }
@@ -85,7 +95,7 @@ public class VeiculoRepository {
     }
 
     public Optional<Veiculo> findById(int id) throws SQLException {
-        String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.id=?";
+        String sql = "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.id=?";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -97,7 +107,7 @@ public class VeiculoRepository {
 
     public List<Veiculo> findByProprietario(int proprietarioId) throws SQLException {
         List<Veiculo> list = new ArrayList<>();
-        String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.proprietario_id=? AND v.estado!='REMOVIDO' ORDER BY v.marca";
+        String sql = "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.proprietario_id=? AND v.estado!='REMOVIDO' ORDER BY v.marca";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, proprietarioId);
@@ -111,7 +121,7 @@ public class VeiculoRepository {
                                         String localizacao, double precoMax) throws SQLException {
         List<Veiculo> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado='DISPONIVEL' AND v.validado=1");
+            "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado='DISPONIVEL' AND v.validado=1");
         List<Object> params = new ArrayList<>();
         if (marca != null && !marca.isBlank()) {
             sql.append(" AND (v.marca LIKE ? OR v.modelo LIKE ?)");
@@ -140,7 +150,7 @@ public class VeiculoRepository {
 
     public List<Veiculo> findPendentes() throws SQLException {
         List<Veiculo> list = new ArrayList<>();
-        String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado='PENDENTE_VALIDACAO' ORDER BY v.data_criacao";
+        String sql = "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado='PENDENTE_VALIDACAO' ORDER BY v.data_criacao";
         try (Connection c = DatabaseConnection.getConnection();
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -153,7 +163,7 @@ public class VeiculoRepository {
             String localizacao, double precoMax, java.time.LocalDate dataInicio, java.time.LocalDate dataFim) throws SQLException {
         List<Veiculo> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id " +
+            "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id " +
             "WHERE v.estado='DISPONIVEL' AND v.validado=1 " +
             // Sem indisponibilidade que sobreponha as datas
             "AND NOT EXISTS (SELECT 1 FROM indisponibilidades i WHERE i.veiculo_id=v.id AND i.data_inicio < ? AND i.data_fim > ?) " +
@@ -196,7 +206,7 @@ public class VeiculoRepository {
 
     public List<Veiculo> findAll() throws SQLException {
         List<Veiculo> list = new ArrayList<>();
-        String sql = "SELECT v.*, u.nome AS proprietario_nome FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado!='REMOVIDO' ORDER BY v.data_criacao DESC";
+        String sql = "SELECT v.*, u.nome AS proprietario_nome, u.email AS proprietario_email FROM veiculos v JOIN utilizadores u ON v.proprietario_id=u.id WHERE v.estado!='REMOVIDO' ORDER BY v.data_criacao DESC";
         try (Connection c = DatabaseConnection.getConnection();
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -232,6 +242,8 @@ public class VeiculoRepository {
         Timestamp dc = rs.getTimestamp("data_criacao");
         if (dc != null) v.setDataCriacao(dc.toLocalDateTime().toLocalDate());
         // Imagem guardada localmente como ficheiro, path derivado do id
+        v.setProprietarioEmail(rs.getString("proprietario_email"));
+        try { v.setMotivoRejeicao(rs.getString("motivo_rejeicao")); } catch (Exception ignored) {}
         return v;
     }
 

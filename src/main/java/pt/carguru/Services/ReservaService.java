@@ -148,10 +148,18 @@ public class ReservaService {
         Session.refresh();
     }
 
+    /** Avaliação do locatário (sobre a experiência): guarda como tipo LOCATARIO. */
     public void avaliarReserva(int reservaId, int estrelas, String comentario) throws SQLException {
         if (estrelas < 1 || estrelas > 5)
             throw new IllegalArgumentException("Avaliação deve ser entre 1 e 5.");
         reservaRepo.updateAvaliacao(reservaId, estrelas, comentario);
+    }
+
+    /** Avaliação do proprietário ao locatário: guarda como tipo PROPRIETARIO. */
+    public void avaliarLocatario(int reservaId, int estrelas, String comentario) throws SQLException {
+        if (estrelas < 1 || estrelas > 5)
+            throw new IllegalArgumentException("Avaliação deve ser entre 1 e 5.");
+        reservaRepo.avaliarComoProprietario(reservaId, estrelas, comentario);
     }
 
     /** Devolve o preço corrente do combustível (tabela precos_combustivel) para o tipo indicado. */
@@ -203,6 +211,21 @@ public class ReservaService {
 
     public List<Reserva> minhasReservasComoProprietario() throws SQLException {
         return reservaRepo.findByProprietario(Session.getUser().getId());
+    }
+
+    /**
+     * Devolve as reservas do utilizador como locatário, opcionalmente filtradas por período.
+     * Passa null em qualquer dos parâmetros de data para não aplicar esse limite.
+     */
+    public List<Reserva> minhasReservasComoLocatarioFiltrado(LocalDate de, LocalDate ate) throws SQLException {
+        return reservaRepo.findByLocatarioFiltrado(Session.getUser().getId(), de, ate);
+    }
+
+    /**
+     * Devolve as reservas do utilizador como proprietário, opcionalmente filtradas por período.
+     */
+    public List<Reserva> minhasReservasComoProprietarioFiltrado(LocalDate de, LocalDate ate) throws SQLException {
+        return reservaRepo.findByProprietarioFiltrado(Session.getUser().getId(), de, ate);
     }
 
     public List<Reserva> listarTodas() throws SQLException {

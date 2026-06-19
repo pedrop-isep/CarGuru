@@ -25,7 +25,7 @@
         <padding><Insets top="28" right="40" bottom="28" left="40"/></padding>
         <Label text="🛡️ Painel de Administração" styleClass="page-title"/>
 
-        <TabPane tabClosingPolicy="UNAVAILABLE">
+        <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="admin-tabs">
 
           <!-- Veículos pendentes -->
           <Tab text="⏳ Veículos Pendentes">
@@ -78,6 +78,19 @@
                 <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
                 <Label text="Disputas de caução pendentes e resolvidas" styleClass="admin-section-title"/>
                 <VBox fx:id="disputasList" spacing="10"/>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
+          <!-- Preços de Combustível -->
+          <Tab text="⛽ Preços Combustível">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="580">
+              <VBox spacing="16">
+                <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+                <Label text="Gestão de preços de combustível" styleClass="admin-section-title"/>
+                <Label text="O preço corrente varia automaticamente ±5% em torno do preço base a cada 10 minutos e é registado hora a hora no histórico."
+                       style="-fx-text-fill: #888; -fx-font-size: 0.85em;" wrapText="true"/>
+                <VBox fx:id="combustivelList" spacing="10"/>
               </VBox>
             </ScrollPane>
           </Tab>

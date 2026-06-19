@@ -109,4 +109,14 @@ public class UserService {
         transacaoRepo.registar(user.getId(), "PENALIZACAO", valor,
                 "Remoção de saldo por administrador", user.getSaldo(), null, null);
     }
+
+    /** Devolve o utilizador atual com avaliação_media e n_avaliacoes preenchidos. */
+    public User getMeuPerfilComAvaliacao() throws SQLException {
+        User u = Session.getUser();
+        if (u == null) throw new IllegalStateException("Não estás autenticado.");
+        double[] av = userRepo.getAvaliacaoMedia(u.getId());
+        u.setAvaliacaoMedia(av[0]);
+        u.setNAvaliacoes((int) av[1]);
+        return u;
+    }
 }

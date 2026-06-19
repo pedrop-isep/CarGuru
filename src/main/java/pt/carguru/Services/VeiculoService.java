@@ -4,6 +4,7 @@ import pt.carguru.Models.Indisponibilidade;
 import pt.carguru.Models.Veiculo;
 import pt.carguru.Repositories.IndisponibilidadeRepository;
 import pt.carguru.Repositories.VeiculoRepository;
+import pt.carguru.Utils.EmailSender;
 import pt.carguru.Utils.Session;
 
 import java.sql.SQLException;
@@ -88,8 +89,45 @@ public class VeiculoService {
     public List<Veiculo> listarPendentes() throws SQLException { return veiculoRepo.findPendentes(); }
     public List<Veiculo> listarTodos() throws SQLException { return veiculoRepo.findAll(); }
 
-    public void aprovarVeiculo(int id) throws SQLException { veiculoRepo.updateEstado(id, "DISPONIVEL"); }
-    public void rejeitarVeiculo(int id) throws SQLException { veiculoRepo.updateEstado(id, "BLOQUEADO"); }
+    /**
+     * Aprova o anúncio de veículo: muda estado para DISPONIVEL e notifica o proprietário por email.
+     */
+    public void aprovarVeiculo(int id) throws SQLException {
+        Veiculo v = veiculoRepo.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Veículo não encontrado."));
+        veiculoRepo.updateEstadoComMotivo(id, "DISPONIVEL", null);
+        // Notificar proprietário (assíncrono — falha de email não impede a aprovação)
+        if (v.getProprietarioEmail() != null && !v.getProprietarioEmail().isBlank()) {
+            new Thread(() -> EmailSender.enviarAprovacaoVeiculo(
+                    v.getProprietarioEmail(),
+                    v.getProprietarioNome() != null ? v.getProprietarioNome() : "Utilizador",
+                    v.getNomeCompleto())).start();
+        }
+    }
+
+    /**
+     * Rejeita o anúncio com um motivo obrigatório. Guarda o motivo na BD e notifica o proprietário.
+     */
+    public void rejeitarVeiculoComMotivo(int id, String motivo) throws SQLException {
+        if (motivo == null || motivo.isBlank())
+            throw new IllegalArgumentException("O motivo de rejeição é obrigatório.");
+        Veiculo v = veiculoRepo.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Veículo não encontrado."));
+        veiculoRepo.updateEstadoComMotivo(id, "BLOQUEADO", motivo);
+        if (v.getProprietarioEmail() != null && !v.getProprietarioEmail().isBlank()) {
+            new Thread(() -> EmailSender.enviarRejeicaoVeiculo(
+                    v.getProprietarioEmail(),
+                    v.getProprietarioNome() != null ? v.getProprietarioNome() : "Utilizador",
+                    v.getNomeCompleto(),
+                    motivo)).start();
+        }
+    }
+
+    /** @deprecated Usa {@link #rejeitarVeiculoComMotivo(int, String)} para rejeições com justificação. */
+    @Deprecated
+    public void rejeitarVeiculo(int id) throws SQLException {
+        rejeitarVeiculoComMotivo(id, "Anúncio rejeitado pelo administrador.");
+    }
 
     private void validar(String marca, String modelo, int ano, String localizacao, double preco) {
         if (marca == null || marca.isBlank()) throw new IllegalArgumentException("Marca obrigatória.");

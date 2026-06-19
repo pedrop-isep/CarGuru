@@ -17,6 +17,7 @@ import pt.carguru.Services.UserService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
+import pt.carguru.Utils.ScrollSpeedUtil;
 import pt.carguru.Utils.Session;
 
 import java.io.File;
@@ -46,6 +47,7 @@ public class ContaController {
     @FXML private Label saldoLabel;
     @FXML private Label caucaoLabel;
     @FXML private Label disponivelLabel;
+    @FXML private Label avaliacaoLabel;
     @FXML private VBox veiculosList;
     @FXML private VBox transacoesList;
     @FXML private Button btnAdmin;
@@ -65,6 +67,9 @@ public class ContaController {
         User user = Session.getUser();
         if (user == null) { App.navigateTo("Login"); return; }
         NavbarHelper.configurar(btnAdmin);
+        try {
+            user = userService.getMeuPerfilComAvaliacao();
+        } catch (Exception ignored) {}
         carregarPerfil(user);
         carregarVeiculos();
         injetarBarraFiltros();
@@ -77,6 +82,8 @@ public class ContaController {
         nomeLabel.setText(user.getNome());
         emailLabel.setText(user.getEmail());
         roleLabel.setText("ADMINISTRADOR".equals(user.getRole()) ? "🛡️ Administrador" : "🚗 Proprietário & Locatário");
+        if (avaliacaoLabel != null)
+            avaliacaoLabel.setText(user.getAvaliacaoStr());
         perfilNome.setText(user.getNome());
         perfilEmail.setText(user.getEmail());
         perfilNif.setText(user.getNif() != null ? user.getNif() : "");
@@ -515,6 +522,7 @@ public class ContaController {
         ScrollPane sp = new ScrollPane(content);
         sp.setFitToWidth(true); sp.setPrefHeight(500);
         sp.setStyle("-fx-background-color: #141414; -fx-background: #141414;");
+        ScrollSpeedUtil.aplicar(sp);
 
         dialog.getDialogPane().setContent(sp);
         dialog.getDialogPane().setStyle("-fx-background-color: #141414;");

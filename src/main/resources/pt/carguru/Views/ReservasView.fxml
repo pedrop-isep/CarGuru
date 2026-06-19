@@ -27,16 +27,20 @@
           <!-- Locatário -->
           <Tab text="Como Locatário">
             <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="500">
+              <VBox fx:id="reservasLocatarioListCard" spacing="8">
               <VBox fx:id="reservasLocatarioList" spacing="12">
                 <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+              </VBox>
               </VBox>
             </ScrollPane>
           </Tab>
           <!-- Proprietário -->
           <Tab text="Como Proprietário">
             <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="500">
+              <VBox fx:id="reservasProprietarioListCard" spacing="8">
               <VBox fx:id="reservasProprietarioList" spacing="12">
                 <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+              </VBox>
               </VBox>
             </ScrollPane>
           </Tab>

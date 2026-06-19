@@ -244,6 +244,7 @@ CREATE TABLE `veiculos` (
   `avaliacao_media` decimal(3,2) NOT NULL DEFAULT 0.00,
   `n_avaliacoes` int(11) NOT NULL DEFAULT 0,
   `validado` tinyint(1) NOT NULL DEFAULT 0,
+  `motivo_rejeicao` text DEFAULT NULL COMMENT 'Motivo de rejeição preenchido pelo administrador',
   `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ;
@@ -506,3 +507,18 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migração: suporte a motivo de rejeição de veículos (User Story: validação admin)
+-- Executar uma única vez numa BD existente:
+--   ALTER TABLE `veiculos` ADD COLUMN `motivo_rejeicao` TEXT DEFAULT NULL
+--     AFTER `validado`;
+-- Em instalações novas o CREATE TABLE abaixo já inclui a coluna.
+--
+-- Notificação por email ao proprietário: NÃO requer coluna nova em `veiculos`.
+-- O email do proprietário é obtido via JOIN à tabela `utilizadores` (coluna
+-- `email` já existente), como `proprietario_email`, em todas as queries de
+-- VeiculoRepository (findById, findByProprietario, findAprovados,
+-- findDisponiveisPorDatas, findPendentes, findAll).
+-- ─────────────────────────────────────────────────────────────────────────────
