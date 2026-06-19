@@ -87,7 +87,7 @@ public class ReservasController {
                 btnFiltrar, btnLimpar,
                 spacer, btnCsv);
         barra.setAlignment(Pos.CENTER_LEFT);
-        barra.setPadding(new Insets(4, 4, 4, 4));
+        barra.setPadding(new Insets(16, 4, 4, 4));
 
         int idx = card.getChildren().indexOf(reservasLocatarioList);
         if (idx >= 0) card.getChildren().add(idx, barra);
@@ -150,7 +150,7 @@ public class ReservasController {
                 btnFiltrar, btnLimpar,
                 spacer, btnCsv);
         barra.setAlignment(Pos.CENTER_LEFT);
-        barra.setPadding(new Insets(4, 4, 4, 4));
+        barra.setPadding(new Insets(16, 4, 4, 4));
 
         int idx = card.getChildren().indexOf(reservasProprietarioList);
         if (idx >= 0) card.getChildren().add(idx, barra);

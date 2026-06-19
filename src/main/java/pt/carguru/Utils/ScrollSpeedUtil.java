@@ -17,7 +17,7 @@ public final class ScrollSpeedUtil {
     private ScrollSpeedUtil() {}
 
     /** Quanto maior, mais rápido o scroll. Ajustável conforme sensação desejada. */
-    private static final double VELOCIDADE = 4.0;
+    private static final double VELOCIDADE = 2.6;
 
     /**
      * Percorre toda a árvore de nós a partir da raiz dada e aplica
