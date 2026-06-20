@@ -1,6 +1,8 @@
 package pt.carguru.Repositories;
 
+import pt.carguru.Models.RendimentoMensalVeiculo;
 import pt.carguru.Models.Reserva;
+import pt.carguru.Models.ReservasPorLocalizacao;
 import pt.carguru.Utils.DatabaseConnection;
 
 import java.math.BigDecimal;
@@ -526,6 +528,76 @@ public class ReservaRepository {
         try { r.setLocatarioEmail(rs.getString("locatario_email")); } catch (Exception ignored) {}
         try { r.setProprietarioEmail(rs.getString("proprietario_email")); } catch (Exception ignored) {}
         return r;
+    }
+
+    // ── Estatísticas (painel de administração) ──────────────────────────────
+
+    /**
+     * Rendimento mensal por veículo, considerando apenas alugueres CONCLUIDOS.
+     * Agrupa por mês (yyyy-MM) e veículo. Filtros de período e veículo são opcionais
+     * (passa null para não filtrar).
+     */
+    public List<RendimentoMensalVeiculo> getRendimentoMensalPorVeiculo(LocalDate de, LocalDate ate, Integer veiculoId) throws SQLException {
+        StringBuilder where = new StringBuilder("r.estado='CONCLUIDA'");
+        if (de  != null) where.append(" AND r.data_inicio >= ?");
+        if (ate != null) where.append(" AND r.data_fim <= ?");
+        if (veiculoId != null) where.append(" AND r.veiculo_id = ?");
+
+        String sql = "SELECT DATE_FORMAT(r.data_inicio, '%Y-%m') AS mes, v.id AS veiculo_id, " +
+                "CONCAT(v.marca, ' ', v.modelo, ' (', v.ano, ')') AS veiculo_nome, " +
+                "SUM(r.custo_renda) AS receita, COUNT(*) AS n " +
+                "FROM reservas r JOIN veiculos v ON v.id = r.veiculo_id " +
+                "WHERE " + where +
+                " GROUP BY mes, v.id, veiculo_nome ORDER BY mes ASC, receita DESC";
+
+        List<RendimentoMensalVeiculo> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            if (de  != null) ps.setDate(idx++, Date.valueOf(de));
+            if (ate != null) ps.setDate(idx++, Date.valueOf(ate));
+            if (veiculoId != null) ps.setInt(idx, veiculoId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                BigDecimal receita = rs.getBigDecimal("receita");
+                list.add(new RendimentoMensalVeiculo(
+                        rs.getString("mes"),
+                        rs.getInt("veiculo_id"),
+                        rs.getString("veiculo_nome"),
+                        receita != null ? receita.doubleValue() : 0.0,
+                        rs.getInt("n")));
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Número de reservas agrupadas pela localização (cidade) do veículo.
+     * Inclui reservas em qualquer estado, para refletir a procura real por zona.
+     * Filtros de período e veículo são opcionais (passa null para não filtrar).
+     */
+    public List<ReservasPorLocalizacao> getReservasPorLocalizacao(LocalDate de, LocalDate ate, Integer veiculoId) throws SQLException {
+        StringBuilder where = new StringBuilder("1=1");
+        if (de  != null) where.append(" AND r.data_inicio >= ?");
+        if (ate != null) where.append(" AND r.data_fim <= ?");
+        if (veiculoId != null) where.append(" AND r.veiculo_id = ?");
+
+        String sql = "SELECT v.cidade AS localizacao, COUNT(*) AS n " +
+                "FROM reservas r JOIN veiculos v ON v.id = r.veiculo_id " +
+                "WHERE " + where +
+                " GROUP BY v.cidade ORDER BY n DESC";
+
+        List<ReservasPorLocalizacao> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            if (de  != null) ps.setDate(idx++, Date.valueOf(de));
+            if (ate != null) ps.setDate(idx++, Date.valueOf(ate));
+            if (veiculoId != null) ps.setInt(idx, veiculoId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(new ReservasPorLocalizacao(rs.getString("localizacao"), rs.getInt("n")));
+        }
+        return list;
     }
 
     private String normalizar(String estado) {

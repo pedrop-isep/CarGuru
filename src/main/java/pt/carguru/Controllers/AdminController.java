@@ -2,17 +2,27 @@ package pt.carguru.Controllers;
 
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.PieChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.util.Duration;
 import pt.carguru.App;
 import pt.carguru.Models.Bloqueio;
 import pt.carguru.Models.Disputa;
 import pt.carguru.Models.PrecoCombustivel;
+import pt.carguru.Models.RendimentoMensalVeiculo;
 import pt.carguru.Models.Reserva;
+import pt.carguru.Models.ReservasPorLocalizacao;
 import pt.carguru.Models.User;
 import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.CombustivelService;
 import pt.carguru.Services.DisputaService;
+import pt.carguru.Services.EstatisticasService;
 import pt.carguru.Services.ReservaService;
 import pt.carguru.Services.UserService;
 import pt.carguru.Services.VeiculoService;
@@ -20,11 +30,19 @@ import pt.carguru.Utils.DialogHelper;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.Session;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import java.io.File;
+import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class AdminController {
@@ -34,12 +52,22 @@ public class AdminController {
     @FXML private VBox historicoList;
     @FXML private VBox disputasList;
     @FXML private VBox combustivelList;
+    @FXML private HBox filtrosEstatisticasBox;
+    @FXML private VBox rendimentoMensalChartBox;
+    @FXML private VBox distribuicaoGeoChartBox;
 
     private final VeiculoService veiculoService = new VeiculoService();
     private final UserService userService = new UserService();
     private final ReservaService reservaService = new ReservaService();
     private final DisputaService disputaService = new DisputaService();
     private final CombustivelService combustivelService = new CombustivelService();
+    private final EstatisticasService estatisticasService = new EstatisticasService();
+
+    // Filtros do painel de estatísticas
+    private DatePicker filtroStatsDe;
+    private DatePicker filtroStatsAte;
+    private ComboBox<Veiculo> filtroStatsVeiculo;
+    private Timeline refreshEstatisticasTimeline;
 
     @FXML
     public void initialize() {
@@ -50,6 +78,7 @@ public class AdminController {
         carregarHistorico();
         carregarDisputas();
         carregarCombustivel();
+        inicializarEstatisticas();
     }
 
     private void carregarVeiculosPendentes() {
@@ -996,6 +1025,154 @@ public class AdminController {
         return row;
     }
 
+    // ── Estatísticas ──────────────────────────────────────────────────────────
+
+    /** Constrói a barra de filtros, carrega os gráficos e arranca o refresh automático. */
+    private void inicializarEstatisticas() {
+        try {
+            filtroStatsDe = new DatePicker();
+            filtroStatsDe.setPromptText("Data início");
+            filtroStatsDe.setPrefWidth(140);
+
+            filtroStatsAte = new DatePicker();
+            filtroStatsAte.setPromptText("Data fim");
+            filtroStatsAte.setPrefWidth(140);
+
+            filtroStatsVeiculo = new ComboBox<>();
+            filtroStatsVeiculo.setPromptText("Todos os veículos");
+            filtroStatsVeiculo.setPrefWidth(220);
+            filtroStatsVeiculo.setButtonCell(new ListCell<>() {
+                @Override protected void updateItem(Veiculo v, boolean empty) {
+                    super.updateItem(v, empty);
+                    setText(empty || v == null ? "Todos os veículos" : v.getNomeCompleto());
+                }
+            });
+            filtroStatsVeiculo.setCellFactory(lv -> new ListCell<>() {
+                @Override protected void updateItem(Veiculo v, boolean empty) {
+                    super.updateItem(v, empty);
+                    setText(empty || v == null ? "Todos os veículos" : v.getNomeCompleto());
+                }
+            });
+            filtroStatsVeiculo.getItems().addAll(estatisticasService.listarVeiculosParaFiltro());
+
+            Button btnFiltrar = new Button("🔍 Filtrar");
+            btnFiltrar.getStyleClass().add("btn-admin-primary");
+            btnFiltrar.setOnAction(e -> carregarEstatisticas());
+
+            Button btnLimpar = new Button("✕ Limpar");
+            btnLimpar.getStyleClass().add("btn-admin-neutral");
+            btnLimpar.setOnAction(e -> {
+                filtroStatsDe.setValue(null);
+                filtroStatsAte.setValue(null);
+                filtroStatsVeiculo.setValue(null);
+                carregarEstatisticas();
+            });
+
+            filtrosEstatisticasBox.getChildren().setAll(
+                    labelInfo("De:"), filtroStatsDe,
+                    labelInfo("Até:"), filtroStatsAte,
+                    labelInfo("Veículo:"), filtroStatsVeiculo,
+                    btnFiltrar, btnLimpar);
+
+            carregarEstatisticas();
+
+            // Atualização automática: recalcula os gráficos periodicamente sem
+            // necessidade de qualquer ação do administrador, mantendo os filtros
+            // atualmente selecionados.
+            refreshEstatisticasTimeline = new Timeline(
+                    new KeyFrame(Duration.seconds(30), e -> carregarEstatisticas()));
+            refreshEstatisticasTimeline.setCycleCount(Timeline.INDEFINITE);
+            refreshEstatisticasTimeline.play();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    private void pararRefreshEstatisticas() {
+        if (refreshEstatisticasTimeline != null) refreshEstatisticasTimeline.stop();
+    }
+
+    /** Recarrega os dois gráficos de estatísticas com os filtros atualmente selecionados na UI. */
+    private void carregarEstatisticas() {
+        LocalDate de  = filtroStatsDe  != null ? filtroStatsDe.getValue()  : null;
+        LocalDate ate = filtroStatsAte != null ? filtroStatsAte.getValue() : null;
+        Veiculo veiculoSel = filtroStatsVeiculo != null ? filtroStatsVeiculo.getValue() : null;
+        Integer veiculoId = veiculoSel != null ? veiculoSel.getId() : null;
+
+        if (de != null && ate != null && ate.isBefore(de)) {
+            mostrarErro("A data de fim não pode ser anterior à data de início.");
+            return;
+        }
+
+        try {
+            List<RendimentoMensalVeiculo> rendimentos = estatisticasService.getRendimentoMensalPorVeiculo(de, ate, veiculoId);
+            rendimentoMensalChartBox.getChildren().setAll(construirGraficoRendimentoMensal(rendimentos));
+
+            List<ReservasPorLocalizacao> geo = estatisticasService.getReservasPorLocalizacao(de, ate, veiculoId);
+            distribuicaoGeoChartBox.getChildren().setAll(construirGraficoDistribuicaoGeografica(geo));
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /**
+     * Gráfico de barras com o rendimento mensal por veículo. Cada veículo é uma
+     * série de dados, e cada mês (yyyy-MM) é uma categoria no eixo X.
+     */
+    private Node construirGraficoRendimentoMensal(List<RendimentoMensalVeiculo> dados) {
+        if (dados.isEmpty()) return labelInfo("Sem alugueres concluídos para os filtros selecionados.");
+
+        CategoryAxis eixoX = new CategoryAxis();
+        eixoX.setLabel("Mês");
+        NumberAxis eixoY = new NumberAxis();
+        eixoY.setLabel("Receita (€)");
+
+        BarChart<String, Number> chart = new BarChart<>(eixoX, eixoY);
+        chart.setTitle("Rendimento mensal por veículo (€)");
+        chart.setAnimated(false);
+        chart.setPrefHeight(320);
+        chart.setLegendVisible(true);
+
+        // Categorias (meses) ordenadas cronologicamente, e uma série por veículo
+        Set<String> meses = new LinkedHashSet<>();
+        Map<Integer, String> nomesPorVeiculo = new LinkedHashMap<>();
+        Map<Integer, Map<String, Double>> receitaPorVeiculoEMes = new LinkedHashMap<>();
+
+        for (RendimentoMensalVeiculo r : dados) {
+            meses.add(r.getMes());
+            nomesPorVeiculo.putIfAbsent(r.getVeiculoId(), r.getVeiculoNome());
+            receitaPorVeiculoEMes
+                    .computeIfAbsent(r.getVeiculoId(), k -> new TreeMap<>())
+                    .merge(r.getMes(), r.getReceita(), Double::sum);
+        }
+
+        for (Map.Entry<Integer, String> ent : nomesPorVeiculo.entrySet()) {
+            XYChart.Series<String, Number> serie = new XYChart.Series<>();
+            serie.setName(ent.getValue());
+            Map<String, Double> porMes = receitaPorVeiculoEMes.get(ent.getKey());
+            for (String mes : meses) {
+                serie.getData().add(new XYChart.Data<>(mes, porMes.getOrDefault(mes, 0.0)));
+            }
+            chart.getData().add(serie);
+        }
+
+        return chart;
+    }
+
+    /** Gráfico circular com a distribuição de reservas por localização (cidade) do veículo. */
+    private Node construirGraficoDistribuicaoGeografica(List<ReservasPorLocalizacao> dados) {
+        if (dados.isEmpty()) return labelInfo("Sem reservas para os filtros selecionados.");
+
+        PieChart chart = new PieChart();
+        chart.setTitle("Reservas por localização");
+        chart.setAnimated(false);
+        chart.setPrefHeight(320);
+        chart.setLabelsVisible(true);
+
+        for (ReservasPorLocalizacao r : dados) {
+            chart.getData().add(new PieChart.Data(
+                    r.getLocalizacao() + " (" + r.getNumeroReservas() + ")", r.getNumeroReservas()));
+        }
+
+        return chart;
+    }
+
     private Label labelInfo(String txt) {
         Label l = new Label(txt);
         l.getStyleClass().add("conta-email");
@@ -1007,12 +1184,12 @@ public class AdminController {
         return DialogHelper.confirmar(titulo, msg);
     }
 
-    @FXML public void irParaHome()     { App.navigateTo("Home"); }
-    @FXML public void irParaDashboard() { App.navigateTo("Dashboard"); }
-    @FXML public void irParaVeiculos()  { App.navigateTo("Vehicles"); }
-    @FXML public void irParaReservas()   { App.navigateTo("Reservas"); }
-    @FXML public void irParaConta()     { App.navigateTo("Conta"); }
-    @FXML public void logout() { NavbarHelper.logout(); }
+    @FXML public void irParaHome()     { pararRefreshEstatisticas(); App.navigateTo("Home"); }
+    @FXML public void irParaDashboard() { pararRefreshEstatisticas(); App.navigateTo("Dashboard"); }
+    @FXML public void irParaVeiculos()  { pararRefreshEstatisticas(); App.navigateTo("Vehicles"); }
+    @FXML public void irParaReservas()   { pararRefreshEstatisticas(); App.navigateTo("Reservas"); }
+    @FXML public void irParaConta()     { pararRefreshEstatisticas(); App.navigateTo("Conta"); }
+    @FXML public void logout() { pararRefreshEstatisticas(); NavbarHelper.logout(); }
 
     private void mostrarErro(String msg)   { DialogHelper.erro(msg); }
     private void mostrarSucesso(String msg){ DialogHelper.sucesso(msg); }

@@ -2,6 +2,7 @@ pt\carguru\Services\VeiculoService.class
 pt\carguru\Controllers\AuthController.class
 pt\carguru\Repositories\UserRepository.class
 pt\carguru\Repositories\BloqueioRepository.class
+pt\carguru\Controllers\AdminController$2.class
 pt\carguru\Controllers\VehiclesController$2.class
 pt\carguru\Models\Disputa.class
 pt\carguru\Services\DisputaService.class
@@ -9,8 +10,11 @@ pt\carguru\Repositories\DisputaRepository.class
 pt\carguru\Models\Reserva.class
 pt\carguru\Services\AuthService.class
 pt\carguru\Controllers\ReservasController$VeiculoListCell.class
+pt\carguru\Services\EstatisticasService.class
+pt\carguru\Controllers\AdminController$1.class
 pt\carguru\Controllers\AdminController.class
 pt\carguru\Utils\DialogHelper.class
+pt\carguru\Models\RendimentoMensalVeiculo.class
 pt\carguru\Services\CombustivelService.class
 pt\carguru\Models\Bloqueio.class
 pt\carguru\Services\ReservaService.class
@@ -18,6 +22,7 @@ pt\carguru\Utils\LembreteScheduler.class
 pt\carguru\Repositories\VeiculoRepository.class
 pt\carguru\Models\RendimentoVeiculo.class
 pt\carguru\Models\Transacao.class
+pt\carguru\Models\ReservasPorLocalizacao.class
 pt\carguru\Utils\EmailSender$1.class
 pt\carguru\Controllers\ContaController.class
 pt\carguru\Services\UserService.class

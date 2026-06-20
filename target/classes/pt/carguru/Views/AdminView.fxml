@@ -95,6 +95,26 @@
             </ScrollPane>
           </Tab>
 
+          <!-- Estatísticas -->
+          <Tab text="📊 Estatísticas">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll" prefHeight="580">
+              <VBox spacing="16">
+                <padding><Insets top="16" right="4" bottom="16" left="4"/></padding>
+                <Label text="Estatísticas da plataforma" styleClass="admin-section-title"/>
+                <Label text="Os dados são recalculados automaticamente a cada 30 segundos. Usa os filtros para refinar a análise."
+                       style="-fx-text-fill: #888; -fx-font-size: 0.85em;" wrapText="true"/>
+
+                <HBox fx:id="filtrosEstatisticasBox" spacing="8" alignment="CENTER_LEFT"/>
+
+                <Label text="💶 Rendimento mensal por veículo (alugueres concluídos)" styleClass="admin-section-title"/>
+                <VBox fx:id="rendimentoMensalChartBox" spacing="8" minHeight="320"/>
+
+                <Label text="📍 Distribuição geográfica das reservas" styleClass="admin-section-title"/>
+                <VBox fx:id="distribuicaoGeoChartBox" spacing="8" minHeight="320"/>
+              </VBox>
+            </ScrollPane>
+          </Tab>
+
         </TabPane>
       </VBox>
     </ScrollPane>
