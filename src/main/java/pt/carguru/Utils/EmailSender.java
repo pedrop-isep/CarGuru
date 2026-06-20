@@ -41,6 +41,115 @@ public class EmailSender {
         }
     }
 
+    /**
+     * Notifica o locatário que o seu pedido de reserva foi ACEITE pelo proprietário.
+     */
+    public static void enviarReservaAceite(String destinatario, String nomeLocatario, String nomeVeiculo,
+                                            String dataInicio, String dataFim, double total) {
+        String assunto = "CarGuru — Reserva Aceite ✅";
+        String corpo = """
+                Olá %s,
+
+                Boas notícias! O proprietário aceitou o teu pedido de reserva.
+
+                Veículo: %s
+                Início: %s
+                Fim: %s
+                Valor total: %.2f€
+
+                Não é necessária nenhuma ação da tua parte por agora — vamos avisar-te
+                novamente perto da data de início e perto da data de devolução.
+
+                Boas viagens! 🚗
+
+                Equipa CarGuru
+                """.formatted(nomeLocatario, nomeVeiculo, dataInicio, dataFim, total);
+        send(destinatario, assunto, corpo);
+    }
+
+    /**
+     * Notifica o locatário que o seu pedido de reserva foi REJEITADO pelo proprietário,
+     * incluindo o motivo indicado.
+     */
+    public static void enviarReservaRejeitada(String destinatario, String nomeLocatario, String nomeVeiculo,
+                                               String dataInicio, String dataFim, String motivo) {
+        String assunto = "CarGuru — Pedido de Reserva Rejeitado";
+        String corpo = """
+                Olá %s,
+
+                O teu pedido de reserva não foi aceite pelo proprietário.
+
+                Veículo: %s
+                Início: %s
+                Fim: %s
+
+                Motivo:
+                %s
+
+                Não te preocupes — o valor da caução não foi cobrado e podes pesquisar
+                outros veículos disponíveis na plataforma.
+
+                Equipa CarGuru
+                """.formatted(nomeLocatario, nomeVeiculo, dataInicio, dataFim,
+                              (motivo == null || motivo.isBlank()) ? "Não foi indicado um motivo específico." : motivo);
+        send(destinatario, assunto, corpo);
+    }
+
+    /**
+     * Lembrete enviado ao locatário quando o aluguer está prestes a começar (no dia anterior).
+     */
+    public static void enviarLembreteInicioAluguer(String destinatario, String nomeLocatario, String nomeVeiculo,
+                                                     String dataInicio, String localizacao) {
+        String assunto = "CarGuru — O teu aluguer começa em breve 🚗";
+        String corpo = """
+                Olá %s,
+
+                Este é um lembrete de que o teu aluguer começa brevemente.
+
+                Veículo: %s
+                Data de início: %s
+                Localização de recolha: %s
+
+                Não te esqueças de levar a tua carta de condução e de chegares a tempo
+                para a entrega das chaves.
+
+                Boas viagens! 🚗
+
+                Equipa CarGuru
+                """.formatted(nomeLocatario, nomeVeiculo, dataInicio,
+                              (localizacao == null || localizacao.isBlank()) ? "A confirmar com o proprietário" : localizacao);
+        send(destinatario, assunto, corpo);
+    }
+
+    /**
+     * Lembrete enviado ao locatário antes do fim do aluguer, para preparar a devolução do veículo.
+     */
+    public static void enviarLembreteDevolucao(String destinatario, String nomeLocatario, String nomeVeiculo,
+                                                String dataFim, String localizacao) {
+        String assunto = "CarGuru — Lembrete de Devolução do Veículo 🔑";
+        String corpo = """
+                Olá %s,
+
+                O teu aluguer está a chegar ao fim — este é um lembrete para preparares
+                a devolução do veículo.
+
+                Veículo: %s
+                Data de devolução: %s
+                Local de devolução: %s
+
+                Lembra-te de:
+                  • Devolver o veículo com o nível de combustível acordado
+                  • Verificar se não ficam objetos pessoais no interior
+                  • Registar a quilometragem final na plataforma
+
+                Obrigado por usares o CarGuru! 🚗
+
+                Equipa CarGuru
+                """.formatted(nomeLocatario, nomeVeiculo, dataFim,
+                              (localizacao == null || localizacao.isBlank()) ? "A confirmar com o proprietário" : localizacao);
+        send(destinatario, assunto, corpo);
+    }
+
     // Métodos específicos para o CarGuru
     public static void enviarTokenRecuperacao(String destinatario, String token) {
         String assunto = "CarGuru — Recuperação de Password";

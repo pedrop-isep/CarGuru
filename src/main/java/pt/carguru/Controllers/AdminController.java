@@ -456,7 +456,7 @@ public class AdminController {
                 filtroHistoricoVeiculo.setPrefWidth(180);
 
                 filtroHistoricoEstado = new ComboBox<>();
-                filtroHistoricoEstado.getItems().addAll("(todos)", "pendente", "confirmada", "cancelada", "concluida");
+                filtroHistoricoEstado.getItems().addAll("(todos)", "pendente", "confirmada", "rejeitada", "cancelada", "concluida");
                 filtroHistoricoEstado.setValue("(todos)");
                 filtroHistoricoEstado.setPrefWidth(130);
 

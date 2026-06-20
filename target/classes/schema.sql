@@ -159,6 +159,19 @@ CREATE TABLE `precos_combustivel` (
 -- Estrutura da tabela `reservas`
 --
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migração: lembretes por email de início/devolução de aluguer (User Story:
+-- notificações por email sobre eventos importantes)
+-- Executar uma única vez numa BD existente:
+--   ALTER TABLE `reservas`
+--     ADD COLUMN `lembrete_inicio_enviado` TINYINT(1) NOT NULL DEFAULT 0 AFTER `motivo_cancelamento`,
+--     ADD COLUMN `lembrete_fim_enviado` TINYINT(1) NOT NULL DEFAULT 0 AFTER `lembrete_inicio_enviado`;
+-- Em instalações novas o CREATE TABLE já inclui as colunas.
+--
+-- Estas colunas evitam que o LembreteScheduler envie o mesmo lembrete duas
+-- vezes (ex: se a aplicação for reiniciada no mesmo dia).
+-- ─────────────────────────────────────────────────────────────────────────────
+
 CREATE TABLE `reservas` (
   `id` int(11) NOT NULL,
   `veiculo_id` int(11) NOT NULL,
@@ -175,6 +188,8 @@ CREATE TABLE `reservas` (
   `data_aceitacao` datetime DEFAULT NULL,
   `data_cancelamento` datetime DEFAULT NULL,
   `motivo_cancelamento` varchar(500) DEFAULT NULL,
+  `lembrete_inicio_enviado` tinyint(1) NOT NULL DEFAULT 0,
+  `lembrete_fim_enviado` tinyint(1) NOT NULL DEFAULT 0,
   `km_inicial` int(11) DEFAULT NULL
 ) ;
 

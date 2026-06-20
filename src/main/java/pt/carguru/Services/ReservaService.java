@@ -6,6 +6,7 @@ import pt.carguru.Repositories.IndisponibilidadeRepository;
 import pt.carguru.Repositories.ReservaRepository;
 import pt.carguru.Repositories.VeiculoRepository;
 import pt.carguru.Models.Veiculo;
+import pt.carguru.Utils.EmailSender;
 import pt.carguru.Utils.Session;
 
 import java.sql.SQLException;
@@ -78,6 +79,45 @@ public class ReservaService {
         Veiculo v = veiculoRepo.findById(r.getVeiculoId())
             .orElseThrow(() -> new IllegalArgumentException("Veículo não encontrado."));
         reservaRepo.updateKmInicial(reservaId, v.getQuilometragem());
+
+        // Notificar o locatário (assíncrono — falha de email não impede a aprovação)
+        if (r.getLocatarioEmail() != null && !r.getLocatarioEmail().isBlank()) {
+            new Thread(() -> EmailSender.enviarReservaAceite(
+                    r.getLocatarioEmail(),
+                    r.getLocatarioNome() != null ? r.getLocatarioNome() : "Utilizador",
+                    r.getVeiculoNome(),
+                    r.getDataInicio().toString(),
+                    r.getDataFim().toString(),
+                    r.getTotal())).start();
+        }
+    }
+
+    /**
+     * Rejeita o pedido de reserva com motivo obrigatório, distinguindo-se de
+     * {@link #cancelarReserva} (que serve para cancelamentos genéricos de reservas
+     * já aceites). Apenas reservas pendentes podem ser rejeitadas. Notifica o
+     * locatário por email com o motivo da rejeição.
+     */
+    public void rejeitarReserva(int reservaId, String motivo) throws SQLException {
+        if (motivo == null || motivo.isBlank())
+            throw new IllegalArgumentException("O motivo da rejeição é obrigatório.");
+        Reserva r = reservaRepo.findById(reservaId)
+            .orElseThrow(() -> new IllegalArgumentException("Reserva não encontrada."));
+        if (r.getProprietarioId() != Session.getUser().getId() && !Session.isAdmin())
+            throw new IllegalStateException("Sem permissão.");
+        if (!"pendente".equals(r.getEstado()))
+            throw new IllegalStateException("Só é possível rejeitar reservas pendentes.");
+        reservaRepo.rejeitar(reservaId, motivo.trim());
+
+        if (r.getLocatarioEmail() != null && !r.getLocatarioEmail().isBlank()) {
+            new Thread(() -> EmailSender.enviarReservaRejeitada(
+                    r.getLocatarioEmail(),
+                    r.getLocatarioNome() != null ? r.getLocatarioNome() : "Utilizador",
+                    r.getVeiculoNome(),
+                    r.getDataInicio().toString(),
+                    r.getDataFim().toString(),
+                    motivo.trim())).start();
+        }
     }
 
     public void cancelarReserva(int reservaId) throws SQLException {
@@ -86,10 +126,46 @@ public class ReservaService {
         int userId = Session.getUser().getId();
         if (r.getLocatarioId() != userId && r.getProprietarioId() != userId && !Session.isAdmin())
             throw new IllegalStateException("Sem permissão.");
-        if ("cancelada".equals(r.getEstado()) || "concluida".equals(r.getEstado()))
+        if ("cancelada".equals(r.getEstado()) || "rejeitada".equals(r.getEstado()) || "concluida".equals(r.getEstado()))
             throw new IllegalStateException("Esta reserva não pode ser cancelada.");
         reservaRepo.updateEstado(reservaId, "CANCELADA");
     }
+
+    /**
+     * Envia os lembretes de email pendentes (início e devolução de aluguer) para o
+     * dia de amanhã — assim o locatário recebe o aviso com antecedência suficiente
+     * para se preparar. Chamado periodicamente pelo {@link pt.carguru.Utils.LembreteScheduler}.
+     * Cada reserva só recebe cada lembrete uma vez (flags lembrete_inicio_enviado /
+     * lembrete_fim_enviado), mesmo que este método seja chamado várias vezes.
+     */
+    public void enviarLembretesDoDia() throws SQLException {
+        LocalDate amanha = LocalDate.now().plusDays(1);
+
+        for (Reserva r : reservaRepo.findParaLembreteInicio(amanha)) {
+            if (r.getLocatarioEmail() == null || r.getLocatarioEmail().isBlank()) continue;
+            Veiculo v = veiculoRepo.findById(r.getVeiculoId()).orElse(null);
+            EmailSender.enviarLembreteInicioAluguer(
+                    r.getLocatarioEmail(),
+                    r.getLocatarioNome() != null ? r.getLocatarioNome() : "Utilizador",
+                    r.getVeiculoNome(),
+                    r.getDataInicio().toString(),
+                    v != null ? v.getLocalizacao() : null);
+            reservaRepo.marcarLembreteInicioEnviado(r.getId());
+        }
+
+        for (Reserva r : reservaRepo.findParaLembreteFim(amanha)) {
+            if (r.getLocatarioEmail() == null || r.getLocatarioEmail().isBlank()) continue;
+            Veiculo v = veiculoRepo.findById(r.getVeiculoId()).orElse(null);
+            EmailSender.enviarLembreteDevolucao(
+                    r.getLocatarioEmail(),
+                    r.getLocatarioNome() != null ? r.getLocatarioNome() : "Utilizador",
+                    r.getVeiculoNome(),
+                    r.getDataFim().toString(),
+                    v != null ? v.getLocalizacao() : null);
+            reservaRepo.marcarLembreteFimEnviado(r.getId());
+        }
+    }
+
 
     /** @deprecated Desde que o registo passou a ser automático (ver {@link #aprovarReserva}),
      *  este método já não é usado pela interface. Mantido apenas por compatibilidade. */

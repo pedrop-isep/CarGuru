@@ -694,6 +694,7 @@
 .reserva-total { -fx-font-size: 1.05em; -fx-font-weight: bold; -fx-text-fill: #ef4444; }
 .reserva-estado-pendente { -fx-text-fill: #eab308; -fx-font-size: 0.8em; -fx-font-weight: bold; }
 .reserva-estado-confirmada { -fx-text-fill: #22c55e; -fx-font-size: 0.8em; -fx-font-weight: bold; }
+.reserva-estado-rejeitada { -fx-text-fill: #ef4444; -fx-font-size: 0.8em; -fx-font-weight: bold; }
 .reserva-estado-cancelada { -fx-text-fill: #777; -fx-font-size: 0.8em; }
 .reserva-estado-concluida { -fx-text-fill: #60a5fa; -fx-font-size: 0.8em; }
 

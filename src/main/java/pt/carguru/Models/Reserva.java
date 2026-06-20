@@ -23,6 +23,8 @@ public class Reserva {
     private String veiculoNome;
     private String locatarioNome;
     private String proprietarioNome;
+    private String locatarioEmail;
+    private String proprietarioEmail;
 
     public Reserva() {}
 
@@ -64,6 +66,10 @@ public class Reserva {
     public void setLocatarioNome(String n) { this.locatarioNome = n; }
     public String getProprietarioNome() { return proprietarioNome; }
     public void setProprietarioNome(String n) { this.proprietarioNome = n; }
+    public String getLocatarioEmail() { return locatarioEmail; }
+    public void setLocatarioEmail(String e) { this.locatarioEmail = e; }
+    public String getProprietarioEmail() { return proprietarioEmail; }
+    public void setProprietarioEmail(String e) { this.proprietarioEmail = e; }
     public double getCaucao() { return caucao; }
     public void setCaucao(double c) { this.caucao = c; }
     public String getCombustivelVeiculo() { return combustivelVeiculo; }

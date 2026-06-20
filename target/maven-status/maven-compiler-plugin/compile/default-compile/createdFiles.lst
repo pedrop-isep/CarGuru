@@ -14,6 +14,7 @@ pt\carguru\Utils\DialogHelper.class
 pt\carguru\Services\CombustivelService.class
 pt\carguru\Models\Bloqueio.class
 pt\carguru\Services\ReservaService.class
+pt\carguru\Utils\LembreteScheduler.class
 pt\carguru\Repositories\VeiculoRepository.class
 pt\carguru\Models\RendimentoVeiculo.class
 pt\carguru\Models\Transacao.class

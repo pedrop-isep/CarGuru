@@ -493,12 +493,7 @@ public class ReservasController {
             });
             Button btnRe = new Button("❌ Recusar");
             btnRe.getStyleClass().add("btn-danger");
-            btnRe.setOnAction(e -> {
-                if (confirmar("Recusar reserva?")) {
-                    try { reservaService.cancelarReserva(r.getId()); recarregarProprietarioComFiltrosAtuais(); }
-                    catch (Exception ex) { mostrarErro(ex.getMessage()); }
-                }
-            });
+            btnRe.setOnAction(e -> abrirDialogoRejeicaoReserva(r));
             btns.getChildren().addAll(btnAp, btnRe);
         }
 
@@ -756,6 +751,7 @@ public class ReservasController {
         return switch (estado) {
             case "pendente"   -> "🕐";
             case "confirmada" -> "✅";
+            case "rejeitada"  -> "🚫";
             case "cancelada"  -> "❌";
             case "concluida"  -> "🏁";
             default           -> "•";
@@ -773,6 +769,51 @@ public class ReservasController {
         return DialogHelper.confirmar("Confirmação", msg)
                 .filter(b -> b == ButtonType.YES)
                 .isPresent();
+    }
+
+    /**
+     * Abre um diálogo para o proprietário introduzir o motivo (obrigatório) da
+     * rejeição do pedido de reserva. O locatário é notificado por email com o motivo.
+     */
+    private void abrirDialogoRejeicaoReserva(Reserva r) {
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Rejeitar Pedido de Reserva");
+
+        Label infoLbl = new Label(String.format("Veículo: %s\nLocatário: %s\nPeríodo: %s → %s",
+                r.getVeiculoNome(), r.getLocatarioNome(), r.getDataInicio(), r.getDataFim()));
+        infoLbl.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        infoLbl.setWrapText(true);
+
+        Label motivoLbl = new Label("Motivo da rejeição (obrigatório):");
+        motivoLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+
+        TextArea tfMotivo = new TextArea();
+        tfMotivo.setPromptText("Ex: Veículo já não está disponível nessas datas, dúvidas sobre o perfil do locatário...");
+        tfMotivo.setPrefRowCount(4);
+        tfMotivo.setWrapText(true);
+        tfMotivo.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white; " +
+                "-fx-border-color: rgba(255,255,255,0.12); -fx-border-radius: 8; -fx-background-radius: 8;");
+
+        VBox conteudo = new VBox(10, infoLbl, motivoLbl, tfMotivo);
+        conteudo.setPadding(new Insets(4, 0, 4, 0));
+        dlg.getDialogPane().setContent(conteudo);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.estilizar(dlg);
+
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tfMotivo.textProperty().addListener((obs, o, n) -> btnOk.setDisable(n.trim().isBlank()));
+        }
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt != ButtonType.OK) return;
+            try {
+                reservaService.rejeitarReserva(r.getId(), tfMotivo.getText().trim());
+                mostrarSucesso("Pedido de reserva rejeitado. O locatário foi notificado por email.");
+                recarregarProprietarioComFiltrosAtuais();
+            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+        });
     }
 
     // ── Navegação ─────────────────────────────────────────────────────────────

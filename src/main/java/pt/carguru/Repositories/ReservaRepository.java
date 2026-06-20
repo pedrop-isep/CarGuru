@@ -48,6 +48,66 @@ public class ReservaRepository {
         }
     }
 
+    /** Rejeita o pedido de reserva, guardando o motivo (reutiliza a coluna motivo_cancelamento). */
+    public void rejeitar(int id, String motivo) throws SQLException {
+        String sql = "UPDATE reservas SET estado='REJEITADA', data_cancelamento=NOW(), motivo_cancelamento=? WHERE id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, motivo);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Reservas ACEITES cujo aluguer começa exatamente na data indicada e cujo
+     * lembrete de início ainda não foi enviado. Usado pelo LembreteScheduler.
+     */
+    public List<Reserva> findParaLembreteInicio(LocalDate data) throws SQLException {
+        String sql = buildJoin("r.estado='ACEITE' AND r.data_inicio=? AND r.lembrete_inicio_enviado=0");
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(data));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    /**
+     * Reservas ACEITES cujo aluguer termina exatamente na data indicada e cujo
+     * lembrete de devolução ainda não foi enviado. Usado pelo LembreteScheduler.
+     */
+    public List<Reserva> findParaLembreteFim(LocalDate data) throws SQLException {
+        String sql = buildJoin("r.estado='ACEITE' AND r.data_fim=? AND r.lembrete_fim_enviado=0");
+        List<Reserva> list = new ArrayList<>();
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(data));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
+    public void marcarLembreteInicioEnviado(int id) throws SQLException {
+        marcarFlag(id, "lembrete_inicio_enviado");
+    }
+
+    public void marcarLembreteFimEnviado(int id) throws SQLException {
+        marcarFlag(id, "lembrete_fim_enviado");
+    }
+
+    private void marcarFlag(int id, String coluna) throws SQLException {
+        String sql = "UPDATE reservas SET " + coluna + "=1 WHERE id=?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+
     public void updateKmInicial(int id, int km) throws SQLException {
         String sql = "UPDATE reservas SET km_inicial=? WHERE id=?";
         try (Connection c = DatabaseConnection.getConnection();
@@ -392,6 +452,7 @@ public class ReservaRepository {
             String dbEstado = switch (estado.toLowerCase()) {
                 case "pendente"   -> "PENDENTE";
                 case "confirmada" -> "ACEITE";
+                case "rejeitada"  -> "REJEITADA";
                 case "cancelada"  -> "CANCELADA";
                 case "concluida"  -> "CONCLUIDA";
                 default           -> estado.toUpperCase();
@@ -427,7 +488,8 @@ public class ReservaRepository {
 
     private String buildJoin(String where) {
         return "SELECT r.*, v.proprietario_id, v.marca, v.modelo, v.ano, v.tipo_combustivel, " +
-               "ul.nome AS locatario_nome, up.nome AS proprietario_nome, " +
+               "ul.nome AS locatario_nome, ul.email AS locatario_email, " +
+               "up.nome AS proprietario_nome, up.email AS proprietario_email, " +
                "al.km_final, " +
                "av_loc.estrelas AS avaliacao_estrelas, " +
                "av_prop.estrelas AS avaliacao_proprietario_estrelas " +
@@ -461,6 +523,8 @@ public class ReservaRepository {
         r.setVeiculoNome(rs.getString("marca") + " " + rs.getString("modelo") + " (" + rs.getInt("ano") + ")");
         r.setLocatarioNome(rs.getString("locatario_nome"));
         r.setProprietarioNome(rs.getString("proprietario_nome"));
+        try { r.setLocatarioEmail(rs.getString("locatario_email")); } catch (Exception ignored) {}
+        try { r.setProprietarioEmail(rs.getString("proprietario_email")); } catch (Exception ignored) {}
         return r;
     }
 
@@ -469,7 +533,8 @@ public class ReservaRepository {
         return switch (estado.toUpperCase()) {
             case "PENDENTE"  -> "pendente";
             case "ACEITE"    -> "confirmada";
-            case "REJEITADA", "CANCELADA", "EXPIRADA" -> "cancelada";
+            case "REJEITADA" -> "rejeitada";
+            case "CANCELADA", "EXPIRADA" -> "cancelada";
             case "CONCLUIDA" -> "concluida";
             default -> estado.toLowerCase();
         };
