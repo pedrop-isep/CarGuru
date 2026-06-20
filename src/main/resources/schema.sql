@@ -522,3 +522,27 @@ COMMIT;
 -- VeiculoRepository (findById, findByProprietario, findAprovados,
 -- findDisponiveisPorDatas, findPendentes, findAll).
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migração: histórico de bloqueios de utilizadores (User Story: moderação admin)
+-- Executar uma única vez numa BD existente:
+--   CREATE TABLE `bloqueios_utilizador` ( ... );  (ver definição completa abaixo)
+-- Em instalações novas, basta correr este ficheiro — a tabela já fica criada.
+--
+-- Cada ação de bloquear/desbloquear gera UMA linha nesta tabela, preservando
+-- assim o histórico completo (datas + motivos) mesmo que o utilizador seja
+-- bloqueado e desbloqueado várias vezes.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS `bloqueios_utilizador` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `utilizador_id` int(11) NOT NULL COMMENT 'Utilizador bloqueado/desbloqueado',
+  `admin_id` int(11) NOT NULL COMMENT 'Administrador que executou a ação',
+  `acao` enum('BLOQUEIO','DESBLOQUEIO') NOT NULL,
+  `motivo` text NOT NULL COMMENT 'Justificação obrigatória da ação',
+  `data` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_bloqueios_utilizador` (`utilizador_id`,`data`),
+  CONSTRAINT `fk_bloqueios_utilizador` FOREIGN KEY (`utilizador_id`) REFERENCES `utilizadores` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_bloqueios_admin` FOREIGN KEY (`admin_id`) REFERENCES `utilizadores` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Histórico de bloqueios/desbloqueios de utilizadores com motivo.';

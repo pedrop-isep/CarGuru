@@ -1,6 +1,7 @@
 pt\carguru\Services\VeiculoService.class
 pt\carguru\Controllers\AuthController.class
 pt\carguru\Repositories\UserRepository.class
+pt\carguru\Repositories\BloqueioRepository.class
 pt\carguru\Controllers\VehiclesController$2.class
 pt\carguru\Models\Disputa.class
 pt\carguru\Services\DisputaService.class
@@ -11,6 +12,7 @@ pt\carguru\Controllers\ReservasController$VeiculoListCell.class
 pt\carguru\Controllers\AdminController.class
 pt\carguru\Utils\DialogHelper.class
 pt\carguru\Services\CombustivelService.class
+pt\carguru\Models\Bloqueio.class
 pt\carguru\Services\ReservaService.class
 pt\carguru\Repositories\VeiculoRepository.class
 pt\carguru\Models\RendimentoVeiculo.class

@@ -2,9 +2,11 @@ C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Disputa.j
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\AuthService.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Utils\Session.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\VeiculoRepository.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Bloqueio.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\AuthController.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Services\VeiculoService.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\RendimentoVeiculo.java
+C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\BloqueioRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Models\Indisponibilidade.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Repositories\ReservaRepository.java
 C:\Users\gonca\OneDrive\Documentos\aaa\src\main\java\pt\carguru\Controllers\DashboardController.java

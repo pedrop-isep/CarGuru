@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import pt.carguru.App;
+import pt.carguru.Models.Bloqueio;
 import pt.carguru.Models.Disputa;
 import pt.carguru.Models.PrecoCombustivel;
 import pt.carguru.Models.Reserva;
@@ -302,16 +303,13 @@ public class AdminController {
                 if (u.getId() != adminId) {
                     Button btnToggle = new Button(u.isBloqueado() ? "✅ Reativar" : "🚫 Suspender");
                     btnToggle.getStyleClass().add(u.isBloqueado() ? "btn-admin-ok" : "btn-admin-danger");
-                    btnToggle.setOnAction(e -> {
-                        String acao = u.isBloqueado() ? "reativar" : "suspender";
-                        Optional<ButtonType> res = confirmar("Confirmar ação",
-                                "Tens a certeza que queres " + acao + " o utilizador " + u.getNome() + "?");
-                        if (res.isPresent() && res.get() == ButtonType.YES) {
-                            try { userService.toggleAtivo(u.getId()); carregarUtilizadores(); }
-                            catch (Exception ex) { mostrarErro(ex.getMessage()); }
-                        }
-                    });
+                    btnToggle.setOnAction(e -> abrirDialogoBloqueio(u));
                     btns.getChildren().add(btnToggle);
+
+                    Button btnHistorico = new Button("📜 Histórico");
+                    btnHistorico.getStyleClass().add("btn-admin-neutral");
+                    btnHistorico.setOnAction(e -> abrirHistoricoBloqueios(u));
+                    btns.getChildren().add(btnHistorico);
                 } else {
                     Label youLabel = new Label("(Tu próprio — admin não pode suspender-se)");
                     youLabel.getStyleClass().add("conta-email");
@@ -321,6 +319,100 @@ public class AdminController {
                 box.getChildren().addAll(topRow, meta, btns);
                 utilizadoresList.getChildren().add(box);
             }
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /**
+     * Abre um diálogo para o administrador introduzir a justificação de
+     * bloqueio ou desbloqueio. O motivo é obrigatório e fica guardado no
+     * histórico de bloqueios (data + motivo + admin responsável).
+     */
+    private void abrirDialogoBloqueio(User u) {
+        boolean vaiBloquear = !u.isBloqueado();
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle(vaiBloquear ? "Bloquear Utilizador" : "Desbloquear Utilizador");
+
+        Label infoLbl = new Label(String.format("Utilizador: %s\nEmail: %s", u.getNome(), u.getEmail()));
+        infoLbl.setStyle("-fx-text-fill: #aaa; -fx-font-size: 0.85em;");
+        infoLbl.setWrapText(true);
+
+        Label motivoLbl = new Label((vaiBloquear ? "Motivo do bloqueio" : "Motivo do desbloqueio") + " (obrigatório):");
+        motivoLbl.setStyle("-fx-text-fill: #ccc; -fx-font-size: 0.85em; -fx-font-weight: bold;");
+
+        javafx.scene.control.TextArea tfMotivo = new javafx.scene.control.TextArea();
+        tfMotivo.setPromptText(vaiBloquear
+                ? "Ex: Comportamento abusivo, avaliações repetidamente negativas, denúncias de outros utilizadores..."
+                : "Ex: Recurso aceite, situação esclarecida, período de suspensão cumprido...");
+        tfMotivo.setPrefRowCount(4);
+        tfMotivo.setWrapText(true);
+        tfMotivo.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white; " +
+                "-fx-border-color: rgba(255,255,255,0.12); -fx-border-radius: 8; -fx-background-radius: 8;");
+
+        VBox conteudo = new VBox(10, infoLbl, motivoLbl, tfMotivo);
+        conteudo.setPadding(new Insets(4, 0, 4, 0));
+        dlg.getDialogPane().setContent(conteudo);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.estilizar(dlg);
+
+        // OK só ativo quando há texto
+        javafx.scene.Node btnOk = dlg.getDialogPane().lookupButton(ButtonType.OK);
+        if (btnOk != null) {
+            btnOk.setDisable(true);
+            tfMotivo.textProperty().addListener((obs, o, n) -> btnOk.setDisable(n.trim().isBlank()));
+        }
+
+        dlg.showAndWait().ifPresent(bt -> {
+            if (bt != ButtonType.OK) return;
+            String motivo = tfMotivo.getText().trim();
+            try {
+                if (vaiBloquear) {
+                    userService.bloquearUtilizador(u.getId(), motivo);
+                    mostrarSucesso("Utilizador bloqueado. Já não consegue fazer login.");
+                } else {
+                    userService.desbloquearUtilizador(u.getId(), motivo);
+                    mostrarSucesso("Utilizador desbloqueado.");
+                }
+                carregarUtilizadores();
+            } catch (Exception ex) { mostrarErro(ex.getMessage()); }
+        });
+    }
+
+    /** Mostra o histórico de bloqueios/desbloqueios de um utilizador (data, ação, motivo, admin). */
+    private void abrirHistoricoBloqueios(User u) {
+        try {
+            List<Bloqueio> historico = userService.listarHistoricoBloqueios(u.getId());
+            Dialog<ButtonType> dlg = new Dialog<>();
+            dlg.setTitle("Histórico de Bloqueios — " + u.getNome());
+
+            VBox conteudo = new VBox(8);
+            conteudo.setPadding(new Insets(4, 0, 4, 0));
+            conteudo.setPrefWidth(420);
+
+            if (historico.isEmpty()) {
+                conteudo.getChildren().add(labelInfo("Sem registos de bloqueio para este utilizador."));
+            } else {
+                for (Bloqueio b : historico) {
+                    VBox item = new VBox(2);
+                    item.getStyleClass().add("admin-row");
+                    Label topo = new Label(b.getAcaoLabel() + "   •   " + b.getDataStr());
+                    topo.setStyle("-fx-font-weight: bold; -fx-text-fill: #f1f5f9;");
+                    Label motivoLbl = new Label("Motivo: " + b.getMotivo());
+                    motivoLbl.setWrapText(true);
+                    motivoLbl.getStyleClass().add("admin-card-meta");
+                    Label adminLbl = new Label("Por: " + b.getAdminNome());
+                    adminLbl.getStyleClass().add("admin-card-meta");
+                    item.getChildren().addAll(topo, motivoLbl, adminLbl);
+                    conteudo.getChildren().add(item);
+                }
+            }
+
+            ScrollPane sp = new ScrollPane(conteudo);
+            sp.setFitToWidth(true);
+            sp.setPrefHeight(360);
+            dlg.getDialogPane().setContent(sp);
+            dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            DialogHelper.estilizar(dlg);
+            dlg.showAndWait();
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 

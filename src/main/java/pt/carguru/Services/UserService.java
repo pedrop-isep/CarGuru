@@ -1,7 +1,9 @@
 package pt.carguru.Services;
 
+import pt.carguru.Models.Bloqueio;
 import pt.carguru.Models.Transacao;
 import pt.carguru.Models.User;
+import pt.carguru.Repositories.BloqueioRepository;
 import pt.carguru.Repositories.ReservaRepository;
 import pt.carguru.Repositories.TransacaoRepository;
 import pt.carguru.Repositories.UserRepository;
@@ -15,6 +17,7 @@ public class UserService {
     private final UserRepository userRepo = new UserRepository();
     private final TransacaoRepository transacaoRepo = new TransacaoRepository();
     private final ReservaRepository reservaRepo = new ReservaRepository();
+    private final BloqueioRepository bloqueioRepo = new BloqueioRepository();
 
     public void atualizarPerfil(String novoNome, String novoNif) throws SQLException {
         User user = Session.getUser();
@@ -91,10 +94,48 @@ public class UserService {
 
     public List<User> listarTodos() throws SQLException { return userRepo.findAll(); }
 
-    public void toggleAtivo(int userId) throws SQLException {
+    /**
+     * Bloqueia um utilizador com justificação obrigatória. O utilizador deixa
+     * de conseguir fazer login (ver AuthService.login) e a ação é registada
+     * no histórico de bloqueios com data e motivo.
+     */
+    public void bloquearUtilizador(int userId, String motivo) throws SQLException {
+        if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
+        if (motivo == null || motivo.isBlank())
+            throw new IllegalArgumentException("O motivo do bloqueio é obrigatório.");
         User user = userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilizador não encontrado."));
-        user.setBloqueado(!user.isBloqueado());
+        if (user.getId() == Session.getUser().getId())
+            throw new IllegalStateException("Não podes bloquear-te a ti próprio.");
+        if (user.isBloqueado()) throw new IllegalStateException("Utilizador já está bloqueado.");
+        user.setBloqueado(true);
         userRepo.update(user);
+        bloqueioRepo.save(new Bloqueio(userId, Session.getUser().getId(), "BLOQUEIO", motivo.trim()));
+    }
+
+    /**
+     * Desbloqueia um utilizador com justificação obrigatória, registando a
+     * ação no histórico de bloqueios com data e motivo.
+     */
+    public void desbloquearUtilizador(int userId, String motivo) throws SQLException {
+        if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
+        if (motivo == null || motivo.isBlank())
+            throw new IllegalArgumentException("O motivo do desbloqueio é obrigatório.");
+        User user = userRepo.findById(userId).orElseThrow(() -> new IllegalArgumentException("Utilizador não encontrado."));
+        if (!user.isBloqueado()) throw new IllegalStateException("Utilizador já está desbloqueado.");
+        user.setBloqueado(false);
+        userRepo.update(user);
+        bloqueioRepo.save(new Bloqueio(userId, Session.getUser().getId(), "DESBLOQUEIO", motivo.trim()));
+    }
+
+    /** Histórico de bloqueios/desbloqueios de um utilizador específico (mais recente primeiro). */
+    public List<Bloqueio> listarHistoricoBloqueios(int userId) throws SQLException {
+        return bloqueioRepo.findByUtilizador(userId);
+    }
+
+    /** Histórico global de bloqueios/desbloqueios de todos os utilizadores (mais recente primeiro). */
+    public List<Bloqueio> listarHistoricoBloqueiosGlobal() throws SQLException {
+        if (!Session.isAdmin()) throw new IllegalStateException("Sem permissão.");
+        return bloqueioRepo.findAll();
     }
 
 
