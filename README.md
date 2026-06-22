@@ -28,7 +28,9 @@ private static final String USER = "root";
 private static final String PASSWORD = "";
 ```
 
-### Conta Admin pré-existente (criar manualmente ou via script):
+### Conta Admin
+A conta de administrador é criada automaticamente ao correr o `schema.sql` (não é necessário nenhum passo manual):
+
 | Email | Password | Role |
 |-------|----------|------|
 | admin@carguru.pt | admin123 | ADMINISTRADOR |

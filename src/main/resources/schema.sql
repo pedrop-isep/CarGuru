@@ -438,6 +438,19 @@ ALTER TABLE `utilizadores`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- Conta de Administrador pré-definida
+-- Email: admin@carguru.pt | Password: admin123
+-- (password_hash gerado com BCrypt/jBCrypt, cost 12 — igual ao usado por PasswordHasher.java)
+-- INSERT IGNORE evita erro caso o script seja executado mais do que uma vez.
+--
+INSERT IGNORE INTO `utilizadores`
+  (`email`, `nome`, `nif`, `n_carta_conducao`, `validade_carta`, `password_hash`, `saldo`, `role`, `bloqueado`)
+VALUES
+  ('admin@carguru.pt', 'Administrador CarGuru', '000000000', 'ADMIN-0000000',
+   '2099-12-31', '$2a$12$NBpDQRZW7.hlHTs3TVAuM.PsL1BnSsqZvQDL823Arpq6Ll1fyIwCy',
+   0.00, 'ADMINISTRADOR', 0);
+
+--
 -- AUTO_INCREMENT de tabela `veiculos`
 --
 ALTER TABLE `veiculos`
