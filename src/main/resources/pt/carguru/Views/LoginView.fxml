@@ -51,18 +51,25 @@
               <padding><Insets top="20" right="32" bottom="24" left="32"/></padding>
               <Label text="Nome completo:" styleClass="form-label"/>
               <TextField fx:id="regNome" styleClass="form-input" promptText="O teu nome"/>
+              <Label fx:id="regNomeErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="Email:" styleClass="form-label"/>
               <TextField fx:id="regEmail" styleClass="form-input" promptText="email@exemplo.com"/>
+              <Label fx:id="regEmailErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="Password:" styleClass="form-label"/>
               <PasswordField fx:id="regPassword" styleClass="form-input" promptText="Mínimo 6 caracteres"/>
+              <Label fx:id="regPasswordErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="Confirmar password:" styleClass="form-label"/>
               <PasswordField fx:id="regConfirmPassword" styleClass="form-input" promptText="Repete a password"/>
+              <Label fx:id="regConfirmPasswordErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="NIF (9 dígitos):" styleClass="form-label"/>
               <TextField fx:id="regNif" styleClass="form-input" promptText="123456789"/>
+              <Label fx:id="regNifErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="Nº Carta de condução:" styleClass="form-label"/>
               <TextField fx:id="regCarta" styleClass="form-input" promptText="Número da carta"/>
+              <Label fx:id="regCartaErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label text="Validade da carta:" styleClass="form-label"/>
               <DatePicker fx:id="regValidadeCarta" maxWidth="Infinity"/>
+              <Label fx:id="regValidadeCartaErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
               <Label fx:id="regErro" styleClass="error-label" wrapText="true"/>
               <Button text="Criar conta →" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleRegistar"/>
             </VBox>

@@ -16,6 +16,7 @@ import pt.carguru.Models.Veiculo;
 import pt.carguru.Services.UserService;
 import pt.carguru.Services.VeiculoService;
 import pt.carguru.Utils.DialogHelper;
+import pt.carguru.Utils.FieldValidator;
 import pt.carguru.Utils.NavbarHelper;
 import pt.carguru.Utils.ScrollSpeedUtil;
 import pt.carguru.Utils.Session;
@@ -41,9 +42,13 @@ public class ContaController {
     @FXML private TextField perfilEmail;
     @FXML private TextField perfilNif;
     @FXML private Label perfilErro;
+    @FXML private Label perfilNomeErro;
+    @FXML private Label perfilNifErro;
     @FXML private TextField perfilNCarta;
     @FXML private DatePicker perfilValidadeCarta;
     @FXML private Label cartaErro;
+    @FXML private Label perfilNCartaErro;
+    @FXML private Label perfilValidadeCartaErro;
     @FXML private Label saldoLabel;
     @FXML private Label caucaoLabel;
     @FXML private Label disponivelLabel;
@@ -61,6 +66,8 @@ public class ContaController {
     private final UserService userService = new UserService();
     private final VeiculoService veiculoService = new VeiculoService();
     private static final DateTimeFormatter DATA_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private final FieldValidator perfilValidator = new FieldValidator();
+    private final FieldValidator cartaValidator = new FieldValidator();
 
     @FXML
     public void initialize() {
@@ -75,6 +82,30 @@ public class ContaController {
         injetarBarraFiltros();
         carregarHistorico();
         tentarCarregarFoto(user);
+        configurarValidacaoPerfil();
+        configurarValidacaoCarta();
+    }
+
+    /** Liga validação em tempo real aos campos de Nome e NIF do perfil pessoal. */
+    private void configurarValidacaoPerfil() {
+        perfilValidator.validarTexto(perfilNome, perfilNomeErro, v ->
+            v.isBlank() ? "Nome obrigatório." : null);
+        perfilValidator.validarTexto(perfilNif, perfilNifErro, v -> {
+            if (v.isBlank()) return null; // NIF é opcional no UserService
+            if (!v.trim().matches("\\d{9}")) return "O NIF deve ter exatamente 9 dígitos.";
+            return null;
+        });
+    }
+
+    /** Liga validação em tempo real aos campos da carta de condução. */
+    private void configurarValidacaoCarta() {
+        cartaValidator.validarTexto(perfilNCarta, perfilNCartaErro, v ->
+            v.isBlank() ? "Número da carta obrigatório." : null);
+        cartaValidator.validarData(perfilValidadeCarta, perfilValidadeCartaErro, data -> {
+            if (data == null) return "Validade da carta obrigatória.";
+            if (data.isBefore(LocalDate.now())) return "A carta de condução está expirada — indica uma data futura.";
+            return null;
+        });
     }
 
     private void carregarPerfil(User user) {
@@ -319,6 +350,10 @@ public class ContaController {
     @FXML
     public void handleGuardarPerfil() {
         perfilErro.setText("");
+        if (!perfilValidator.isValid()) {
+            perfilErro.setText("Corrige os campos assinalados a vermelho antes de continuar.");
+            return;
+        }
         DialogHelper.confirmar("Confirmar alterações",
                 "Tens a certeza que queres guardar as alterações ao teu perfil?")
             .filter(b -> b == ButtonType.YES)
@@ -334,6 +369,10 @@ public class ContaController {
     @FXML
     public void handleGuardarCarta() {
         cartaErro.setText("");
+        if (!cartaValidator.isValid()) {
+            cartaErro.setText("Corrige os campos assinalados a vermelho antes de continuar.");
+            return;
+        }
         DialogHelper.confirmar("Confirmar carta de condução",
                 "Confirmas a atualização dos dados da carta de condução?")
             .filter(b -> b == ButtonType.YES)
@@ -487,6 +526,57 @@ public class ContaController {
         desc.setPrefRowCount(3); desc.setPromptText("Descrição opcional...");
         desc.setStyle("-fx-control-inner-background:#1e1e1e; -fx-text-fill:white; -fx-border-color:rgba(255,255,255,0.09); -fx-border-radius:8; -fx-background-radius:8;");
 
+        // Labels de erro por campo (vermelho, aparecem em tempo real)
+        Label erroMarca = erroLbl(), erroModelo = erroLbl(), erroAno = erroLbl(), erroMatricula = erroLbl(),
+              erroLoc = erroLbl(), erroPreco = erroLbl(), erroConsumo = erroLbl(), erroKm = erroLbl(), erroLotacao = erroLbl();
+
+        FieldValidator fv = new FieldValidator();
+        fv.validarTexto(marca, erroMarca, v -> v.isBlank() ? "Marca obrigatória." : null);
+        fv.validarTexto(modelo, erroModelo, v -> v.isBlank() ? "Modelo obrigatório." : null);
+        fv.validarTexto(ano, erroAno, v -> {
+            if (v.isBlank()) return "Ano obrigatório.";
+            int anoMax = LocalDate.now().getYear() + 1;
+            try {
+                int a = Integer.parseInt(v.trim());
+                if (a < 1900 || a > anoMax) return "Ano inválido (entre 1900 e " + anoMax + ").";
+            } catch (NumberFormatException e) { return "O ano deve ser um número inteiro."; }
+            return null;
+        });
+        fv.validarTexto(matricula, erroMatricula, v -> v.isBlank() ? "Matrícula obrigatória." : null);
+        fv.validarTexto(loc, erroLoc, v -> v.isBlank() ? "Localização obrigatória." : null);
+        fv.validarTexto(preco, erroPreco, v -> {
+            if (v.isBlank()) return "Preço obrigatório.";
+            try {
+                double p = Double.parseDouble(v.replace(",", ".").trim());
+                if (p <= 0) return "O preço deve ser positivo.";
+            } catch (NumberFormatException e) { return "Preço inválido."; }
+            return null;
+        });
+        fv.validarTexto(consumo, erroConsumo, v -> {
+            if (v.isBlank()) return "Consumo obrigatório.";
+            try {
+                double c = Double.parseDouble(v.replace(",", ".").trim());
+                if (c < 0) return "O consumo não pode ser negativo.";
+            } catch (NumberFormatException e) { return "Consumo inválido."; }
+            return null;
+        });
+        fv.validarTexto(km, erroKm, v -> {
+            if (v.isBlank()) return "Quilometragem obrigatória.";
+            try {
+                int k = Integer.parseInt(v.trim());
+                if (k < 0) return "A quilometragem não pode ser negativa.";
+            } catch (NumberFormatException e) { return "A quilometragem deve ser um número inteiro."; }
+            return null;
+        });
+        fv.validarTexto(lotacao, erroLotacao, v -> {
+            if (v.isBlank()) return "Lotação obrigatória.";
+            try {
+                int l = Integer.parseInt(v.trim());
+                if (l <= 0) return "A lotação deve ser pelo menos 1.";
+            } catch (NumberFormatException e) { return "A lotação deve ser um número inteiro."; }
+            return null;
+        });
+
         // Imagem do veículo
         final File[] imagemSelecionada = { null };
         Label lblImagemAtual = new Label();
@@ -509,13 +599,15 @@ public class ContaController {
             }
         });
 
+        Label erroGeral = erroLbl();
+
         VBox content = new VBox(8,
-            lbl("Marca:"), marca, lbl("Modelo:"), modelo, lbl("Ano:"), ano,
-            lbl("Matrícula:"), matricula, lbl("Combustível:"), comb,
-            lbl("Transmissão:"), trans, lbl("Localização:"), loc,
-            lbl("Preço/dia (€):"), preco, lbl("Consumo (L/100km):"), consumo,
-            lbl("Quilómetros:"), km, lbl("Lotação:"), lotacao, lbl("Descrição:"), desc,
-            lbl("Imagem:"), btnEscolherImagem, lblImagemAtual);
+            lbl("Marca:"), marca, erroMarca, lbl("Modelo:"), modelo, erroModelo, lbl("Ano:"), ano, erroAno,
+            lbl("Matrícula:"), matricula, erroMatricula, lbl("Combustível:"), comb,
+            lbl("Transmissão:"), trans, lbl("Localização:"), loc, erroLoc,
+            lbl("Preço/dia (€):"), preco, erroPreco, lbl("Consumo (L/100km):"), consumo, erroConsumo,
+            lbl("Quilómetros:"), km, erroKm, lbl("Lotação:"), lotacao, erroLotacao, lbl("Descrição:"), desc,
+            lbl("Imagem:"), btnEscolherImagem, lblImagemAtual, erroGeral);
         content.setPadding(new Insets(16));
         content.setStyle("-fx-background-color: #141414;");
 
@@ -528,6 +620,18 @@ public class ContaController {
         dialog.getDialogPane().setStyle("-fx-background-color: #141414;");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         DialogHelper.estilizar(dialog);
+
+        // Impede que o dialog feche quando há campos inválidos — os valores escritos
+        // pelo utilizador permanecem todos visíveis, só os erros é que aparecem/desaparecem.
+        javafx.scene.Node btnOk = dialog.getDialogPane().lookupButton(ButtonType.OK);
+        btnOk.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
+            erroGeral.setText(""); erroGeral.setManaged(false); erroGeral.setVisible(false);
+            if (!fv.isValid()) {
+                erroGeral.setText("Corrige os campos assinalados a vermelho antes de continuar.");
+                erroGeral.setManaged(true); erroGeral.setVisible(true);
+                event.consume();
+            }
+        });
 
         dialog.showAndWait().ifPresent(bt -> {
             if (bt == ButtonType.OK) {
@@ -567,6 +671,16 @@ public class ContaController {
                 } catch (Exception e) { DialogHelper.erro(e.getMessage()); }
             }
         });
+    }
+
+    /** Cria uma label de erro de campo (vermelha, escondida por defeito). */
+    private Label erroLbl() {
+        Label l = new Label();
+        l.getStyleClass().add("field-error-label");
+        l.setWrapText(true);
+        l.setManaged(false);
+        l.setVisible(false);
+        return l;
     }
 
     private void abrirModalIndisponibilidade(Veiculo v) {

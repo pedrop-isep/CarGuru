@@ -16,6 +16,7 @@ pt\carguru\Controllers\AdminController.class
 pt\carguru\Utils\DialogHelper.class
 pt\carguru\Models\RendimentoMensalVeiculo.class
 pt\carguru\Services\CombustivelService.class
+pt\carguru\Utils\FieldValidator.class
 pt\carguru\Models\Bloqueio.class
 pt\carguru\Services\ReservaService.class
 pt\carguru\Utils\LembreteScheduler.class
@@ -37,6 +38,7 @@ pt\carguru\Models\PrecoCombustivel.class
 pt\carguru\Utils\ScrollSpeedUtil.class
 pt\carguru\Utils\EmailSender.class
 pt\carguru\Controllers\DashboardController.class
+pt\carguru\Utils\FieldValidator$Regra.class
 pt\carguru\Models\Veiculo.class
 pt\carguru\Utils\DatabaseConnection.class
 pt\carguru\Models\User.class

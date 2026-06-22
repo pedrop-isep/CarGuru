@@ -330,6 +330,21 @@
 .error-label { -fx-text-fill: #ef4444; -fx-font-size: 0.82em; }
 .success-label { -fx-text-fill: #22c55e; -fx-font-size: 0.82em; }
 
+/* ----- Validação em tempo real de campos ----- */
+.field-error-label {
+    -fx-text-fill: #ef4444;
+    -fx-font-size: 0.78em;
+    -fx-padding: 0 0 0 2;
+}
+.form-input.field-invalid,
+.filter-input.field-invalid {
+    -fx-border-color: #ef4444;
+    -fx-border-width: 1.5;
+}
+.date-picker.field-invalid { -fx-border-color: #ef4444; -fx-border-width: 1.5; }
+.combo-box.field-invalid,
+.filter-combo.field-invalid { -fx-border-color: #ef4444; -fx-border-width: 1.5; }
+
 /* ----- Buttons ----- */
 .btn-auth {
     -fx-background-color: #dc2626;

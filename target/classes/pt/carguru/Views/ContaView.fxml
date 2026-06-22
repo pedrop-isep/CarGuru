@@ -61,10 +61,12 @@
             <Label text="👤 Perfil Pessoal" styleClass="conta-card-title"/>
             <Label text="Nome completo:" styleClass="form-label"/>
             <TextField fx:id="perfilNome" styleClass="form-input"/>
+            <Label fx:id="perfilNomeErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
             <Label text="Email (não editável):" styleClass="form-label"/>
             <TextField fx:id="perfilEmail" styleClass="form-input" disable="true"/>
             <Label text="NIF:" styleClass="form-label"/>
             <TextField fx:id="perfilNif" styleClass="form-input"/>
+            <Label fx:id="perfilNifErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
             <Label fx:id="perfilErro" styleClass="error-label" wrapText="true"/>
             <Button text="Guardar alterações" styleClass="btn-auth" maxWidth="Infinity" onAction="#handleGuardarPerfil"/>
           </VBox>
@@ -84,10 +86,12 @@
             <VBox spacing="6" HBox.hgrow="ALWAYS">
               <Label text="Número da carta:" styleClass="form-label"/>
               <TextField fx:id="perfilNCarta" promptText="Ex: S-123456-7" styleClass="form-input"/>
+              <Label fx:id="perfilNCartaErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
             </VBox>
             <VBox spacing="6" HBox.hgrow="ALWAYS">
               <Label text="Validade:" styleClass="form-label"/>
               <DatePicker fx:id="perfilValidadeCarta" styleClass="form-input" maxWidth="Infinity"/>
+              <Label fx:id="perfilValidadeCartaErro" styleClass="field-error-label" wrapText="true" managed="false" visible="false"/>
             </VBox>
           </HBox>
           <Label fx:id="cartaErro" styleClass="error-label" wrapText="true"/>
